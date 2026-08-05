@@ -17,7 +17,7 @@
 - **TypeScript строго `6.0.3`.** Не `7.x`. `typescript-eslint@8.66.0` объявляет `typescript: ">=4.8.4 <6.1.0"` — с TS 7 команда `npm run lint` не запустится вовсе. `6.0.3` — максимальная стабильная версия внутри диапазона, и она удовлетворяет Pinia (`>=5.6.0`) и Vuetify (`>=4.7`).
 - **Точные версии зависимостей** (проверены в реестре npm на 2026-08-06):
   - runtime: `vue@3.5.41`, `vue-router@5.2.0`, `pinia@4.0.2`, `vuetify@4.1.7`, `vue-i18n@11.4.8`, `idb@8.0.3`, `@mdi/font@7.4.47`
-  - dev: `vite@8.2.0`, `@vitejs/plugin-vue@6.0.8`, `vite-plugin-vuetify@2.1.3`, `sass-embedded@1.100.0`, `typescript@6.0.3`, `vue-tsc@3.3.9`, `vitest@4.1.10`, `fake-indexeddb@6.2.5`, `eslint@10.8.0`, `@eslint/js@10.8.0`, `eslint-plugin-vue@10.10.0`, `@vue/eslint-config-typescript@14.9.0`, `@vue/eslint-config-prettier@10.2.0`, `prettier@3.9.6`, `globals@16.5.0`
+  - dev: `vite@8.2.0`, `@vitejs/plugin-vue@6.0.8`, `vite-plugin-vuetify@2.1.3`, `sass-embedded@1.100.0`, `typescript@~6.0.3`, `@types/node`, `vue-tsc@3.3.9`, `vitest@4.1.10`, `fake-indexeddb@6.2.5`, `eslint@10.8.0`, `@eslint/js@10.8.0`, `eslint-plugin-vue@10.10.0`, `@vue/eslint-config-typescript@14.9.0`, `@vue/eslint-config-prettier@10.2.0`, `prettier@3.9.6`, `globals@16.5.0`
 - **Отступы — символы табуляции**, `tabWidth: 2`. Кавычки одинарные. Это относится и к коду, и к JSON-конфигам в этом плане: копируй блоки как есть.
 - **Порядок секций в SFC: `style`, затем `template`, затем `script`.** Всегда. Проверяется правилом `vue/block-order`.
 - **`<style lang="scss" module>` и `<script setup lang="ts">`** — во всех без исключения компонентах, даже если секция стилей пустая (в этом случае секцию просто не пишем, но если стили есть — только так).
@@ -85,7 +85,12 @@
 ```bash
 npm install vue@3.5.41
 npm install -D vite@8.2.0 @vitejs/plugin-vue@6.0.8 typescript@6.0.3 vue-tsc@3.3.9
+npm install -D sass-embedded@1.100.0 @types/node
 ```
+
+`sass-embedded` нужен уже здесь, а не вместе с Vuetify: `App.vue` из шага 8 использует `<style lang="scss">`, и без препроцессора сборка упадёт. `@types/node` нужен, потому что `vite.config.ts` импортирует `node:url`.
+
+После установки замени в `package.json` версию TypeScript с `^6.0.3` на `~6.0.3`. Каретка разрешила бы 6.1.x, а это ровно тот диапазон, который ломает линтер.
 
 - [ ] **Step 3: Создать .gitignore и .gitattributes**
 
@@ -116,7 +121,7 @@ coverage
 		"module": "ESNext",
 		"moduleResolution": "bundler",
 		"lib": ["ES2022", "DOM", "DOM.Iterable"],
-		"types": ["vite/client"],
+		"types": ["vite/client", "node"],
 		"strict": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
@@ -358,8 +363,10 @@ git commit -m "chore: add eslint flat config and prettier"
 
 ```bash
 npm install vuetify@4.1.7 @mdi/font@7.4.47
-npm install -D vite-plugin-vuetify@2.1.3 sass-embedded@1.100.0
+npm install -D vite-plugin-vuetify@2.1.3
 ```
+
+`sass-embedded` уже стоит с Task 1.
 
 - [ ] **Step 2: Подключить плагин в vite.config.ts**
 
