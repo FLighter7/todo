@@ -17,7 +17,7 @@
 - **TypeScript строго `6.0.3`.** Не `7.x`. `typescript-eslint@8.66.0` объявляет `typescript: ">=4.8.4 <6.1.0"` — с TS 7 команда `npm run lint` не запустится вовсе. `6.0.3` — максимальная стабильная версия внутри диапазона, и она удовлетворяет Pinia (`>=5.6.0`) и Vuetify (`>=4.7`).
 - **Точные версии зависимостей** (проверены в реестре npm на 2026-08-06):
   - runtime: `vue@3.5.41`, `vue-router@5.2.0`, `pinia@4.0.2`, `vuetify@4.1.7`, `vue-i18n@11.4.8`, `idb@8.0.3`, `@mdi/font@7.4.47`
-  - dev: `vite@8.2.0`, `@vitejs/plugin-vue@6.0.8`, `vite-plugin-vuetify@2.1.3`, `sass-embedded@1.100.0`, `typescript@6.0.3`, `vue-tsc@3.3.9`, `vitest@4.1.10`, `fake-indexeddb@6.2.5`, `eslint@10.8.0`, `@eslint/js@10.8.0`, `eslint-plugin-vue@10.10.0`, `@vue/eslint-config-typescript@14.9.0`, `@vue/eslint-config-prettier@10.2.0`, `prettier@3.9.6`, `globals@16.5.0`
+  - dev: `vite@8.2.0`, `@vitejs/plugin-vue@6.0.8`, `vite-plugin-vuetify@2.1.3`, `sass-embedded@1.100.0`, `typescript@~6.0.3`, `@types/node`, `vue-tsc@3.3.9`, `vitest@4.1.10`, `fake-indexeddb@6.2.5`, `eslint@10.8.0`, `@eslint/js@10.0.1` (нумеруется независимо от самого ESLint), `eslint-plugin-vue@10.10.0`, `@vue/eslint-config-typescript@14.9.0`, `@vue/eslint-config-prettier@10.2.0`, `prettier@3.9.6`, `globals@16.5.0`
 - **Отступы — символы табуляции**, `tabWidth: 2`. Кавычки одинарные. Это относится и к коду, и к JSON-конфигам в этом плане: копируй блоки как есть.
 - **Порядок секций в SFC: `style`, затем `template`, затем `script`.** Всегда. Проверяется правилом `vue/block-order`.
 - **`<style lang="scss" module>` и `<script setup lang="ts">`** — во всех без исключения компонентах, даже если секция стилей пустая (в этом случае секцию просто не пишем, но если стили есть — только так).
@@ -33,21 +33,21 @@
 
 Что создаётся и за что отвечает.
 
-| Файл | Ответственность |
-|---|---|
-| `src/types/todo.ts` | Тип `Todo` и `TodoPeriod`. Единственный источник правды по форме записи. |
-| `src/services/storage/types.ts` | Интерфейс `TodoStorage`, ошибка `StorageUnavailableError`. |
-| `src/services/storage/in-memory.ts` | Реализация в памяти: тесты и режим деградации. |
-| `src/services/storage/indexed-db.ts` | Реализация на `idb`. |
-| `src/stores/todos.ts` | Pinia store: список, действия, геттер квадрантов. |
-| `src/router/index.ts` | Два маршрута. |
-| `src/i18n/index.ts`, `en.ts`, `ru.ts` | Локализация и выбор языка. |
-| `src/plugins/vuetify.ts` | Инициализация Vuetify, темы. |
-| `src/views/TodoListView.vue` | Страница списка. |
-| `src/views/MatrixView.vue` | Страница матрицы. |
-| `src/components/TodoForm.vue` | Диалог создания и редактирования дела. |
-| `src/components/TodoQuadrant.vue` | Один квадрант матрицы. |
-| `src/App.vue` | Каркас, навигация, переключатели, баннер и snackbar. |
+| Файл                                  | Ответственность                                                          |
+| ------------------------------------- | ------------------------------------------------------------------------ |
+| `src/types/todo.ts`                   | Тип `Todo` и `TodoPeriod`. Единственный источник правды по форме записи. |
+| `src/services/storage/types.ts`       | Интерфейс `TodoStorage`, ошибка `StorageUnavailableError`.               |
+| `src/services/storage/in-memory.ts`   | Реализация в памяти: тесты и режим деградации.                           |
+| `src/services/storage/indexed-db.ts`  | Реализация на `idb`.                                                     |
+| `src/stores/todos.ts`                 | Pinia store: список, действия, геттер квадрантов.                        |
+| `src/router/index.ts`                 | Два маршрута.                                                            |
+| `src/i18n/index.ts`, `en.ts`, `ru.ts` | Локализация и выбор языка.                                               |
+| `src/plugins/vuetify.ts`              | Инициализация Vuetify, темы.                                             |
+| `src/views/TodoListView.vue`          | Страница списка.                                                         |
+| `src/views/MatrixView.vue`            | Страница матрицы.                                                        |
+| `src/components/TodoForm.vue`         | Диалог создания и редактирования дела.                                   |
+| `src/components/TodoQuadrant.vue`     | Один квадрант матрицы.                                                   |
+| `src/App.vue`                         | Каркас, навигация, переключатели, баннер и snackbar.                     |
 
 ---
 
@@ -56,9 +56,11 @@
 ## Task 1: Проект, сборка и пустая страница
 
 **Files:**
+
 - Create: `package.json`, `.gitignore`, `.gitattributes`, `index.html`, `vite.config.ts`, `tsconfig.json`, `src/main.ts`, `src/App.vue`, `src/env.d.ts`
 
 **Interfaces:**
+
 - Consumes: ничего, это первая задача.
 - Produces: алиас `@` → `src/`; точка входа `src/main.ts`; корневой компонент `src/App.vue`; скрипты `npm run dev`, `npm run build`, `npm run preview`.
 
@@ -85,7 +87,12 @@
 ```bash
 npm install vue@3.5.41
 npm install -D vite@8.2.0 @vitejs/plugin-vue@6.0.8 typescript@6.0.3 vue-tsc@3.3.9
+npm install -D sass-embedded@1.100.0 @types/node
 ```
+
+`sass-embedded` нужен уже здесь, а не вместе с Vuetify: `App.vue` из шага 8 использует `<style lang="scss">`, и без препроцессора сборка упадёт. `@types/node` нужен, потому что `vite.config.ts` импортирует `node:url`.
+
+После установки замени в `package.json` версию TypeScript с `^6.0.3` на `~6.0.3`. Каретка разрешила бы 6.1.x, а это ровно тот диапазон, который ломает линтер.
 
 - [ ] **Step 3: Создать .gitignore и .gitattributes**
 
@@ -116,7 +123,7 @@ coverage
 		"module": "ESNext",
 		"moduleResolution": "bundler",
 		"lib": ["ES2022", "DOM", "DOM.Iterable"],
-		"types": ["vite/client"],
+		"types": ["vite/client", "node"],
 		"strict": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
@@ -229,17 +236,19 @@ git commit -m "chore: scaffold vite + vue 3 + typescript project"
 ## Task 2: ESLint и Prettier
 
 **Files:**
+
 - Create: `eslint.config.js`, `.prettierrc.json`, `.prettierignore`
 - Modify: `package.json` (скрипты `lint`, `lint:fix`, `format`)
 
 **Interfaces:**
+
 - Consumes: структура проекта из Task 1.
 - Produces: команды `npm run lint` и `npm run format`; правило `vue/block-order` со значением `['style', 'template', 'script']`, которое дальше проверяет каждый компонент.
 
 - [ ] **Step 1: Установить пакеты**
 
 ```bash
-npm install -D eslint@10.8.0 @eslint/js@10.8.0 eslint-plugin-vue@10.10.0 @vue/eslint-config-typescript@14.9.0 @vue/eslint-config-prettier@10.2.0 prettier@3.9.6 globals@16.5.0
+npm install -D eslint@10.8.0 @eslint/js@10.0.1 eslint-plugin-vue@10.10.0 @vue/eslint-config-typescript@14.9.0 @vue/eslint-config-prettier@10.2.0 prettier@3.9.6 globals@16.5.0
 ```
 
 - [ ] **Step 2: Создать eslint.config.js**
@@ -347,10 +356,12 @@ git commit -m "chore: add eslint flat config and prettier"
 ## Task 3: Vuetify и переключатель темы
 
 **Files:**
+
 - Create: `src/plugins/vuetify.ts`
 - Modify: `vite.config.ts`, `src/main.ts`, `src/App.vue`
 
 **Interfaces:**
+
 - Consumes: `src/main.ts`, `src/App.vue` из Task 1.
 - Produces: экспорт по умолчанию из `@/plugins/vuetify` — инстанс Vuetify; именованные экспорты `type AppTheme = 'light' | 'dark' | 'system'` и `persistTheme(theme: AppTheme): void`.
 
@@ -358,8 +369,10 @@ git commit -m "chore: add eslint flat config and prettier"
 
 ```bash
 npm install vuetify@4.1.7 @mdi/font@7.4.47
-npm install -D vite-plugin-vuetify@2.1.3 sass-embedded@1.100.0
+npm install -D vite-plugin-vuetify@2.1.3
 ```
+
+`sass-embedded` уже стоит с Task 1.
 
 - [ ] **Step 2: Подключить плагин в vite.config.ts**
 
@@ -492,10 +505,12 @@ git commit -m "feat: add vuetify with persisted theme toggle"
 ## Task 4: Маршрутизация и две страницы
 
 **Files:**
+
 - Create: `src/router/index.ts`, `src/views/TodoListView.vue`, `src/views/MatrixView.vue`
 - Modify: `src/main.ts`, `src/App.vue`
 
 **Interfaces:**
+
 - Consumes: `@/plugins/vuetify` из Task 3.
 - Produces: маршруты с именами `'list'` (путь `/`) и `'matrix'` (путь `/matrix'`); компоненты-заглушки `TodoListView` и `MatrixView`, которые наполняются в Task 10 и Task 13.
 
@@ -570,7 +585,7 @@ createApp(App).use(router).use(vuetify).mount('#app');
 Замени блок `<v-main>` в `src/App.vue` на:
 
 ```vue
-		<v-main :class="$style.main">
+<v-main :class="$style.main">
 			<router-view />
 		</v-main>
 ```
@@ -578,12 +593,12 @@ createApp(App).use(router).use(vuetify).mount('#app');
 И добавь вкладки внутрь `<v-app-bar>`, сразу после блока `<template #append>`:
 
 ```vue
-			<template #extension>
-				<v-tabs>
-					<v-tab :to="{ name: 'list' }">List</v-tab>
-					<v-tab :to="{ name: 'matrix' }">Matrix</v-tab>
-				</v-tabs>
-			</template>
+<template #extension>
+	<v-tabs>
+		<v-tab :to="{ name: 'list' }">List</v-tab>
+		<v-tab :to="{ name: 'matrix' }">Matrix</v-tab>
+	</v-tabs>
+</template>
 ```
 
 - [ ] **Step 6: Проверить в браузере**
@@ -610,10 +625,12 @@ git commit -m "feat: add router with list and matrix pages"
 ## Task 5: Локализация
 
 **Files:**
+
 - Create: `src/i18n/index.ts`, `src/i18n/en.ts`, `src/i18n/ru.ts`
 - Modify: `src/main.ts`, `src/App.vue`, `src/views/TodoListView.vue`, `src/views/MatrixView.vue`
 
 **Interfaces:**
+
 - Consumes: `App.vue` и страницы из Task 4.
 - Produces: именованные экспорты `i18n` (инстанс), `type AppLocale = 'en' | 'ru'`, `setLocale(locale: AppLocale): void`, `SUPPORTED_LOCALES`. Полный словарь ключей, которым пользуются все последующие задачи.
 
@@ -892,10 +909,12 @@ git commit -m "feat: add i18n with english and russian locales"
 ## Task 6: Модель данных, интерфейс хранилища и реализация в памяти
 
 **Files:**
+
 - Create: `src/types/todo.ts`, `src/services/storage/types.ts`, `src/services/storage/in-memory.ts`, `src/services/storage/in-memory.test.ts`
 - Modify: `vite.config.ts` (секция `test`), `package.json` (скрипты тестов)
 
 **Interfaces:**
+
 - Consumes: ничего из предыдущих задач, это новый слой.
 - Produces:
   - `interface Todo { id: string; title: string; note?: string; created: string; period: TodoPeriod; important: boolean; urgent: boolean; done: boolean }`
@@ -1124,9 +1143,11 @@ git commit -m "feat: add todo model and in-memory storage with tests"
 ## Task 7: Хранилище на IndexedDB
 
 **Files:**
+
 - Create: `src/services/storage/indexed-db.ts`, `src/services/storage/indexed-db.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Todo` из `@/types/todo`; `TodoStorage` и `StorageUnavailableError` из `./types` (Task 6).
 - Produces: `createIndexedDbStorage(): Promise<TodoStorage>` — асинхронная фабрика, бросающая `StorageUnavailableError`, если IndexedDB недоступна.
 
@@ -1247,13 +1268,19 @@ async function open(): Promise<IDBPDatabase<TodoDbSchema>> {
 	}
 
 	try {
-		return await openDB<TodoDbSchema>(DB_NAME, DB_VERSION, {
-			upgrade(database) {
-				if (!database.objectStoreNames.contains(STORE_NAME)) {
-					database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+		const database = await openDB<TodoDbSchema>(DB_NAME, DB_VERSION, {
+			upgrade(db) {
+				if (!db.objectStoreNames.contains(STORE_NAME)) {
+					db.createObjectStore(STORE_NAME, { keyPath: 'id' });
 				}
 			},
 		});
+
+		// Another tab upgrading or deleting the database stays blocked until every
+		// other connection closes, so release ours as soon as it asks.
+		database.addEventListener('versionchange', () => database.close());
+
+		return database;
 	} catch (error) {
 		throw new StorageUnavailableError(error);
 	}
@@ -1276,7 +1303,11 @@ export async function createIndexedDbStorage(): Promise<TodoStorage> {
 }
 ```
 
+Два момента, которые легко упустить.
+
 Проверка `typeof indexedDB === 'undefined'` нужна отдельно от `try`: в Safari при жёстких настройках приватности объект отсутствует целиком, и обращение к нему бросит `ReferenceError`, а не отвергнутый промис.
+
+Подписка на `versionchange` обязательна. Открытое соединение блокирует и удаление базы, и переход на новую версию схемы: запрос просто повисает, пока соединение не закроют. В браузере это выстрелит при двух открытых вкладках, а в тестах — на `deleteDB` в `afterEach` (все тесты уйдут в таймаут).
 
 - [ ] **Step 5: Запустить тесты**
 
@@ -1300,10 +1331,12 @@ git commit -m "feat: add indexeddb storage implementation"
 ## Task 8: Pinia store
 
 **Files:**
+
 - Create: `src/stores/todos.ts`, `src/stores/todos.test.ts`
 - Modify: `src/main.ts`
 
 **Interfaces:**
+
 - Consumes: `Todo`, `TodoPeriod`, `TodoStorage`, `createInMemoryStorage`, `createIndexedDbStorage`.
 - Produces:
   - `interface TodoDraft { title: string; note?: string; period: TodoPeriod; important: boolean; urgent: boolean }`
@@ -1637,9 +1670,11 @@ git commit -m "feat: add todos pinia store with storage fallback"
 ## Task 9: Форма дела
 
 **Files:**
+
 - Create: `src/components/TodoForm.vue`
 
 **Interfaces:**
+
 - Consumes: `TodoDraft` из `@/stores/todos`; ключи i18n `form.*`, `todo.*`, `period.*`.
 - Produces: компонент `TodoForm` с моделью открытия `defineModel<boolean>()`, пропом `initial?: Partial<TodoDraft>`, пропом `mode: 'add' | 'edit'` и событием `submit` с полезной нагрузкой `TodoDraft`.
 
@@ -1779,9 +1814,11 @@ git commit -m "feat: add todo form dialog component"
 ## Task 10: Страница списка
 
 **Files:**
+
 - Modify: `src/views/TodoListView.vue`
 
 **Interfaces:**
+
 - Consumes: `useTodosStore` (Task 8), `TodoForm` (Task 9), ключи i18n `todo.*`, `list.*`, `form.*`, `period.*`.
 - Produces: рабочую страницу списка с созданием, редактированием по клику на строку, отметкой выполнения и удалением. Дальше её не меняем.
 
@@ -1954,6 +1991,7 @@ onMounted(() => {
 
 Run: `npm run dev`
 Expected:
+
 - страница списка показывает текст «Дел пока нет», кнопка «плюс» в правом нижнем углу;
 - по кнопке открывается диалог с заголовком «Новое дело»; сохранение с пустым названием показывает ошибку и не закрывает диалог;
 - заполненное дело появляется в таблице со всеми колонками;
@@ -1984,9 +2022,11 @@ git commit -m "feat: add todo list page with persistence"
 ## Task 11: Сообщения о проблемах с хранилищем
 
 **Files:**
+
 - Modify: `src/App.vue`
 
 **Interfaces:**
+
 - Consumes: `store.persistent`, `store.lastError`, `store.dismissError` (Task 8); ключи `storage.unavailable`, `storage.writeFailed`.
 - Produces: видимую реакцию на отказ хранилища. Финальный вид `App.vue`.
 
@@ -1995,7 +2035,7 @@ git commit -m "feat: add todo list page with persistence"
 В `src/App.vue` замени содержимое `<v-main>` на:
 
 ```vue
-		<v-main :class="$style.main">
+<v-main :class="$style.main">
 			<v-alert
 				v-if="!store.persistent"
 				type="warning"
@@ -2074,9 +2114,11 @@ git commit -m "feat: surface storage failures in the ui"
 ## Task 12: Разбиение по квадрантам
 
 **Files:**
+
 - Modify: `src/stores/todos.ts`, `src/stores/todos.test.ts`
 
 **Interfaces:**
+
 - Consumes: `items` из store (Task 8).
 - Produces:
   - `type QuadrantKey = 'do' | 'schedule' | 'delegate' | 'eliminate'`
@@ -2196,20 +2238,20 @@ export function quadrantFlags(key: QuadrantKey): { important: boolean; urgent: b
 Внутри `defineStore` добавь геттер (импорт `computed` из `vue` объедини с уже существующим импортом `ref`):
 
 ```ts
-	const quadrants = computed<Record<QuadrantKey, Todo[]>>(() => {
-		const groups: Record<QuadrantKey, Todo[]> = {
-			do: [],
-			schedule: [],
-			delegate: [],
-			eliminate: [],
-		};
+const quadrants = computed<Record<QuadrantKey, Todo[]>>(() => {
+	const groups: Record<QuadrantKey, Todo[]> = {
+		do: [],
+		schedule: [],
+		delegate: [],
+		eliminate: [],
+	};
 
-		for (const todo of items.value) {
-			groups[quadrantOf(todo)].push(todo);
-		}
+	for (const todo of items.value) {
+		groups[quadrantOf(todo)].push(todo);
+	}
 
-		return groups;
-	});
+	return groups;
+});
 ```
 
 И добавь `quadrants` в объект, возвращаемый из `defineStore`.
@@ -2236,10 +2278,12 @@ git commit -m "feat: add eisenhower quadrant grouping to the store"
 ## Task 13: Страница матрицы
 
 **Files:**
+
 - Create: `src/components/TodoQuadrant.vue`
 - Modify: `src/views/MatrixView.vue`
 
 **Interfaces:**
+
 - Consumes: `useTodosStore`, `QuadrantKey`, `QUADRANT_KEYS`, `quadrantFlags` (Task 12); `TodoForm` (Task 9); ключи `quadrant.*`.
 - Produces: рабочую страницу матрицы. Последняя задача плана.
 
@@ -2393,6 +2437,7 @@ function openFor(quadrant: QuadrantKey): void {
 
 Run: `npm run dev`
 Expected:
+
 - страница матрицы показывает четыре карточки в сетке 2×2, каждая своего цвета, пустые подписаны «Пусто»;
 - дела, заведённые на странице списка, лежат в квадрантах согласно флагам;
 - «плюс» в квадранте «Сделать» открывает форму с уже включёнными переключателями важности и срочности; сохранённое дело появляется в этом же квадранте;
