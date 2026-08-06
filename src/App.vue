@@ -10,12 +10,17 @@
 			<template #append>
 				<v-btn :icon="themeIcon" aria-label="Toggle theme" @click="toggleTheme" />
 			</template>
+
+			<template #extension>
+				<v-tabs>
+					<v-tab :to="{ name: 'list' }">List</v-tab>
+					<v-tab :to="{ name: 'matrix' }">Matrix</v-tab>
+				</v-tabs>
+			</template>
 		</v-app-bar>
 
 		<v-main :class="$style.main">
-			<v-container>
-				<v-btn color="primary">Vuetify works</v-btn>
-			</v-container>
+			<router-view />
 		</v-main>
 	</v-app>
 </template>
