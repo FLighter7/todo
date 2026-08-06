@@ -134,6 +134,7 @@ describe('useTodosStore', () => {
 				throw new Error('quota exceeded');
 			},
 			async remove() {},
+			async clear() {},
 		};
 		const store = useTodosStore();
 		await store.load(async () => failing);
@@ -154,6 +155,50 @@ describe('useTodosStore', () => {
 		store.dismissError();
 
 		expect(store.lastError).toBeNull();
+	});
+});
+
+describe('useTodosStore replaceAll', () => {
+	it('replaces the list in memory and in storage', async () => {
+		const storage = createInMemoryStorage([makeTodo({ id: 'old' })]);
+		const store = useTodosStore();
+		await store.load(async () => storage);
+
+		await store.replaceAll([makeTodo({ id: 'new-1' }), makeTodo({ id: 'new-2' })]);
+
+		expect(store.items.map((t) => t.id)).toEqual(['new-1', 'new-2']);
+		const stored = await storage.getAll();
+		expect(stored.map((t) => t.id).sort()).toEqual(['new-1', 'new-2']);
+	});
+
+	it('can replace the list with nothing', async () => {
+		const storage = createInMemoryStorage([makeTodo()]);
+		const store = useTodosStore();
+		await store.load(async () => storage);
+
+		await store.replaceAll([]);
+
+		expect(store.items).toEqual([]);
+		await expect(storage.getAll()).resolves.toEqual([]);
+	});
+
+	it('reports a write failure instead of throwing', async () => {
+		const failing: TodoStorage = {
+			async getAll() {
+				return [];
+			},
+			async put() {
+				throw new Error('quota exceeded');
+			},
+			async remove() {},
+			async clear() {},
+		};
+		const store = useTodosStore();
+		await store.load(async () => failing);
+
+		await store.replaceAll([makeTodo()]);
+
+		expect(store.lastError).toBe('storage.writeFailed');
 	});
 });
 

@@ -74,4 +74,12 @@ describe('createInMemoryStorage', () => {
 
 		await expect(storage.getAll()).resolves.toHaveLength(1);
 	});
+
+	it('clears every item', async () => {
+		const storage = createInMemoryStorage([makeTodo(), makeTodo({ id: 'id-2' })]);
+
+		await storage.clear();
+
+		await expect(storage.getAll()).resolves.toEqual([]);
+	});
 });

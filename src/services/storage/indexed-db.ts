@@ -50,5 +50,8 @@ export async function createIndexedDbStorage(): Promise<TodoStorage> {
 		async remove(id) {
 			await database.delete(STORE_NAME, id);
 		},
+		async clear() {
+			await database.clear(STORE_NAME);
+		},
 	};
 }

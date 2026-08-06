@@ -58,6 +58,16 @@ describe('createIndexedDbStorage', () => {
 		await expect(storage.getAll()).resolves.toEqual([]);
 	});
 
+	it('clears every item', async () => {
+		const storage = await createIndexedDbStorage();
+		await storage.put(makeTodo());
+		await storage.put(makeTodo({ id: 'id-2' }));
+
+		await storage.clear();
+
+		await expect(storage.getAll()).resolves.toEqual([]);
+	});
+
 	it('throws StorageUnavailableError when indexedDB is missing', async () => {
 		const original = globalThis.indexedDB;
 		// @ts-expect-error deliberately removing the global to simulate a browser without IndexedDB

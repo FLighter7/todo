@@ -14,5 +14,8 @@ export function createInMemoryStorage(seed: Todo[] = []): TodoStorage {
 		async remove(id) {
 			items.delete(id);
 		},
+		async clear() {
+			items.clear();
+		},
 	};
 }

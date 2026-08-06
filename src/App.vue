@@ -10,6 +10,7 @@
 			<template #append>
 				<v-btn :icon="themeIcon" :aria-label="t('app.toggleTheme')" @click="toggleTheme" />
 				<v-btn :icon="mdiTranslate" :aria-label="t('app.toggleLanguage')" @click="toggleLanguage" />
+				<backup-menu @notify="notice = $event" />
 			</template>
 
 			<template #extension>
@@ -31,23 +32,19 @@
 
 			<router-view />
 
-			<v-snackbar
-				:model-value="store.lastError !== null"
-				color="error"
-				timeout="5000"
-				@update:model-value="store.dismissError()"
-			>
-				{{ store.lastError === null ? '' : t(store.lastError) }}
+			<v-snackbar v-model="snackbarOpen" :color="snackbarColor" timeout="5000">
+				{{ snackbarText }}
 			</v-snackbar>
 		</v-main>
 	</v-app>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useLocale, useTheme } from 'vuetify';
 import { mdiTranslate, mdiWeatherNight, mdiWeatherSunny } from '@mdi/js';
+import BackupMenu from '@/components/BackupMenu.vue';
 import { persistTheme } from '@/plugins/vuetify';
 import { setLocale } from '@/i18n';
 import { requestPersistentStorage } from '@/services/storage/persistence';
@@ -57,6 +54,8 @@ const { t, locale } = useI18n();
 const theme = useTheme();
 const vuetifyLocale = useLocale();
 const store = useTodosStore();
+
+const notice = ref('');
 
 onMounted(() => {
 	void store.load();
@@ -71,6 +70,22 @@ watch(locale, (value) => {
 const themeIcon = computed(() =>
 	theme.global.name.value === 'dark' ? mdiWeatherNight : mdiWeatherSunny,
 );
+
+// One snackbar for both kinds of message: store errors carry an i18n key,
+// everything else arrives already translated.
+const snackbarText = computed(() => (store.lastError === null ? notice.value : t(store.lastError)));
+
+const snackbarColor = computed(() => (store.lastError === null ? undefined : 'error'));
+
+const snackbarOpen = computed({
+	get: () => snackbarText.value !== '',
+	set: (open: boolean) => {
+		if (!open) {
+			store.dismissError();
+			notice.value = '';
+		}
+	},
+});
 
 function toggleTheme(): void {
 	const next = theme.global.name.value === 'dark' ? 'light' : 'dark';

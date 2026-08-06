@@ -108,6 +108,21 @@ export const useTodosStore = defineStore('todos', () => {
 		await persist(() => storage.remove(id));
 	}
 
+	/** Replaces the whole list, e.g. when restoring a backup file. */
+	async function replaceAll(todos: Todo[]): Promise<void> {
+		// Keep plain copies to write: reading them back out of items.value would
+		// yield Vue's reactive proxies, which IndexedDB cannot structured-clone.
+		const copies = todos.map((todo) => ({ ...todo }));
+		items.value = copies;
+
+		await persist(async () => {
+			await storage.clear();
+			for (const todo of copies) {
+				await storage.put(todo);
+			}
+		});
+	}
+
 	function dismissError(): void {
 		lastError.value = null;
 	}
@@ -138,6 +153,7 @@ export const useTodosStore = defineStore('todos', () => {
 		update,
 		toggleDone,
 		remove,
+		replaceAll,
 		dismissError,
 	};
 });
