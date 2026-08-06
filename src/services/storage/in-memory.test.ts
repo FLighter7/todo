@@ -7,10 +7,12 @@ function makeTodo(overrides: Partial<Todo> = {}): Todo {
 		id: 'id-1',
 		title: 'Buy milk',
 		created: '2026-08-06T10:00:00.000Z',
+		updated: '2026-08-06T10:00:00.000Z',
 		period: 'one-time',
 		important: false,
 		urgent: false,
 		done: false,
+		deleted: false,
 		...overrides,
 	};
 }

@@ -3,7 +3,7 @@ import type { Todo } from '@/types/todo';
 import { StorageUnavailableError, type TodoStorage } from './types';
 
 const DB_NAME = 'todo';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'todos';
 
 interface TodoDbSchema extends DBSchema {
@@ -20,9 +20,27 @@ async function open(): Promise<IDBPDatabase<TodoDbSchema>> {
 
 	try {
 		const database = await openDB<TodoDbSchema>(DB_NAME, DB_VERSION, {
-			upgrade(db) {
+			upgrade(db, oldVersion, _newVersion, transaction) {
 				if (!db.objectStoreNames.contains(STORE_NAME)) {
 					db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+				}
+
+				if (oldVersion > 0 && oldVersion < 2) {
+					// Records written before sync existed have no updated/deleted.
+					// updated takes created rather than "now": as far as this app
+					// knows the record never changed, and stamping the present
+					// would hand it an undeserved win in the first merge.
+					const store = transaction.objectStore(STORE_NAME);
+					void store.openCursor().then(async function patch(cursor) {
+						if (!cursor) return;
+						const record = cursor.value as Partial<Todo> & { id: string };
+						await cursor.update({
+							...record,
+							updated: record.updated ?? record.created ?? new Date(0).toISOString(),
+							deleted: record.deleted ?? false,
+						} as Todo);
+						return patch(await cursor.continue());
+					});
 				}
 			},
 		});

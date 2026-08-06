@@ -27,10 +27,12 @@ function makeTodo(overrides: Partial<Todo> = {}): Todo {
 		id: 'seeded',
 		title: 'Seeded task',
 		created: '2026-08-06T10:00:00.000Z',
+		updated: '2026-08-06T10:00:00.000Z',
 		period: 'one-time',
 		important: false,
 		urgent: false,
 		done: false,
+		deleted: false,
 		...overrides,
 	};
 }
@@ -114,7 +116,7 @@ describe('useTodosStore', () => {
 		expect(store.items[0].done).toBe(false);
 	});
 
-	it('removes a task from memory and from storage', async () => {
+	it('hides a removed task but keeps it as a tombstone', async () => {
 		const storage = createInMemoryStorage([makeTodo()]);
 		const store = useTodosStore();
 		await store.load(async () => storage);
@@ -122,7 +124,59 @@ describe('useTodosStore', () => {
 		await store.remove('seeded');
 
 		expect(store.items).toEqual([]);
-		await expect(storage.getAll()).resolves.toEqual([]);
+		expect(store.records).toHaveLength(1);
+		expect(store.records[0].deleted).toBe(true);
+	});
+
+	it('writes the tombstone through to storage instead of erasing the row', async () => {
+		const storage = createInMemoryStorage([makeTodo()]);
+		const store = useTodosStore();
+		await store.load(async () => storage);
+
+		await store.remove('seeded');
+
+		const stored = await storage.getAll();
+		expect(stored).toHaveLength(1);
+		expect(stored[0].deleted).toBe(true);
+	});
+
+	it('hides tombstones loaded from storage', async () => {
+		const store = useTodosStore();
+		await store.load(async () =>
+			createInMemoryStorage([makeTodo({ id: 'alive' }), makeTodo({ id: 'gone', deleted: true })]),
+		);
+
+		expect(store.items.map((t) => t.id)).toEqual(['alive']);
+		expect(store.records).toHaveLength(2);
+	});
+
+	it('moves the updated timestamp on every change', async () => {
+		const store = useTodosStore();
+		await store.load(async () => createInMemoryStorage([makeTodo()]));
+		const before = store.records[0].updated;
+
+		await store.update('seeded', { title: 'Renamed' });
+
+		expect(Date.parse(store.records[0].updated)).toBeGreaterThan(Date.parse(before));
+	});
+
+	it('stamps created and updated alike on a new task', async () => {
+		const store = useTodosStore();
+		await store.load(async () => createInMemoryStorage());
+
+		const created = await store.add(makeDraft());
+
+		expect(created.updated).toBe(created.created);
+		expect(created.deleted).toBe(false);
+	});
+
+	it('ignores toggling a task that is already deleted', async () => {
+		const store = useTodosStore();
+		await store.load(async () => createInMemoryStorage([makeTodo({ deleted: true })]));
+
+		await store.toggleDone('seeded');
+
+		expect(store.records[0].done).toBe(false);
 	});
 
 	it('reports a write failure without losing the in-memory change', async () => {
