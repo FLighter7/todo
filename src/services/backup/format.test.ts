@@ -7,10 +7,12 @@ function makeTodo(overrides: Partial<Todo> = {}): Todo {
 		id: 'id-1',
 		title: 'Buy milk',
 		created: '2026-08-06T10:00:00.000Z',
+		updated: '2026-08-06T10:00:00.000Z',
 		period: 'one-time',
 		important: false,
 		urgent: false,
 		done: false,
+		deleted: false,
 		...overrides,
 	};
 }
@@ -99,6 +101,29 @@ describe('parseBackup', () => {
 		expect(() => parseBackup(serialize({ version: 1, exportedAt: 'x', todos: [todo] }))).toThrow(
 			BackupFormatError,
 		);
+	});
+
+	it('reads a version 1 file and fills in the sync fields', () => {
+		const legacy = {
+			id: 'old-1',
+			title: 'Written before sync existed',
+			created: '2026-07-01T09:00:00.000Z',
+			period: 'one-time',
+			important: true,
+			urgent: false,
+			done: false,
+		};
+
+		const parsed = parseBackup(serialize({ version: 1, exportedAt: 'x', todos: [legacy] }));
+
+		expect(parsed.todos[0].updated).toBe(legacy.created);
+		expect(parsed.todos[0].deleted).toBe(false);
+	});
+
+	it('keeps tombstones from a version 2 file', () => {
+		const text = serialize(createBackup([makeTodo({ deleted: true })]));
+
+		expect(parseBackup(text).todos[0].deleted).toBe(true);
 	});
 
 	it('rejects a non-object entry inside todos', () => {

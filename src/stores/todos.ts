@@ -35,10 +35,14 @@ export function quadrantFlags(key: QuadrantKey): { important: boolean; urgent: b
 type StorageFactory = () => Promise<TodoStorage>;
 
 export const useTodosStore = defineStore('todos', () => {
-	const items = ref<Todo[]>([]);
+	/** Everything in storage, tombstones included. Sync needs those. */
+	const records = ref<Todo[]>([]);
 	const loading = ref(false);
 	const persistent = ref(true);
 	const lastError = ref<string | null>(null);
+
+	/** What the user sees. Views never deal with tombstones. */
+	const items = computed(() => records.value.filter((todo) => !todo.deleted));
 
 	let storage: TodoStorage = createInMemoryStorage();
 
@@ -61,51 +65,62 @@ export const useTodosStore = defineStore('todos', () => {
 			persistent.value = false;
 		}
 
-		items.value = await storage.getAll();
+		records.value = await storage.getAll();
 		loading.value = false;
 	}
 
 	async function add(draft: TodoDraft): Promise<Todo> {
+		const now = new Date().toISOString();
 		const todo: Todo = {
 			id: crypto.randomUUID(),
 			title: draft.title,
 			note: draft.note,
-			created: new Date().toISOString(),
+			created: now,
+			updated: now,
 			period: draft.period,
 			important: draft.important,
 			urgent: draft.urgent,
 			done: false,
+			deleted: false,
 		};
 
-		items.value.push(todo);
+		records.value.push(todo);
 		await persist(() => storage.put(todo));
 
 		return todo;
 	}
 
 	async function update(id: string, patch: Partial<Omit<Todo, 'id'>>): Promise<void> {
-		const index = items.value.findIndex((item) => item.id === id);
+		const index = records.value.findIndex((item) => item.id === id);
 		if (index === -1) {
 			return;
 		}
 
-		const updated: Todo = { ...items.value[index], ...patch };
-		items.value[index] = updated;
+		const updated: Todo = {
+			...records.value[index],
+			...patch,
+			updated: new Date().toISOString(),
+		};
+		records.value[index] = updated;
 		await persist(() => storage.put(updated));
 	}
 
 	async function toggleDone(id: string): Promise<void> {
-		const todo = items.value.find((item) => item.id === id);
-		if (!todo) {
+		const todo = records.value.find((item) => item.id === id);
+		if (!todo || todo.deleted) {
 			return;
 		}
 
 		await update(id, { done: !todo.done });
 	}
 
+	/**
+	 * Soft delete. The record stays as a tombstone: without it a merge could
+	 * not tell "deleted here" from "not created yet", and the other device
+	 * would hand the task straight back.
+	 */
 	async function remove(id: string): Promise<void> {
-		items.value = items.value.filter((item) => item.id !== id);
-		await persist(() => storage.remove(id));
+		await update(id, { deleted: true });
 	}
 
 	/** Replaces the whole list, e.g. when restoring a backup file. */
@@ -113,7 +128,7 @@ export const useTodosStore = defineStore('todos', () => {
 		// Keep plain copies to write: reading them back out of items.value would
 		// yield Vue's reactive proxies, which IndexedDB cannot structured-clone.
 		const copies = todos.map((todo) => ({ ...todo }));
-		items.value = copies;
+		records.value = copies;
 
 		await persist(async () => {
 			await storage.clear();
@@ -143,6 +158,7 @@ export const useTodosStore = defineStore('todos', () => {
 	});
 
 	return {
+		records,
 		items,
 		loading,
 		persistent,

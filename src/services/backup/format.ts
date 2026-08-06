@@ -1,6 +1,6 @@
 import type { Todo, TodoPeriod } from '@/types/todo';
 
-export const BACKUP_VERSION = 1;
+export const BACKUP_VERSION = 2;
 
 export interface TodoBackup {
 	version: number;
@@ -49,15 +49,28 @@ function readTodo(value: unknown, index: number): Todo {
 		fail('"note" must be a string when present');
 	}
 
+	if (entry.updated !== undefined && typeof entry.updated !== 'string') {
+		fail('"updated" must be a string when present');
+	}
+
+	if (entry.deleted !== undefined && typeof entry.deleted !== 'boolean') {
+		fail('"deleted" must be true or false when present');
+	}
+
 	return {
 		id: entry.id as string,
 		title: entry.title as string,
 		note: entry.note as string | undefined,
 		created: entry.created as string,
+		// Version 1 files predate sync. Filling updated from created is honest —
+		// nothing known to this app has changed the record since it was made —
+		// and unlike stamping "now" it grants no unearned win in a merge.
+		updated: (entry.updated as string | undefined) ?? (entry.created as string),
 		period: entry.period as TodoPeriod,
 		important: entry.important as boolean,
 		urgent: entry.urgent as boolean,
 		done: entry.done as boolean,
+		deleted: (entry.deleted as boolean | undefined) ?? false,
 	};
 }
 
