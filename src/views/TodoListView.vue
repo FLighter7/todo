@@ -39,18 +39,18 @@
 			<template #[`item.period`]="{ item }">{{ t(`period.${item.period}`) }}</template>
 
 			<template #[`item.important`]="{ item }">
-				<v-icon v-if="item.important" icon="mdi-check" />
+				<v-icon v-if="item.important" :icon="mdiCheck" />
 			</template>
 
 			<template #[`item.urgent`]="{ item }">
-				<v-icon v-if="item.urgent" icon="mdi-check" />
+				<v-icon v-if="item.urgent" :icon="mdiCheck" />
 			</template>
 
 			<template #[`item.created`]="{ item }">{{ formatDate(item.created) }}</template>
 
 			<template #[`item.actions`]="{ item }">
 				<v-btn
-					icon="mdi-delete-outline"
+					:icon="mdiDeleteOutline"
 					variant="text"
 					density="comfortable"
 					:aria-label="t('todo.actions')"
@@ -61,7 +61,7 @@
 
 		<v-btn
 			:class="$style.fab"
-			icon="mdi-plus"
+			:icon="mdiPlus"
 			color="primary"
 			size="large"
 			:aria-label="t('form.add')"
@@ -81,6 +81,7 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { DataTableHeader } from 'vuetify';
+import { mdiCheck, mdiDeleteOutline, mdiPlus } from '@mdi/js';
 import TodoForm from '@/components/TodoForm.vue';
 import type { Todo } from '@/types/todo';
 import { useTodosStore, type TodoDraft } from '@/stores/todos';

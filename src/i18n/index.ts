@@ -1,6 +1,6 @@
 import { createI18n } from 'vue-i18n';
-import en from './en';
-import ru from './ru';
+import en from './locales/en.json';
+import ru from './locales/ru.json';
 
 const LOCALE_STORAGE_KEY = 'todo.locale';
 
@@ -21,9 +21,12 @@ function detectLocale(): AppLocale {
 	return navigator.language.startsWith('ru') ? 'ru' : 'en';
 }
 
+/** Resolved once at startup so Vuetify can start on the same locale as the app. */
+export const initialLocale = detectLocale();
+
 export const i18n = createI18n({
 	legacy: false,
-	locale: detectLocale(),
+	locale: initialLocale,
 	fallbackLocale: 'en',
 	messages: { en, ru },
 });
