@@ -1,7 +1,11 @@
 <template>
 	<v-container>
-		<h1 class="text-h5">List</h1>
+		<h1 class="text-h5">{{ t('nav.list') }}</h1>
 	</v-container>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+</script>

@@ -1,7 +1,11 @@
 <template>
 	<v-container>
-		<h1 class="text-h5">Matrix</h1>
+		<h1 class="text-h5">{{ t('nav.matrix') }}</h1>
 	</v-container>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+</script>
