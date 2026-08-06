@@ -23,7 +23,7 @@
 			<span class="text-subtitle-1">{{ t(`quadrant.${quadrant}`) }}</span>
 			<v-spacer />
 			<v-btn
-				icon="mdi-plus"
+				:icon="mdiPlus"
 				variant="text"
 				density="comfortable"
 				:aria-label="t('form.add')"
@@ -53,6 +53,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
+import { mdiPlus } from '@mdi/js';
 import type { Todo } from '@/types/todo';
 import type { QuadrantKey } from '@/stores/todos';
 

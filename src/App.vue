@@ -9,7 +9,7 @@
 		<v-app-bar :title="t('app.title')" density="comfortable">
 			<template #append>
 				<v-btn :icon="themeIcon" :aria-label="t('app.toggleTheme')" @click="toggleTheme" />
-				<v-btn icon="mdi-translate" :aria-label="t('app.toggleLanguage')" @click="toggleLanguage" />
+				<v-btn :icon="mdiTranslate" :aria-label="t('app.toggleLanguage')" @click="toggleLanguage" />
 			</template>
 
 			<template #extension>
@@ -44,23 +44,30 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useTheme } from 'vuetify';
+import { useLocale, useTheme } from 'vuetify';
+import { mdiTranslate, mdiWeatherNight, mdiWeatherSunny } from '@mdi/js';
 import { persistTheme } from '@/plugins/vuetify';
 import { setLocale } from '@/i18n';
 import { useTodosStore } from '@/stores/todos';
 
 const { t, locale } = useI18n();
 const theme = useTheme();
+const vuetifyLocale = useLocale();
 const store = useTodosStore();
 
 onMounted(() => {
 	void store.load();
 });
 
+// Vuetify keeps its own locale for built-in strings, so it has to follow ours.
+watch(locale, (value) => {
+	vuetifyLocale.current.value = value;
+});
+
 const themeIcon = computed(() =>
-	theme.global.name.value === 'dark' ? 'mdi-weather-night' : 'mdi-weather-sunny',
+	theme.global.name.value === 'dark' ? mdiWeatherNight : mdiWeatherSunny,
 );
 
 function toggleTheme(): void {
