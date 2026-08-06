@@ -21,7 +21,24 @@
 		</v-app-bar>
 
 		<v-main :class="$style.main">
+			<v-alert
+				v-if="!store.persistent"
+				type="warning"
+				variant="tonal"
+				class="ma-4"
+				:text="t('storage.unavailable')"
+			/>
+
 			<router-view />
+
+			<v-snackbar
+				:model-value="store.lastError !== null"
+				color="error"
+				timeout="5000"
+				@update:model-value="store.dismissError()"
+			>
+				{{ store.lastError === null ? '' : t(store.lastError) }}
+			</v-snackbar>
 		</v-main>
 	</v-app>
 </template>
