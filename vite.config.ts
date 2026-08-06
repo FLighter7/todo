@@ -5,6 +5,8 @@ import vuetify from 'vite-plugin-vuetify';
 import vueI18n from '@intlify/unplugin-vue-i18n/vite';
 
 export default defineConfig({
+	// GitHub Pages serves a project repository from a sub-path.
+	base: '/todo/',
 	plugins: [
 		vue(),
 		vuetify({ autoImport: true }),
