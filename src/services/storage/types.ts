@@ -4,6 +4,7 @@ export interface TodoStorage {
 	getAll(): Promise<Todo[]>;
 	put(todo: Todo): Promise<void>;
 	remove(id: string): Promise<void>;
+	clear(): Promise<void>;
 }
 
 export class StorageUnavailableError extends Error {

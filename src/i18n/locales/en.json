@@ -36,6 +36,18 @@
 	"list": {
 		"empty": "No tasks yet. Add the first one."
 	},
+	"backup": {
+		"menu": "Backup",
+		"export": "Export to a file",
+		"import": "Restore from a file",
+		"confirmTitle": "Replace all tasks?",
+		"confirmBody": "Tasks in the file: {incoming}. Tasks to be deleted: {current}. This cannot be undone.",
+		"exportedAt": "File created: {date}",
+		"replace": "Replace",
+		"restored": "Restored from the file. Tasks: {count}.",
+		"exported": "Backup saved.",
+		"invalid": "Could not read the file: {reason}"
+	},
 	"quadrant": {
 		"do": "Do",
 		"schedule": "Schedule",
