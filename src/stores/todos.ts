@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import type { Todo, TodoPeriod } from '@/types/todo';
 import type { TodoStorage } from '@/services/storage/types';
@@ -11,6 +11,25 @@ export interface TodoDraft {
 	period: TodoPeriod;
 	important: boolean;
 	urgent: boolean;
+}
+
+export type QuadrantKey = 'do' | 'schedule' | 'delegate' | 'eliminate';
+
+export const QUADRANT_KEYS: readonly QuadrantKey[] = ['do', 'schedule', 'delegate', 'eliminate'];
+
+export function quadrantOf(todo: Todo): QuadrantKey {
+	if (todo.important) {
+		return todo.urgent ? 'do' : 'schedule';
+	}
+
+	return todo.urgent ? 'delegate' : 'eliminate';
+}
+
+export function quadrantFlags(key: QuadrantKey): { important: boolean; urgent: boolean } {
+	return {
+		important: key === 'do' || key === 'schedule',
+		urgent: key === 'do' || key === 'delegate',
+	};
 }
 
 type StorageFactory = () => Promise<TodoStorage>;
@@ -93,11 +112,27 @@ export const useTodosStore = defineStore('todos', () => {
 		lastError.value = null;
 	}
 
+	const quadrants = computed<Record<QuadrantKey, Todo[]>>(() => {
+		const groups: Record<QuadrantKey, Todo[]> = {
+			do: [],
+			schedule: [],
+			delegate: [],
+			eliminate: [],
+		};
+
+		for (const todo of items.value) {
+			groups[quadrantOf(todo)].push(todo);
+		}
+
+		return groups;
+	});
+
 	return {
 		items,
 		loading,
 		persistent,
 		lastError,
+		quadrants,
 		load,
 		add,
 		update,

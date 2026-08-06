@@ -4,7 +4,13 @@ import type { Todo } from '@/types/todo';
 import type { TodoStorage } from '@/services/storage/types';
 import { StorageUnavailableError } from '@/services/storage/types';
 import { createInMemoryStorage } from '@/services/storage/in-memory';
-import { useTodosStore, type TodoDraft } from './todos';
+import {
+	quadrantFlags,
+	quadrantOf,
+	useTodosStore,
+	type QuadrantKey,
+	type TodoDraft,
+} from './todos';
 
 function makeDraft(overrides: Partial<TodoDraft> = {}): TodoDraft {
 	return {
@@ -148,5 +154,77 @@ describe('useTodosStore', () => {
 		store.dismissError();
 
 		expect(store.lastError).toBeNull();
+	});
+});
+
+describe('quadrantOf', () => {
+	it('maps important and urgent to do', () => {
+		expect(quadrantOf(makeTodo({ important: true, urgent: true }))).toBe('do');
+	});
+
+	it('maps important and not urgent to schedule', () => {
+		expect(quadrantOf(makeTodo({ important: true, urgent: false }))).toBe('schedule');
+	});
+
+	it('maps not important and urgent to delegate', () => {
+		expect(quadrantOf(makeTodo({ important: false, urgent: true }))).toBe('delegate');
+	});
+
+	it('maps not important and not urgent to eliminate', () => {
+		expect(quadrantOf(makeTodo({ important: false, urgent: false }))).toBe('eliminate');
+	});
+});
+
+describe('quadrantFlags', () => {
+	it('is the inverse of quadrantOf for every quadrant', () => {
+		const keys: QuadrantKey[] = ['do', 'schedule', 'delegate', 'eliminate'];
+
+		for (const key of keys) {
+			expect(quadrantOf(makeTodo(quadrantFlags(key)))).toBe(key);
+		}
+	});
+});
+
+describe('useTodosStore quadrants', () => {
+	it('exposes all four quadrants even when empty', async () => {
+		const store = useTodosStore();
+		await store.load(async () => createInMemoryStorage());
+
+		expect(Object.keys(store.quadrants).sort()).toEqual([
+			'delegate',
+			'do',
+			'eliminate',
+			'schedule',
+		]);
+	});
+
+	it('groups every task into its quadrant', async () => {
+		const store = useTodosStore();
+		await store.load(async () =>
+			createInMemoryStorage([
+				makeTodo({ id: 'a', important: true, urgent: true }),
+				makeTodo({ id: 'b', important: true, urgent: false }),
+				makeTodo({ id: 'c', important: false, urgent: true }),
+				makeTodo({ id: 'd', important: false, urgent: false }),
+				makeTodo({ id: 'e', important: true, urgent: true }),
+			]),
+		);
+
+		expect(store.quadrants.do.map((todo) => todo.id)).toEqual(['a', 'e']);
+		expect(store.quadrants.schedule.map((todo) => todo.id)).toEqual(['b']);
+		expect(store.quadrants.delegate.map((todo) => todo.id)).toEqual(['c']);
+		expect(store.quadrants.eliminate.map((todo) => todo.id)).toEqual(['d']);
+	});
+
+	it('moves a task between quadrants when its flags change', async () => {
+		const store = useTodosStore();
+		await store.load(async () =>
+			createInMemoryStorage([makeTodo({ id: 'a', important: false, urgent: false })]),
+		);
+
+		await store.update('a', { important: true, urgent: true });
+
+		expect(store.quadrants.eliminate).toEqual([]);
+		expect(store.quadrants.do).toHaveLength(1);
 	});
 });
