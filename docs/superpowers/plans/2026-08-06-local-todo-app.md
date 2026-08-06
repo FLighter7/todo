@@ -1268,13 +1268,19 @@ async function open(): Promise<IDBPDatabase<TodoDbSchema>> {
 	}
 
 	try {
-		return await openDB<TodoDbSchema>(DB_NAME, DB_VERSION, {
-			upgrade(database) {
-				if (!database.objectStoreNames.contains(STORE_NAME)) {
-					database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+		const database = await openDB<TodoDbSchema>(DB_NAME, DB_VERSION, {
+			upgrade(db) {
+				if (!db.objectStoreNames.contains(STORE_NAME)) {
+					db.createObjectStore(STORE_NAME, { keyPath: 'id' });
 				}
 			},
 		});
+
+		// Another tab upgrading or deleting the database stays blocked until every
+		// other connection closes, so release ours as soon as it asks.
+		database.addEventListener('versionchange', () => database.close());
+
+		return database;
 	} catch (error) {
 		throw new StorageUnavailableError(error);
 	}
@@ -1297,7 +1303,11 @@ export async function createIndexedDbStorage(): Promise<TodoStorage> {
 }
 ```
 
+Два момента, которые легко упустить.
+
 Проверка `typeof indexedDB === 'undefined'` нужна отдельно от `try`: в Safari при жёстких настройках приватности объект отсутствует целиком, и обращение к нему бросит `ReferenceError`, а не отвергнутый промис.
+
+Подписка на `versionchange` обязательна. Открытое соединение блокирует и удаление базы, и переход на новую версию схемы: запрос просто повисает, пока соединение не закроют. В браузере это выстрелит при двух открытых вкладках, а в тестах — на `deleteDB` в `afterEach` (все тесты уйдут в таймаут).
 
 - [ ] **Step 5: Запустить тесты**
 

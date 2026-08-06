@@ -15,6 +15,7 @@
 	},
 	"dependencies": {
 		"@mdi/font": "^7.4.47",
+		"idb": "^8.0.3",
 		"vue": "^3.5.41",
 		"vue-i18n": "^11.4.8",
 		"vue-router": "^5.2.0",
@@ -28,6 +29,7 @@
 		"@vue/eslint-config-typescript": "^14.9.0",
 		"eslint": "^10.8.0",
 		"eslint-plugin-vue": "^10.10.0",
+		"fake-indexeddb": "^6.2.5",
 		"globals": "^16.5.0",
 		"prettier": "^3.9.6",
 		"sass-embedded": "^1.100.0",
