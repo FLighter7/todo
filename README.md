@@ -1,81 +1,81 @@
 # Todo
 
-Список дел с матрицей Эйзенхауэра. Приложение для личного пользования: без бэкенда, всё хранится в браузере, работает на десктопе и на телефоне.
+A todo list with an Eisenhower matrix. Built for personal use: no backend, everything is stored in the browser, works on desktop and phone.
 
-## Команды
+## Commands
 
-| Команда                 | Что делает                                             |
-| ----------------------- | ------------------------------------------------------ |
-| `npm install`           | Установить зависимости                                 |
-| `npm run dev`           | Дев-сервер с горячей перезагрузкой                     |
-| `npm run dev -- --host` | То же, но доступно с других устройств в локальной сети |
-| `npm run build`         | Проверка типов и продакшен-сборка в `dist/`            |
-| `npm run preview`       | Отдать собранное приложение локально                   |
-| `npm test`              | Юнит-тесты                                             |
-| `npm run lint`          | ESLint                                                 |
-| `npm run format`        | Prettier                                               |
+| Command                 | What it does                                          |
+| ----------------------- | ----------------------------------------------------- |
+| `npm install`           | Install dependencies                                  |
+| `npm run dev`           | Dev server with hot reload                            |
+| `npm run dev -- --host` | The same, reachable from other devices on the network |
+| `npm run build`         | Type check and production build into `dist/`          |
+| `npm run preview`       | Serve the built app locally                           |
+| `npm test`              | Unit tests                                            |
+| `npm run lint`          | ESLint                                                |
+| `npm run format`        | Prettier                                              |
 
-## Где лежат данные и когда они пропадают
+## Where the data lives and when it disappears
 
-Задачи хранятся в **IndexedDB** того браузера, где открыто приложение. Не в облаке и не в файле: на другом устройстве будет свой, независимый список. Синхронизация между устройствами — отдельный этап, её пока нет.
+Tasks are stored in the **IndexedDB** of whichever browser the app is open in. Not in the cloud and not in a file: another device keeps its own independent list, and bringing the two together is what the sync tab is for.
 
-Про сохранность данных есть три вещи, которые важно знать заранее.
+Three things about durability are worth knowing up front.
 
-**Safari удаляет данные сайта после 7 дней без посещений.** Это касается IndexedDB, localStorage и регистрации сервис-воркера. Если открывать приложение во вкладке Safari и не заходить неделю, задачи пропадут. У веб-приложений, добавленных **на домашний экран**, отдельный счётчик, и это правило на них не распространяется — поэтому на iPhone приложение нужно именно устанавливать, а не держать вкладкой. Подробности в [записи WebKit об изменениях политики хранения](https://webkit.org/blog/14403/updates-to-storage-policy/).
+**Safari deletes site data after 7 days without a visit.** This covers IndexedDB, localStorage and the service worker registration. Open the app in a Safari tab, stay away for a week, and the tasks are gone. Web apps added to the **home screen** are counted separately and the rule does not apply to them — which is why on iPhone the app should be installed rather than kept as a tab. Details are in [WebKit's post on storage policy changes](https://webkit.org/blog/14403/updates-to-storage-policy/).
 
-**По умолчанию хранилище работает в режиме «по возможности».** Браузер вправе вычистить его при нехватке места на устройстве. Приложение запрашивает постоянный режим через `navigator.storage.persist()`, но решение остаётся за браузером: Chrome обычно соглашается для установленных приложений, Safari — при добавлении на домашний экран.
+**By default storage is best-effort.** The browser may clear it when the device runs low on space. The app asks for persistent mode through `navigator.storage.persist()`, but the decision stays with the browser: Chrome usually grants it to installed apps, Safari when the app is added to the home screen.
 
-**Резервную копию нужно делать руками.** В шапке есть меню с двумя действиями: сохранить все дела в JSON-файл и восстановить их из файла. Автоматических копий нет, так что при сколько-нибудь ценном списке имеет смысл сохранять файл время от времени.
+**Backups are manual.** The menu in the app bar has two actions: save every task to a JSON file, and restore them from one. There are no automatic copies, so once the list is worth anything it is worth exporting a file now and then.
 
-Восстановление **заменяет** весь список содержимым файла, а не дополняет его, поэтому перед заменой показывается подтверждение со счётчиками. Испорченный файл список не тронет: приложение сначала полностью проверяет содержимое и только потом что-то записывает.
+Restoring **replaces** the whole list with the contents of the file rather than adding to it, so a confirmation with counts appears first. A damaged file cannot hurt the list: the app validates the contents completely before it writes anything.
 
-**Удалённые дела не стираются физически.** Вместо записи остаётся пометка об удалении: без неё синхронизация между устройствами возвращала бы удалённое обратно, потому что «удалено здесь» и «ещё не создано» выглядели бы одинаково. Из списка такие дела пропадают, но в базе и в файле резервной копии остаются. Если это важно — учитывай при удалении чего-то чувствительного.
+**Deleted tasks are not physically erased.** A deletion marker stays behind instead: without it sync would bring deleted tasks back, because "deleted here" and "not created yet" would look identical. Such tasks disappear from the list but remain in the database and in backup files. Worth keeping in mind when deleting something sensitive.
 
-## Синхронизация между устройствами
+## Syncing between devices
 
-Вкладка «Синхронизация» связывает два устройства напрямую по WebRTC. Сервера нет: данные идут между устройствами и никуда больше.
+The Sync tab connects two devices directly over WebRTC. There is no server: the data travels between the devices and nowhere else.
 
-Порядок такой. На первом устройстве нажми «Начать с этого устройства» — появится QR-код. На втором выбери «Присоединиться к другому» и считай этот код камерой; второе устройство покажет ответный код, который нужно считать первым. После этого списки объединяются в обе стороны.
+It goes like this. On the first device press "Start on this device" — a QR code appears. On the second choose "Join another device" and scan that code; the second device then shows a reply code for the first one to scan. After that both lists are merged in both directions.
 
-**Оба устройства должны быть в одной сети.** Соединение устанавливается напрямую по локальной сети, без STUN и TURN, и через интернет работать не будет. Адрес в коде — mDNS-имя вида `xxxxx.local`, поэтому в сетях, где multicast DNS заблокирован или включена изоляция клиентов (типично для гостевого Wi-Fi), соединение не установится.
+**Both devices must be on the same network.** The connection is made directly over the local network, without STUN or TURN, and will not work across the internet. The address inside the code is an mDNS name of the form `xxxxx.local`, so on networks where multicast DNS is blocked or client isolation is on — typical of guest Wi-Fi — the connection will not come up.
 
-**Камера нужна не всегда.** Под каждым кодом есть кнопка копирования, а под сканером — поле для вставки. Для связки «телефон ↔ компьютер без веб-камеры» это основной способ: код короткий, около 300 символов.
+**A camera is not always needed.** Every code has a copy button underneath, and the scanner has a paste field. For a phone paired with a computer that has no webcam this is the main path: the code is short, around 300 characters.
 
-При слиянии для каждой задачи побеждает та версия, которую изменили позже. Удаление — тоже изменение, поэтому удалённое на одном устройстве удалится и на втором, если только на втором его не отредактировали ещё позже.
+When merging, the version edited later wins for each task. Deletion counts as an edit, so a task deleted on one device is deleted on the other too — unless the other device edited it even later.
 
-## Установка как приложения
+## Installing as an app
 
-Приложение устанавливается на устройство и работает без сети.
+The app installs onto the device and works without a network.
 
-**На компьютере.** Открой приложение в Chrome или Edge и нажми иконку установки в адресной строке. Работает и с локального `npm run preview`, но тогда установленное приложение останется привязанным к `localhost:4173` и будет открываться только при запущенном сервере — для повседневного использования ставь с задеплоенного адреса.
+**On a computer.** Open it in Chrome or Edge and press the install icon in the address bar. This works with a local `npm run preview` as well, but the installed app then stays bound to `localhost:4173` and only opens while that server runs — for everyday use, install from a deployed address.
 
-**На телефоне.** iOS: открой в Safari, «Поделиться» → «На экран "Домой"». Android: Chrome предложит установку сам, либо меню → «Установить приложение».
+**On a phone.** iOS: open in Safari, Share → "Add to Home Screen". Android: Chrome offers the install itself, or use menu → "Install app".
 
-## Как проверить PWA локально
+## Testing the PWA locally
 
-Сервис-воркер требует «безопасного контекста». HTTPS подходит, и `http://localhost` с `http://127.0.0.1` браузеры тоже считают доверенными — специально ради разработки. Поэтому проверять всё можно локально:
+A service worker requires a secure context. HTTPS qualifies, and browsers also trust `http://localhost` and `http://127.0.0.1` — specifically for development. So all of it can be checked locally:
 
 ```bash
 npm run build
 npm run preview
 ```
 
-Открой `http://localhost:4173/todo/`. Сервис-воркер зарегистрируется, появится иконка установки, а офлайн-режим проверяется в DevTools: вкладка Application → Service Workers, либо Network → Offline, затем перезагрузка страницы.
+Open `http://localhost:4173/todo/`. The service worker registers, the install icon appears, and offline mode is checked in DevTools: Application → Service Workers, or Network → Offline followed by a reload.
 
-**А вот с телефоном так не выйдет.** `npm run dev -- --host` отдаёт адрес вида `http://192.168.1.5:5173`, и это уже небезопасный контекст: сервис-воркер не зарегистрируется, установки не будет. Варианта два — временный HTTPS-туннель (Cloudflare Tunnel, ngrok) или деплой. Флаг Chrome, разрешающий доверять небезопасному origin, на iOS отсутствует.
+**A phone will not work this way.** `npm run dev -- --host` serves an address like `http://192.168.1.5:5173`, and that is already an insecure context: the service worker will not register and there will be no install. Two options remain — a temporary HTTPS tunnel (Cloudflare Tunnel, ngrok) or a deployment. The Chrome flag for trusting an insecure origin does not exist on iOS.
 
-**Если офлайн не заработал, сначала проверь сам браузер.** Выполни в консоли:
+**If offline mode does not work, suspect the browser first.** Run this in the console:
 
 ```js
 caches.open('t' + Math.random()).then((c) => c.put('/x', new Response('hi')));
 ```
 
-Это должно молча выполниться. Если падает с `InvalidAccessError: Entry already exists` — Cache API в этой сборке браузера сломан, и дело не в приложении. Ровно так вёл себя Chrome 150.0.7871.189 при разработке этого этапа; в Edge всё работало. Проверяй в другом браузере, прежде чем искать причину в коде.
+It should complete silently. If it throws `InvalidAccessError: Entry already exists`, the Cache API in that browser build is broken and the app is not at fault. That is exactly how Chrome 150.0.7871.189 behaved while this stage was being built; Edge was fine. Try another browser before looking for the cause in the code.
 
-## Деплой
+## Deployment
 
-Приложение рассчитано на GitHub Pages и собирается с базовым путём `/todo/` — то есть адрес будет вида `https://<пользователь>.github.io/todo/`. Если хостинг будет другим, базовый путь задаётся параметром `base` в [vite.config.ts](vite.config.ts); для хостинга в корне домена достаточно `'/'`.
+The app targets GitHub Pages and builds with the base path `/todo/`, so the address will look like `https://<user>.github.io/todo/`. For different hosting the base path is the `base` option in [vite.config.ts](vite.config.ts); hosting at a domain root needs only `'/'`.
 
-## Документация
+## Documentation
 
-Проектные документы лежат в [docs/superpowers/](docs/superpowers/): спеки описывают замысел и принятые решения, планы — пошаговую реализацию.
+Project documents live in [docs/superpowers/](docs/superpowers/): specs describe the intent and the decisions behind it, plans describe the implementation step by step.

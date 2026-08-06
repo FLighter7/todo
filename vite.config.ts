@@ -26,8 +26,10 @@ export default defineConfig({
 			manifest: {
 				name: 'Todo',
 				short_name: 'Todo',
-				description: 'Личный список дел с матрицей Эйзенхауэра',
-				lang: 'ru',
+				// The manifest carries one fixed language; English matches the i18n
+				// fallback locale. It cannot follow the in-app language switch.
+				description: 'A personal todo list with an Eisenhower matrix',
+				lang: 'en',
 				// standalone is what exempts an installed app from Safari's
 				// seven-day deletion of site data. Do not weaken it to 'browser'.
 				display: 'standalone',
