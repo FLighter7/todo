@@ -48,6 +48,28 @@
 		"exported": "Backup saved.",
 		"invalid": "Could not read the file: {reason}"
 	},
+	"sync": {
+		"title": "Sync",
+		"intro": "Sync two devices over a direct connection. Both must be on the same network; nothing goes through a server.",
+		"startHere": "This device starts",
+		"joinHere": "This device joins",
+		"showingCode": "Show this code to the other device",
+		"scanTheirCode": "Now scan the code it shows back",
+		"scanInvite": "Scan the code from the other device",
+		"showAnswer": "Show this code back to the other device",
+		"scanning": "Point the camera at the code",
+		"orPaste": "No camera? Paste the code here",
+		"copy": "Copy code",
+		"copied": "Code copied.",
+		"paste": "Use this code",
+		"cameraFailed": "The camera is unavailable. Paste the code instead.",
+		"connecting": "Connecting…",
+		"waiting": "Waiting for the other device…",
+		"done": "Sync finished. Added: {added}. Updated: {updated}.",
+		"failed": "Sync failed: {reason}",
+		"restart": "Start over",
+		"cancel": "Cancel"
+	},
 	"quadrant": {
 		"do": "Do",
 		"schedule": "Schedule",
