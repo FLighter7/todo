@@ -17,7 +17,12 @@ export default defineConfig({
 		}),
 		VitePWA({
 			registerType: 'autoUpdate',
-			includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+			// The globPatterns below already match every svg and png copied from
+			// public/, so neither includeAssets nor the plugin's own manifest-icon
+			// precaching may add them again: a URL listed twice makes Workbox call
+			// cache.put on it twice, the install step rejects with "Entry already
+			// exists", and the app silently ends up with no offline mode at all.
+			includeManifestIcons: false,
 			manifest: {
 				name: 'Todo',
 				short_name: 'Todo',

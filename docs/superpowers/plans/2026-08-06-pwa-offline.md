@@ -23,10 +23,12 @@
 ## Task 1: Базовый путь и иконки
 
 **Files:**
+
 - Create: `public/favicon.svg`, `public/pwa-192.png`, `public/pwa-512.png`, `public/pwa-maskable-512.png`, `public/apple-touch-icon.png`
 - Modify: `vite.config.ts`, `index.html`
 
 **Interfaces:**
+
 - Produces: набор иконок в `public/`, доступный манифесту из Task 2; базовый путь `/todo/`.
 
 - [ ] **Step 1: Задать базовый путь**
@@ -91,9 +93,9 @@ Expected: пять файлов в `public/`, каждый непустой, р�
 В `<head>` добавить:
 
 ```html
-		<link rel="icon" type="image/svg+xml" href="/todo/favicon.svg" />
-		<link rel="apple-touch-icon" href="/todo/apple-touch-icon.png" />
-		<meta name="theme-color" content="#1867C0" />
+<link rel="icon" type="image/svg+xml" href="/todo/favicon.svg" />
+<link rel="apple-touch-icon" href="/todo/apple-touch-icon.png" />
+<meta name="theme-color" content="#1867C0" />
 ```
 
 - [ ] **Step 6: Проверить сборку**
@@ -113,9 +115,11 @@ git commit -m "chore: add app icons and set the github pages base path"
 ## Task 2: Манифест и сервис-воркер
 
 **Files:**
+
 - Modify: `vite.config.ts`, `src/main.ts`
 
 **Interfaces:**
+
 - Consumes: иконки из Task 1.
 - Produces: `dist/manifest.webmanifest`, `dist/sw.js`; регистрацию воркера при старте приложения.
 
@@ -136,7 +140,11 @@ import { VitePWA } from 'vite-plugin-pwa';
 ```ts
 		VitePWA({
 			registerType: 'autoUpdate',
-			includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+			// Не добавляй сюда includeAssets и не оставляй includeManifestIcons
+			// по умолчанию: globPatterns ниже уже забирает все svg и png, а любой
+			// URL, попавший в предзагрузку дважды, роняет установку воркера с
+			// «Entry already exists» — и офлайна не будет вовсе.
+			includeManifestIcons: false,
 			manifest: {
 				name: 'Todo',
 				short_name: 'Todo',
@@ -160,7 +168,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 				],
 			},
 			workbox: {
-				globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+				globPatterns: ['**/*.{js,css,html,svg,png}'],
 				navigateFallback: '/todo/index.html',
 				cleanupOutdatedCaches: true,
 			},
@@ -180,8 +188,17 @@ import { registerSW } from 'virtual:pwa-register';
 и вызов после `mount`:
 
 ```ts
-registerSW({ immediate: true });
+registerSW({
+	immediate: true,
+	onRegisterError(error) {
+		// No service worker means no offline mode and, on iOS, no exemption from
+		// Safari's seven-day deletion of site data. Never swallow this.
+		console.error('Service worker registration failed', error);
+	},
+});
 ```
+
+Обработчик ошибки обязателен. Без него провал регистрации уходит в тишину, и приложение молча остаётся без офлайна.
 
 - [ ] **Step 4: Объявить типы виртуального модуля**
 
@@ -218,10 +235,12 @@ git commit -m "feat: add web app manifest and offline service worker"
 ## Task 3: Постоянное хранилище
 
 **Files:**
+
 - Create: `src/services/storage/persistence.ts`, `src/services/storage/persistence.test.ts`
 - Modify: `src/App.vue`
 
 **Interfaces:**
+
 - Produces: `requestPersistentStorage(): Promise<boolean>` — запрашивает постоянный режим, возвращает результат, никогда не бросает.
 
 - [ ] **Step 1: Написать падающий тест**
@@ -391,6 +410,12 @@ Expected: все пункты проходят, ошибок в консоли �
 Если по итогам проверки менялись исходники — коммит с описанием исправления. Если нет — коммита нет.
 
 ---
+
+## Что выяснилось при выполнении
+
+**Дубликаты в списке предзагрузки ломают офлайн молча.** Один и тот же URL попадал в precache дважды: сначала из `includeAssets`, потом из `globPatterns`, а иконки — ещё и потому, что плагин по умолчанию сам добавляет иконки манифеста (`includeManifestIcons: true`). Workbox вызывает `cache.put` для обоих вхождений параллельно, установка воркера падает с `InvalidAccessError: Entry already exists`, и приложение остаётся вообще без офлайна. Коварство в том, что колбэк `onRegisteredSW` при этом рапортует об успехе: регистрация проходит, а падает более поздняя фаза установки. Лечится удалением `includeAssets` и выставлением `includeManifestIcons: false`.
+
+**Проверять офлайн нужно не в любом браузере.** В Chrome 150.0.7871.189 на этой машине Cache API нерабочий: даже `caches.open('случайное-имя').then(c => c.put('/x', new Response('hi')))` падает с той же ошибкой `Entry already exists`. Это дефект сборки браузера, а не приложения — IndexedDB там работает, квота выдаётся. Вся проверка этапа выполнена в Edge 151, где Cache API исправен. Если офлайн внезапно «не работает» — сначала проверь этот минимальный вызов в консоли, прежде чем искать причину в коде.
 
 ## Проверка результата этапа
 
