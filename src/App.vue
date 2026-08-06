@@ -27,14 +27,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useTheme } from 'vuetify';
 import { persistTheme } from '@/plugins/vuetify';
 import { setLocale } from '@/i18n';
+import { useTodosStore } from '@/stores/todos';
 
 const { t, locale } = useI18n();
 const theme = useTheme();
+const store = useTodosStore();
+
+onMounted(() => {
+	void store.load();
+});
 
 const themeIcon = computed(() =>
 	theme.global.name.value === 'dark' ? 'mdi-weather-night' : 'mdi-weather-sunny',
