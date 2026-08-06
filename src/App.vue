@@ -17,6 +17,7 @@
 				<v-tabs>
 					<v-tab :to="{ name: 'list' }">{{ t('nav.list') }}</v-tab>
 					<v-tab :to="{ name: 'matrix' }">{{ t('nav.matrix') }}</v-tab>
+					<v-tab :to="{ name: 'sync' }">{{ t('sync.title') }}</v-tab>
 				</v-tabs>
 			</template>
 		</v-app-bar>
@@ -30,7 +31,7 @@
 				:text="t('storage.unavailable')"
 			/>
 
-			<router-view />
+			<router-view @notify="notice = $event" />
 
 			<v-snackbar v-model="snackbarOpen" :color="snackbarColor" timeout="5000">
 				{{ snackbarText }}
