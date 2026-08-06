@@ -50,6 +50,7 @@ import { useLocale, useTheme } from 'vuetify';
 import { mdiTranslate, mdiWeatherNight, mdiWeatherSunny } from '@mdi/js';
 import { persistTheme } from '@/plugins/vuetify';
 import { setLocale } from '@/i18n';
+import { requestPersistentStorage } from '@/services/storage/persistence';
 import { useTodosStore } from '@/stores/todos';
 
 const { t, locale } = useI18n();
@@ -59,6 +60,7 @@ const store = useTodosStore();
 
 onMounted(() => {
 	void store.load();
+	void requestPersistentStorage();
 });
 
 // Vuetify keeps its own locale for built-in strings, so it has to follow ours.
