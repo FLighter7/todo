@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { requestPersistentStorage } from './persistence';
+import { StoragePersistence } from './StoragePersistence';
 
 const original = globalThis.navigator;
 
@@ -14,31 +14,31 @@ function stubNavigator(storage: unknown): void {
 	});
 }
 
-describe('requestPersistentStorage', () => {
+describe('StoragePersistence', () => {
 	it('returns true when the browser grants persistence', async () => {
 		stubNavigator({ persisted: async () => false, persist: async () => true });
 
-		await expect(requestPersistentStorage()).resolves.toBe(true);
+		await expect(new StoragePersistence().request()).resolves.toBe(true);
 	});
 
 	it('returns false when the browser refuses', async () => {
 		stubNavigator({ persisted: async () => false, persist: async () => false });
 
-		await expect(requestPersistentStorage()).resolves.toBe(false);
+		await expect(new StoragePersistence().request()).resolves.toBe(false);
 	});
 
 	it('does not ask again when storage is already persistent', async () => {
 		const persist = vi.fn(async () => true);
 		stubNavigator({ persisted: async () => true, persist });
 
-		await expect(requestPersistentStorage()).resolves.toBe(true);
+		await expect(new StoragePersistence().request()).resolves.toBe(true);
 		expect(persist).not.toHaveBeenCalled();
 	});
 
 	it('returns false when the api is missing', async () => {
 		stubNavigator(undefined);
 
-		await expect(requestPersistentStorage()).resolves.toBe(false);
+		await expect(new StoragePersistence().request()).resolves.toBe(false);
 	});
 
 	it('returns false instead of throwing when the api rejects', async () => {
@@ -49,6 +49,6 @@ describe('requestPersistentStorage', () => {
 			},
 		});
 
-		await expect(requestPersistentStorage()).resolves.toBe(false);
+		await expect(new StoragePersistence().request()).resolves.toBe(false);
 	});
 });

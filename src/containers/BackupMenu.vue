@@ -54,9 +54,9 @@
 import { computed, ref, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { mdiDatabaseCogOutline, mdiDownloadOutline, mdiUploadOutline } from '@mdi/js';
-import type { TodoBackup } from '@/services/backup/format';
-import { BackupFormatError, createBackup, parseBackup } from '@/services/backup/format';
-import { downloadBackup, readTextFile } from '@/services/backup/file';
+import type { TodoBackup } from '@/services/backup/BackupService';
+import { BackupFormatError, backupService } from '@/services/backup/BackupService';
+import { backupFile } from '@/services/backup/BackupFile';
 import { useTodosStore } from '@/stores/todos';
 
 const emit = defineEmits<{ notify: [message: string] }>();
@@ -80,7 +80,7 @@ const exportedAt = computed(() => {
 });
 
 function exportFile(): void {
-	downloadBackup(createBackup(store.items));
+	backupFile.download(backupService.create(store.items));
 	emit('notify', t('backup.exported'));
 }
 
@@ -99,7 +99,7 @@ async function onFileChosen(event: Event): Promise<void> {
 
 	try {
 		// Parse before touching anything: a broken file must not cost the list.
-		pending.value = parseBackup(await readTextFile(file));
+		pending.value = backupService.parse(await backupFile.readText(file));
 		confirmOpen.value = true;
 	} catch (error) {
 		const reason = error instanceof BackupFormatError ? error.message : String(error);

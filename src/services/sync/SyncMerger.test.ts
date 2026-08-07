@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Todo } from '@/types/todo';
-import { mergeTodos } from './merge';
+import { SyncMerger } from './SyncMerger';
 
 function makeTodo(overrides: Partial<Todo> = {}): Todo {
 	return {
@@ -21,57 +21,59 @@ function byId(todos: Todo[]): Record<string, Todo> {
 	return Object.fromEntries(todos.map((todo) => [todo.id, todo]));
 }
 
-describe('mergeTodos', () => {
+const merger = new SyncMerger();
+
+describe('SyncMerger.merge', () => {
 	it('returns nothing when both sides are empty', () => {
-		expect(mergeTodos([], [])).toEqual([]);
+		expect(merger.merge([], [])).toEqual([]);
 	});
 
 	it('keeps a record that exists only locally', () => {
 		const local = [makeTodo()];
 
-		expect(mergeTodos(local, [])).toEqual(local);
+		expect(merger.merge(local, [])).toEqual(local);
 	});
 
 	it('takes a record that exists only remotely', () => {
 		const remote = [makeTodo({ id: 'remote-only' })];
 
-		expect(mergeTodos([], remote)).toEqual(remote);
+		expect(merger.merge([], remote)).toEqual(remote);
 	});
 
 	it('keeps the local version when it was updated later', () => {
 		const local = [makeTodo({ title: 'Local wins', updated: '2026-08-02T00:00:00.000Z' })];
 		const remote = [makeTodo({ title: 'Remote loses', updated: '2026-08-01T00:00:00.000Z' })];
 
-		expect(mergeTodos(local, remote)[0].title).toBe('Local wins');
+		expect(merger.merge(local, remote)[0].title).toBe('Local wins');
 	});
 
 	it('takes the remote version when it was updated later', () => {
 		const local = [makeTodo({ title: 'Local loses', updated: '2026-08-01T00:00:00.000Z' })];
 		const remote = [makeTodo({ title: 'Remote wins', updated: '2026-08-02T00:00:00.000Z' })];
 
-		expect(mergeTodos(local, remote)[0].title).toBe('Remote wins');
+		expect(merger.merge(local, remote)[0].title).toBe('Remote wins');
 	});
 
 	it('prefers the local version on identical timestamps so the result is deterministic', () => {
 		const local = [makeTodo({ title: 'Local' })];
 		const remote = [makeTodo({ title: 'Remote' })];
 
-		expect(mergeTodos(local, remote)[0].title).toBe('Local');
-		expect(mergeTodos(remote, local)[0].title).toBe('Remote');
+		expect(merger.merge(local, remote)[0].title).toBe('Local');
+		expect(merger.merge(remote, local)[0].title).toBe('Remote');
 	});
 
 	it('lets a newer tombstone win over an older edit', () => {
 		const local = [makeTodo({ title: 'Edited', updated: '2026-08-01T00:00:00.000Z' })];
 		const remote = [makeTodo({ deleted: true, updated: '2026-08-02T00:00:00.000Z' })];
 
-		expect(mergeTodos(local, remote)[0].deleted).toBe(true);
+		expect(merger.merge(local, remote)[0].deleted).toBe(true);
 	});
 
 	it('lets a newer edit win over an older tombstone', () => {
 		const local = [makeTodo({ title: 'Resurrected', updated: '2026-08-03T00:00:00.000Z' })];
 		const remote = [makeTodo({ deleted: true, updated: '2026-08-02T00:00:00.000Z' })];
 
-		const merged = mergeTodos(local, remote)[0];
+		const merged = merger.merge(local, remote)[0];
 		expect(merged.deleted).toBe(false);
 		expect(merged.title).toBe('Resurrected');
 	});
@@ -79,14 +81,14 @@ describe('mergeTodos', () => {
 	it('keeps a tombstone that only the remote side knows about', () => {
 		const remote = [makeTodo({ id: 'gone', deleted: true })];
 
-		expect(mergeTodos([], remote)[0].deleted).toBe(true);
+		expect(merger.merge([], remote)[0].deleted).toBe(true);
 	});
 
 	it('combines records from both sides', () => {
 		const local = [makeTodo({ id: 'a' }), makeTodo({ id: 'b' })];
 		const remote = [makeTodo({ id: 'b' }), makeTodo({ id: 'c' })];
 
-		const merged = mergeTodos(local, remote);
+		const merged = merger.merge(local, remote);
 
 		expect(merged).toHaveLength(3);
 		expect(Object.keys(byId(merged)).sort()).toEqual(['a', 'b', 'c']);
@@ -98,7 +100,7 @@ describe('mergeTodos', () => {
 		const localCopy = structuredClone(local);
 		const remoteCopy = structuredClone(remote);
 
-		mergeTodos(local, remote);
+		merger.merge(local, remote);
 
 		expect(local).toEqual(localCopy);
 		expect(remote).toEqual(remoteCopy);
@@ -111,8 +113,8 @@ describe('mergeTodos', () => {
 		];
 		const remote = [makeTodo({ id: 'b' }), makeTodo({ id: 'c', deleted: true })];
 
-		const once = mergeTodos(local, remote);
-		const twice = mergeTodos(once, remote);
+		const once = merger.merge(local, remote);
+		const twice = merger.merge(once, remote);
 
 		expect(byId(twice)).toEqual(byId(once));
 	});
@@ -124,6 +126,6 @@ describe('mergeTodos', () => {
 			makeTodo({ id: 'b' }),
 		];
 
-		expect(byId(mergeTodos(local, remote))).toEqual(byId(mergeTodos(remote, local)));
+		expect(byId(merger.merge(local, remote))).toEqual(byId(merger.merge(remote, local)));
 	});
 });

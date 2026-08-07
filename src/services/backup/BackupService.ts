@@ -74,47 +74,51 @@ function readTodo(value: unknown, index: number): Todo {
 	};
 }
 
-export function createBackup(todos: Todo[]): TodoBackup {
-	return {
-		version: BACKUP_VERSION,
-		exportedAt: new Date().toISOString(),
-		todos: todos.map((todo) => ({ ...todo })),
-	};
+export class BackupService {
+	create(todos: Todo[]): TodoBackup {
+		return {
+			version: BACKUP_VERSION,
+			exportedAt: new Date().toISOString(),
+			todos: todos.map((todo) => ({ ...todo })),
+		};
+	}
+
+	/**
+	 * Parses and fully validates a backup file. Callers may only touch storage
+	 * after this returns: a malformed file must never cost the user their list.
+	 */
+	parse(text: string): TodoBackup {
+		let raw: unknown;
+		try {
+			raw = JSON.parse(text);
+		} catch {
+			throw new BackupFormatError('The file is not valid JSON');
+		}
+
+		if (!isRecord(raw)) {
+			throw new BackupFormatError('The file does not contain a backup object');
+		}
+
+		if (typeof raw.version !== 'number') {
+			throw new BackupFormatError('The backup has no version');
+		}
+
+		if (raw.version > BACKUP_VERSION) {
+			throw new BackupFormatError(
+				`The backup is newer than this app supports (version ${raw.version})`,
+			);
+		}
+
+		if (!Array.isArray(raw.todos)) {
+			throw new BackupFormatError('The backup has no list of tasks');
+		}
+
+		return {
+			version: raw.version,
+			exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : '',
+			todos: raw.todos.map(readTodo),
+		};
+	}
 }
 
-/**
- * Parses and fully validates a backup file. Callers may only touch storage
- * after this returns: a malformed file must never cost the user their list.
- */
-export function parseBackup(text: string): TodoBackup {
-	let raw: unknown;
-	try {
-		raw = JSON.parse(text);
-	} catch {
-		throw new BackupFormatError('The file is not valid JSON');
-	}
-
-	if (!isRecord(raw)) {
-		throw new BackupFormatError('The file does not contain a backup object');
-	}
-
-	if (typeof raw.version !== 'number') {
-		throw new BackupFormatError('The backup has no version');
-	}
-
-	if (raw.version > BACKUP_VERSION) {
-		throw new BackupFormatError(
-			`The backup is newer than this app supports (version ${raw.version})`,
-		);
-	}
-
-	if (!Array.isArray(raw.todos)) {
-		throw new BackupFormatError('The backup has no list of tasks');
-	}
-
-	return {
-		version: raw.version,
-		exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : '',
-		todos: raw.todos.map(readTodo),
-	};
-}
+export const backupService = new BackupService();

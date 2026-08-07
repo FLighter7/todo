@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SignalFormatError, decodeSignal, encodeSignal } from './signal';
+import { SignalFormatError, SyncSignal } from './SyncSignal';
 
 // A real offer captured from Chromium: data channel only, no ICE servers.
 const OFFER_SDP = [
@@ -35,46 +35,48 @@ function fieldsOf(sdp: string) {
 	};
 }
 
-describe('encodeSignal', () => {
+const signal = new SyncSignal();
+
+describe('SyncSignal.encode', () => {
 	it('produces a compact payload for an ordinary offer', () => {
-		const encoded = encodeSignal({ type: 'offer', sdp: OFFER_SDP });
+		const encoded = signal.encode({ type: 'offer', sdp: OFFER_SDP });
 
 		expect(encoded.startsWith('1oc.')).toBe(true);
 		expect(encoded.length).toBeLessThan(320);
 	});
 
 	it('marks an answer differently from an offer', () => {
-		const offer = encodeSignal({ type: 'offer', sdp: OFFER_SDP });
-		const answer = encodeSignal({ type: 'answer', sdp: ANSWER_SDP });
+		const offer = signal.encode({ type: 'offer', sdp: OFFER_SDP });
+		const answer = signal.encode({ type: 'answer', sdp: ANSWER_SDP });
 
 		expect(offer[1]).toBe('o');
 		expect(answer[1]).toBe('a');
 	});
 
 	it('falls back to the full mode when the sdp cannot be reduced', () => {
-		const encoded = encodeSignal({ type: 'offer', sdp: 'v=0\r\nnothing useful here\r\n' });
+		const encoded = signal.encode({ type: 'offer', sdp: 'v=0\r\nnothing useful here\r\n' });
 
 		expect(encoded.startsWith('1of.')).toBe(true);
 	});
 });
 
-describe('decodeSignal', () => {
+describe('SyncSignal.decode', () => {
 	it('round-trips the fields that matter for an offer', () => {
-		const decoded = decodeSignal(encodeSignal({ type: 'offer', sdp: OFFER_SDP }));
+		const decoded = signal.decode(signal.encode({ type: 'offer', sdp: OFFER_SDP }));
 
 		expect(decoded.type).toBe('offer');
 		expect(fieldsOf(decoded.sdp)).toEqual(fieldsOf(OFFER_SDP));
 	});
 
 	it('round-trips an answer and keeps its setup role', () => {
-		const decoded = decodeSignal(encodeSignal({ type: 'answer', sdp: ANSWER_SDP }));
+		const decoded = signal.decode(signal.encode({ type: 'answer', sdp: ANSWER_SDP }));
 
 		expect(decoded.type).toBe('answer');
 		expect(decoded.sdp).toContain('a=setup:active');
 	});
 
 	it('rebuilds an sdp that still looks like one', () => {
-		const decoded = decodeSignal(encodeSignal({ type: 'offer', sdp: OFFER_SDP }));
+		const decoded = signal.decode(signal.encode({ type: 'offer', sdp: OFFER_SDP }));
 
 		expect(decoded.sdp.startsWith('v=0')).toBe(true);
 		expect(decoded.sdp).toContain('m=application 9 UDP/DTLS/SCTP webrtc-datachannel');
@@ -84,35 +86,35 @@ describe('decodeSignal', () => {
 	it('round-trips through the full mode as well', () => {
 		const odd = 'v=0\r\nnothing useful here\r\n';
 
-		expect(decodeSignal(encodeSignal({ type: 'offer', sdp: odd })).sdp).toBe(odd);
+		expect(signal.decode(signal.encode({ type: 'offer', sdp: odd })).sdp).toBe(odd);
 	});
 
 	it('rejects an empty string', () => {
-		expect(() => decodeSignal('')).toThrow(SignalFormatError);
+		expect(() => signal.decode('')).toThrow(SignalFormatError);
 	});
 
 	it('rejects text that is not a signal at all', () => {
-		expect(() => decodeSignal('https://example.com')).toThrow(SignalFormatError);
+		expect(() => signal.decode('https://example.com')).toThrow(SignalFormatError);
 	});
 
 	it('rejects a newer format version', () => {
-		expect(() => decodeSignal('9oc.eyJ9')).toThrow(/newer/i);
+		expect(() => signal.decode('9oc.eyJ9')).toThrow(/newer/i);
 	});
 
 	it('rejects an unknown mode', () => {
-		expect(() => decodeSignal('1oz.eyJ9')).toThrow(SignalFormatError);
+		expect(() => signal.decode('1oz.eyJ9')).toThrow(SignalFormatError);
 	});
 
 	it('rejects a damaged payload instead of returning nonsense', () => {
-		const encoded = encodeSignal({ type: 'offer', sdp: OFFER_SDP });
+		const encoded = signal.encode({ type: 'offer', sdp: OFFER_SDP });
 		const damaged = encoded.slice(0, -6);
 
-		expect(() => decodeSignal(damaged)).toThrow(SignalFormatError);
+		expect(() => signal.decode(damaged)).toThrow(SignalFormatError);
 	});
 
 	it('trims surrounding whitespace so pasted text works', () => {
-		const encoded = encodeSignal({ type: 'offer', sdp: OFFER_SDP });
+		const encoded = signal.encode({ type: 'offer', sdp: OFFER_SDP });
 
-		expect(decodeSignal(`  ${encoded}\n`).type).toBe('offer');
+		expect(signal.decode(`  ${encoded}\n`).type).toBe('offer');
 	});
 });

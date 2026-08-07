@@ -66,11 +66,10 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import SyncCode from '@/components/SyncCode.vue';
-import SyncScanner from '@/components/SyncScanner.vue';
-import type { SyncConnection } from '@/services/sync/connection';
-import { createSyncConnection } from '@/services/sync/connection';
-import { mergeTodos } from '@/services/sync/merge';
+import SyncCode from '../SyncCode.vue';
+import SyncScanner from '../SyncScanner.vue';
+import { SyncConnection } from '@/services/sync/SyncConnection';
+import { syncMerger } from '@/services/sync/SyncMerger';
 import { useTodosStore } from '@/stores/todos';
 
 type Step = 'idle' | 'show-offer' | 'scan-offer' | 'show-answer' | 'working' | 'done' | 'failed';
@@ -111,7 +110,7 @@ function fail(error: unknown): void {
 
 async function startAsInitiator(): Promise<void> {
 	try {
-		connection = createSyncConnection();
+		connection = new SyncConnection();
 		ourCode.value = await connection.createOffer();
 		step.value = 'show-offer';
 	} catch (error) {
@@ -120,7 +119,7 @@ async function startAsInitiator(): Promise<void> {
 }
 
 function startAsResponder(): void {
-	connection = createSyncConnection();
+	connection = new SyncConnection();
 	step.value = 'scan-offer';
 }
 
@@ -155,7 +154,7 @@ async function runExchange(): Promise<void> {
 	try {
 		const before = new Map(store.records.map((todo) => [todo.id, todo.updated]));
 		const theirs = await connection.exchange([...store.records]);
-		const merged = mergeTodos([...store.records], theirs);
+		const merged = syncMerger.merge([...store.records], theirs);
 
 		result.value = {
 			added: merged.filter((todo) => !before.has(todo.id)).length,

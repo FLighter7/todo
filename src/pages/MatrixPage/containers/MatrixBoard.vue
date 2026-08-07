@@ -33,7 +33,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import TodoForm from '@/components/TodoForm.vue';
-import TodoQuadrant from '@/components/TodoQuadrant.vue';
+import TodoQuadrant from '../TodoQuadrant.vue';
 import {
 	QUADRANT_KEYS,
 	quadrantFlags,

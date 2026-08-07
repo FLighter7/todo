@@ -2,6 +2,8 @@
 
 A todo list with an Eisenhower matrix. Built for personal use: no backend, everything is stored in the browser, works on desktop and phone.
 
+Folder structure and architectural rules are documented in [.claude/Architecture.md](.claude/Architecture.md).
+
 ## Commands
 
 | Command                 | What it does                                          |

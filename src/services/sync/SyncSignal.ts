@@ -107,65 +107,69 @@ function isCompact(value: unknown): value is CompactSignal {
 	);
 }
 
-/**
- * Encodes a description as a short string for a QR code.
- *
- * The compact mode carries only the fields that vary and rebuilds the rest,
- * which measured 212 bytes against 586 for the whole SDP — the difference
- * between a QR a phone reads at a glance and one it has to be held against.
- * An SDP that will not reduce falls back to carrying the whole thing, so an
- * unfamiliar shape costs a bigger code rather than breaking sync outright.
- */
-export function encodeSignal(signal: Signal): string {
-	const marker = signal.type === 'offer' ? 'o' : 'a';
-	const fields = extract(signal.sdp);
+export class SyncSignal {
+	/**
+	 * Encodes a description as a short string for a QR code.
+	 *
+	 * The compact mode carries only the fields that vary and rebuilds the rest,
+	 * which measured 212 bytes against 586 for the whole SDP — the difference
+	 * between a QR a phone reads at a glance and one it has to be held against.
+	 * An SDP that will not reduce falls back to carrying the whole thing, so an
+	 * unfamiliar shape costs a bigger code rather than breaking sync outright.
+	 */
+	encode(signal: Signal): string {
+		const marker = signal.type === 'offer' ? 'o' : 'a';
+		const fields = extract(signal.sdp);
 
-	if (fields) {
-		return `${SIGNAL_VERSION}${marker}c.${toBase64Url(JSON.stringify(fields))}`;
+		if (fields) {
+			return `${SIGNAL_VERSION}${marker}c.${toBase64Url(JSON.stringify(fields))}`;
+		}
+
+		// Deflate was measured at 570 chars against 586 raw: three percent, not
+		// worth making every caller async.
+		return `${SIGNAL_VERSION}${marker}f.${toBase64Url(signal.sdp)}`;
 	}
 
-	// Deflate was measured at 570 chars against 586 raw: three percent, not
-	// worth making every caller async.
-	return `${SIGNAL_VERSION}${marker}f.${toBase64Url(signal.sdp)}`;
+	decode(text: string): Signal {
+		const trimmed = text.trim();
+		const match = /^(\d)([oa])([cf])\.(.+)$/.exec(trimmed);
+
+		if (!match) {
+			throw new SignalFormatError('This is not a pairing code');
+		}
+
+		const [, version, marker, mode, payload] = match;
+
+		if (Number(version) > SIGNAL_VERSION) {
+			throw new SignalFormatError('The code is newer than this app supports');
+		}
+
+		const type: SignalType = marker === 'o' ? 'offer' : 'answer';
+
+		let decoded: string;
+		try {
+			decoded = fromBase64Url(payload);
+		} catch {
+			throw new SignalFormatError('The code is damaged');
+		}
+
+		if (mode === 'f') {
+			return { type, sdp: decoded };
+		}
+
+		let fields: unknown;
+		try {
+			fields = JSON.parse(decoded);
+		} catch {
+			throw new SignalFormatError('The code is damaged');
+		}
+
+		if (!isCompact(fields)) {
+			throw new SignalFormatError('The code is missing connection details');
+		}
+
+		return { type, sdp: rebuild(fields) };
+	}
 }
 
-export function decodeSignal(text: string): Signal {
-	const trimmed = text.trim();
-	const match = /^(\d)([oa])([cf])\.(.+)$/.exec(trimmed);
-
-	if (!match) {
-		throw new SignalFormatError('This is not a pairing code');
-	}
-
-	const [, version, marker, mode, payload] = match;
-
-	if (Number(version) > SIGNAL_VERSION) {
-		throw new SignalFormatError('The code is newer than this app supports');
-	}
-
-	const type: SignalType = marker === 'o' ? 'offer' : 'answer';
-
-	let decoded: string;
-	try {
-		decoded = fromBase64Url(payload);
-	} catch {
-		throw new SignalFormatError('The code is damaged');
-	}
-
-	if (mode === 'f') {
-		return { type, sdp: decoded };
-	}
-
-	let fields: unknown;
-	try {
-		fields = JSON.parse(decoded);
-	} catch {
-		throw new SignalFormatError('The code is damaged');
-	}
-
-	if (!isCompact(fields)) {
-		throw new SignalFormatError('The code is missing connection details');
-	}
-
-	return { type, sdp: rebuild(fields) };
-}
+export const syncSignal = new SyncSignal();

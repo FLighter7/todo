@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import type { Todo } from '@/types/todo';
-import type { TodoStorage } from '@/services/storage/types';
-import { StorageUnavailableError } from '@/services/storage/types';
-import { createInMemoryStorage } from '@/services/storage/in-memory';
+import type { TodoStorage } from '@/repositories/TodoStorage';
+import { StorageUnavailableError } from '@/repositories/TodoStorage';
+import { InMemoryRepository } from '@/repositories/InMemoryRepository';
 import {
 	quadrantFlags,
 	quadrantOf,
@@ -43,7 +43,7 @@ beforeEach(() => {
 
 describe('useTodosStore', () => {
 	it('loads existing items from storage', async () => {
-		const storage = createInMemoryStorage([makeTodo()]);
+		const storage = new InMemoryRepository([makeTodo()]);
 		const store = useTodosStore();
 
 		await store.load(async () => storage);
@@ -66,7 +66,7 @@ describe('useTodosStore', () => {
 
 	it('adds a task with a generated id, a creation timestamp and done=false', async () => {
 		const store = useTodosStore();
-		await store.load(async () => createInMemoryStorage());
+		await store.load(async () => new InMemoryRepository());
 
 		const created = await store.add(makeDraft({ important: true }));
 
@@ -78,7 +78,7 @@ describe('useTodosStore', () => {
 	});
 
 	it('writes an added task through to storage', async () => {
-		const storage = createInMemoryStorage();
+		const storage = new InMemoryRepository();
 		const store = useTodosStore();
 		await store.load(async () => storage);
 
@@ -89,7 +89,7 @@ describe('useTodosStore', () => {
 
 	it('updates an existing task', async () => {
 		const store = useTodosStore();
-		await store.load(async () => createInMemoryStorage([makeTodo()]));
+		await store.load(async () => new InMemoryRepository([makeTodo()]));
 
 		await store.update('seeded', { title: 'Renamed' });
 
@@ -98,7 +98,7 @@ describe('useTodosStore', () => {
 
 	it('ignores updates for an unknown id', async () => {
 		const store = useTodosStore();
-		await store.load(async () => createInMemoryStorage([makeTodo()]));
+		await store.load(async () => new InMemoryRepository([makeTodo()]));
 
 		await store.update('missing', { title: 'Renamed' });
 
@@ -107,7 +107,7 @@ describe('useTodosStore', () => {
 
 	it('toggles done in both directions', async () => {
 		const store = useTodosStore();
-		await store.load(async () => createInMemoryStorage([makeTodo()]));
+		await store.load(async () => new InMemoryRepository([makeTodo()]));
 
 		await store.toggleDone('seeded');
 		expect(store.items[0].done).toBe(true);
@@ -117,7 +117,7 @@ describe('useTodosStore', () => {
 	});
 
 	it('hides a removed task but keeps it as a tombstone', async () => {
-		const storage = createInMemoryStorage([makeTodo()]);
+		const storage = new InMemoryRepository([makeTodo()]);
 		const store = useTodosStore();
 		await store.load(async () => storage);
 
@@ -129,7 +129,7 @@ describe('useTodosStore', () => {
 	});
 
 	it('writes the tombstone through to storage instead of erasing the row', async () => {
-		const storage = createInMemoryStorage([makeTodo()]);
+		const storage = new InMemoryRepository([makeTodo()]);
 		const store = useTodosStore();
 		await store.load(async () => storage);
 
@@ -143,7 +143,7 @@ describe('useTodosStore', () => {
 	it('hides tombstones loaded from storage', async () => {
 		const store = useTodosStore();
 		await store.load(async () =>
-			createInMemoryStorage([makeTodo({ id: 'alive' }), makeTodo({ id: 'gone', deleted: true })]),
+			new InMemoryRepository([makeTodo({ id: 'alive' }), makeTodo({ id: 'gone', deleted: true })]),
 		);
 
 		expect(store.items.map((t) => t.id)).toEqual(['alive']);
@@ -152,7 +152,7 @@ describe('useTodosStore', () => {
 
 	it('moves the updated timestamp on every change', async () => {
 		const store = useTodosStore();
-		await store.load(async () => createInMemoryStorage([makeTodo()]));
+		await store.load(async () => new InMemoryRepository([makeTodo()]));
 		const before = store.records[0].updated;
 
 		await store.update('seeded', { title: 'Renamed' });
@@ -162,7 +162,7 @@ describe('useTodosStore', () => {
 
 	it('stamps created and updated alike on a new task', async () => {
 		const store = useTodosStore();
-		await store.load(async () => createInMemoryStorage());
+		await store.load(async () => new InMemoryRepository());
 
 		const created = await store.add(makeDraft());
 
@@ -172,7 +172,7 @@ describe('useTodosStore', () => {
 
 	it('ignores toggling a task that is already deleted', async () => {
 		const store = useTodosStore();
-		await store.load(async () => createInMemoryStorage([makeTodo({ deleted: true })]));
+		await store.load(async () => new InMemoryRepository([makeTodo({ deleted: true })]));
 
 		await store.toggleDone('seeded');
 
@@ -214,7 +214,7 @@ describe('useTodosStore', () => {
 
 describe('useTodosStore replaceAll', () => {
 	it('replaces the list in memory and in storage', async () => {
-		const storage = createInMemoryStorage([makeTodo({ id: 'old' })]);
+		const storage = new InMemoryRepository([makeTodo({ id: 'old' })]);
 		const store = useTodosStore();
 		await store.load(async () => storage);
 
@@ -226,7 +226,7 @@ describe('useTodosStore replaceAll', () => {
 	});
 
 	it('can replace the list with nothing', async () => {
-		const storage = createInMemoryStorage([makeTodo()]);
+		const storage = new InMemoryRepository([makeTodo()]);
 		const store = useTodosStore();
 		await store.load(async () => storage);
 
@@ -287,7 +287,7 @@ describe('quadrantFlags', () => {
 describe('useTodosStore quadrants', () => {
 	it('exposes all four quadrants even when empty', async () => {
 		const store = useTodosStore();
-		await store.load(async () => createInMemoryStorage());
+		await store.load(async () => new InMemoryRepository());
 
 		expect(Object.keys(store.quadrants).sort()).toEqual([
 			'delegate',
@@ -300,7 +300,7 @@ describe('useTodosStore quadrants', () => {
 	it('groups every task into its quadrant', async () => {
 		const store = useTodosStore();
 		await store.load(async () =>
-			createInMemoryStorage([
+			new InMemoryRepository([
 				makeTodo({ id: 'a', important: true, urgent: true }),
 				makeTodo({ id: 'b', important: true, urgent: false }),
 				makeTodo({ id: 'c', important: false, urgent: true }),
@@ -318,7 +318,7 @@ describe('useTodosStore quadrants', () => {
 	it('moves a task between quadrants when its flags change', async () => {
 		const store = useTodosStore();
 		await store.load(async () =>
-			createInMemoryStorage([makeTodo({ id: 'a', important: false, urgent: false })]),
+			new InMemoryRepository([makeTodo({ id: 'a', important: false, urgent: false })]),
 		);
 
 		await store.update('a', { important: true, urgent: true });

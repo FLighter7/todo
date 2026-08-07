@@ -1,9 +1,9 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import type { Todo, TodoPeriod } from '@/types/todo';
-import type { TodoStorage } from '@/services/storage/types';
-import { createInMemoryStorage } from '@/services/storage/in-memory';
-import { createIndexedDbStorage } from '@/services/storage/indexed-db';
+import type { TodoStorage } from '@/repositories/TodoStorage';
+import { InMemoryRepository } from '@/repositories/InMemoryRepository';
+import { IndexedDbRepository } from '@/repositories/IndexedDbRepository';
 
 export interface TodoDraft {
 	title: string;
@@ -32,7 +32,7 @@ export function quadrantFlags(key: QuadrantKey): { important: boolean; urgent: b
 	};
 }
 
-type StorageFactory = () => Promise<TodoStorage>;
+type RepositoryFactory = () => Promise<TodoStorage>;
 
 export const useTodosStore = defineStore('todos', () => {
 	/** Everything in storage, tombstones included. Sync needs those. */
@@ -44,7 +44,7 @@ export const useTodosStore = defineStore('todos', () => {
 	/** What the user sees. Views never deal with tombstones. */
 	const items = computed(() => records.value.filter((todo) => !todo.deleted));
 
-	let storage: TodoStorage = createInMemoryStorage();
+	let storage: TodoStorage = new InMemoryRepository();
 
 	async function persist(write: () => Promise<void>): Promise<void> {
 		try {
@@ -54,14 +54,16 @@ export const useTodosStore = defineStore('todos', () => {
 		}
 	}
 
-	async function load(createStorage: StorageFactory = createIndexedDbStorage): Promise<void> {
+	async function load(
+		createRepository: RepositoryFactory = () => IndexedDbRepository.create(),
+	): Promise<void> {
 		loading.value = true;
 
 		try {
-			storage = await createStorage();
+			storage = await createRepository();
 			persistent.value = true;
 		} catch {
-			storage = createInMemoryStorage();
+			storage = new InMemoryRepository();
 			persistent.value = false;
 		}
 

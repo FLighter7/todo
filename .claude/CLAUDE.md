@@ -31,22 +31,9 @@ Imports inside `src` use the `@/` alias.
 
 ## Architecture
 
-```
-src/
-	types/todo.ts          — the shape of the data, single source of truth
-	services/
-		storage/             — types.ts (interface), indexed-db.ts, in-memory.ts, persistence.ts
-		backup/              — format.ts (envelope validation), file.ts (download/read)
-		sync/                — signal.ts (pairing-code codec), connection.ts (WebRTC), merge.ts
-	stores/todos.ts        — Pinia store
-	views/                 — TodoListView, MatrixView, SyncView
-	components/            — TodoForm, TodoQuadrant, BackupMenu, SyncCode, SyncScanner
-	i18n/, plugins/, router/
-```
+Full reference — folder tree, dependency direction, components-vs-containers, services-vs-repositories, naming — lives in [.claude/Architecture.md](Architecture.md). Read it before restructuring anything.
 
-Dependencies point one way: views → store → services. **The `services` layer knows nothing about Vue or Pinia** — that is what keeps its tests free of a browser environment and the storage swappable.
-
-`TodoStorage` ([src/services/storage/types.ts](../src/services/storage/types.ts)) is the key boundary: `getAll / put / remove / clear`. The store does not know IndexedDB sits underneath; tests substitute the in-memory implementation.
+The short version: `pages → containers/components → stores → services/repositories → types`. **`services`/`repositories` know nothing about Vue or Pinia** — that is what keeps their tests free of a browser environment and the storage swappable. `TodoStorage` ([src/repositories/TodoStorage.ts](../src/repositories/TodoStorage.ts)) is the key boundary: `getAll / put / remove / clear`. The store does not know IndexedDB sits underneath; tests substitute `InMemoryRepository`.
 
 The Eisenhower matrix is **a view of the same data**, not a separate entity: the `quadrants` getter splits `items` by `important` × `urgent` into `do / schedule / delegate / eliminate`.
 
@@ -57,7 +44,7 @@ The Eisenhower matrix is **a view of the same data**, not a separate entity: the
 Two things are easy to break without knowing them:
 
 - **`updated` moves on every change** — sync merges on it, and the later version wins. Any new mutation has to advance it; `store.update()` does that itself, so records must never be mutated around it.
-- **Deletion is soft.** `remove()` sets `deleted: true` and the record stays as a tombstone. Without it a merge cannot tell "deleted here" from "not created yet" and hands the task straight back. In the store, `records` holds everything including tombstones (sync needs them) and `items` holds what the user sees. Views only ever touch `items`.
+- **Deletion is soft.** `remove()` sets `deleted: true` and the record stays as a tombstone. Without it a merge cannot tell "deleted here" from "not created yet" and hands the task straight back. In the store, `records` holds everything including tombstones (sync needs them) and `items` holds what the user sees. Pages only ever touch `items`.
 
 The IndexedDB schema is at version 2. Changing the record shape means raising `DB_VERSION` and writing a migration that backfills old records without granting them an undeservedly fresh `updated`.
 

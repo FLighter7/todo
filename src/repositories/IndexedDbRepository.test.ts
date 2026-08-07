@@ -2,8 +2,8 @@ import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it } from 'vitest';
 import { deleteDB } from 'idb';
 import type { Todo } from '@/types/todo';
-import { StorageUnavailableError } from './types';
-import { createIndexedDbStorage } from './indexed-db';
+import { StorageUnavailableError } from './TodoStorage';
+import { IndexedDbRepository } from './IndexedDbRepository';
 
 function makeTodo(overrides: Partial<Todo> = {}): Todo {
 	return {
@@ -24,50 +24,50 @@ afterEach(async () => {
 	await deleteDB('todo');
 });
 
-describe('createIndexedDbStorage', () => {
+describe('IndexedDbRepository', () => {
 	it('starts empty', async () => {
-		const storage = await createIndexedDbStorage();
+		const repository = await IndexedDbRepository.create();
 
-		await expect(storage.getAll()).resolves.toEqual([]);
+		await expect(repository.getAll()).resolves.toEqual([]);
 	});
 
 	it('persists an item across separate connections', async () => {
-		const first = await createIndexedDbStorage();
+		const first = await IndexedDbRepository.create();
 		await first.put(makeTodo());
 
-		const second = await createIndexedDbStorage();
+		const second = await IndexedDbRepository.create();
 
 		await expect(second.getAll()).resolves.toEqual([makeTodo()]);
 	});
 
 	it('replaces an item with the same id', async () => {
-		const storage = await createIndexedDbStorage();
+		const repository = await IndexedDbRepository.create();
 
-		await storage.put(makeTodo());
-		await storage.put(makeTodo({ done: true }));
+		await repository.put(makeTodo());
+		await repository.put(makeTodo({ done: true }));
 
-		const items = await storage.getAll();
+		const items = await repository.getAll();
 		expect(items).toHaveLength(1);
 		expect(items[0].done).toBe(true);
 	});
 
 	it('removes an item by id', async () => {
-		const storage = await createIndexedDbStorage();
-		await storage.put(makeTodo());
+		const repository = await IndexedDbRepository.create();
+		await repository.put(makeTodo());
 
-		await storage.remove('id-1');
+		await repository.remove('id-1');
 
-		await expect(storage.getAll()).resolves.toEqual([]);
+		await expect(repository.getAll()).resolves.toEqual([]);
 	});
 
 	it('clears every item', async () => {
-		const storage = await createIndexedDbStorage();
-		await storage.put(makeTodo());
-		await storage.put(makeTodo({ id: 'id-2' }));
+		const repository = await IndexedDbRepository.create();
+		await repository.put(makeTodo());
+		await repository.put(makeTodo({ id: 'id-2' }));
 
-		await storage.clear();
+		await repository.clear();
 
-		await expect(storage.getAll()).resolves.toEqual([]);
+		await expect(repository.getAll()).resolves.toEqual([]);
 	});
 
 	it('throws StorageUnavailableError when indexedDB is missing', async () => {
@@ -76,7 +76,7 @@ describe('createIndexedDbStorage', () => {
 		delete globalThis.indexedDB;
 
 		try {
-			await expect(createIndexedDbStorage()).rejects.toBeInstanceOf(StorageUnavailableError);
+			await expect(IndexedDbRepository.create()).rejects.toBeInstanceOf(StorageUnavailableError);
 		} finally {
 			globalThis.indexedDB = original;
 		}
