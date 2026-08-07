@@ -98,6 +98,22 @@ Tests construct their own instances directly (`new InMemoryRepository(seed)`, `n
 
 ## Naming
 
-camelCase/PascalCase throughout — `.vue` files and class files (`IndexedDbRepository.ts`) are PascalCase, matching their default export. No kebab-case, unless a filename is mandated by a tool outside this project's control (`package-lock.json`).
+camelCase/PascalCase throughout — `.vue` files and class files (`IndexedDbRepository.ts`) are PascalCase, matching the class/component name. No kebab-case, unless a filename is mandated by a tool outside this project's control (`package-lock.json`).
 
 Imports inside `src` use the `@/` alias; a file only uses a relative import for a sibling in the same page folder (e.g. `pages/MatrixPage/containers/MatrixBoard.vue` importing `../TodoQuadrant.vue`).
+
+## Exports and index files
+
+Prefer named exports over default exports wherever possible. The one exception is `.vue` Single File Components: Vue's compiler requires the component to be the file's default export, so that part is out of our control.
+
+Every folder re-exports the files inside it through an `index.ts` barrel, so consumers import from the folder rather than reaching into individual files. For a `.vue` file, the barrel aliases the default export to the component's name:
+
+```ts
+export { default as ComponentName } from './ComponentName.vue';
+```
+
+For plain `.ts` files, it re-exports their named exports directly:
+
+```ts
+export * from './backupService';
+```
