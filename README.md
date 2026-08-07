@@ -64,7 +64,7 @@ npm run preview
 
 Open `http://localhost:4173/todo/`. The service worker registers, the install icon appears, and offline mode is checked in DevTools: Application → Service Workers, or Network → Offline followed by a reload.
 
-**A phone will not work this way.** `npm run dev -- --host` serves an address like `http://192.168.1.5:5173`, and that is already an insecure context: the service worker will not register and there will be no install. Two options remain — a temporary HTTPS tunnel (Cloudflare Tunnel, ngrok) or a deployment. The Chrome flag for trusting an insecure origin does not exist on iOS.
+**A phone will not work this way.** `npm run dev -- --host` serves an address like `http://192.168.1.5:3000`, and that is already an insecure context: the service worker will not register and there will be no install. Two options remain — a temporary HTTPS tunnel (Cloudflare Tunnel, ngrok) or a deployment. The Chrome flag for trusting an insecure origin does not exist on iOS.
 
 **If offline mode does not work, suspect the browser first.** Run this in the console:
 
