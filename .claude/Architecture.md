@@ -4,22 +4,24 @@ The detailed reference for how this repository is organized. CLAUDE.md keeps onl
 
 ## Root
 
-| Path | What it is |
-| --- | --- |
-| `.claude/` | Claude Code config: `CLAUDE.md` (working notes) and this file |
-| `dist/` | Build output, git-ignored |
-| `docs/` | `docs/superpowers/specs/` and `docs/superpowers/plans/` — design intent and step-by-step plans, see CLAUDE.md's "Process" section |
-| `node_modules/` | Installed dependencies |
-| `public/` | Static assets copied verbatim into the build (PWA icons, favicon) |
-| `src/` | Application source — see below |
-| `index.html` | Vite's HTML entry point, loads `/src/index.ts` |
-| `package.json`, `package-lock.json` | npm manifest and lockfile |
-| `tsconfig.json` | TypeScript config; declares the `@/*` → `./src/*` path alias |
-| `vite.config.ts` | Vite config; also the Vitest config (single `test` block) and the PWA plugin config |
-| `eslint.config.js` | Flat ESLint config, including the `vue/block-order` rule (style → template → script) |
-| `.prettierrc.json`, `.prettierignore` | Formatting config |
-| `.gitignore`, `.gitattributes` | git settings (the latter normalizes line endings to LF) |
-| `README.md` | Project overview for a human reader: commands, data durability, sync, install, deployment |
+| Path                                  | What it is                                                                                                                        |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `.claude/`                            | Claude Code config: `CLAUDE.md` (working notes) and this file                                                                     |
+| `dist/`                               | Build output, git-ignored                                                                                                         |
+| `docs/`                               | `docs/superpowers/specs/` and `docs/superpowers/plans/` — design intent and step-by-step plans, see CLAUDE.md's "Process" section |
+| `e2e/`                                | Playwright end-to-end tests, run against a built `npm run preview` server                                                         |
+| `node_modules/`                       | Installed dependencies                                                                                                            |
+| `public/`                             | Static assets copied verbatim into the build (PWA icons, favicon)                                                                 |
+| `src/`                                | Application source — see below                                                                                                    |
+| `index.html`                          | Vite's HTML entry point, loads `/src/index.ts`                                                                                    |
+| `package.json`, `package-lock.json`   | npm manifest and lockfile                                                                                                         |
+| `tsconfig.json`                       | TypeScript config; declares the `@/*` → `./src/*` path alias                                                                      |
+| `vite.config.ts`                      | Vite config; also the Vitest config (single `test` block) and the PWA plugin config                                               |
+| `playwright.config.ts`                | Playwright config: test directory, base URL, and the `webServer` that runs `npm run preview`                                      |
+| `eslint.config.js`                    | Flat ESLint config, including the `vue/block-order` rule (style → template → script)                                              |
+| `.prettierrc.json`, `.prettierignore` | Formatting config                                                                                                                 |
+| `.gitignore`, `.gitattributes`        | git settings (the latter normalizes line endings to LF)                                                                           |
+| `README.md`                           | Project overview for a human reader: commands, data durability, sync, install, deployment                                         |
 
 ## `src/` structure
 
@@ -76,7 +78,7 @@ pages → containers / components → stores → services / repositories → typ
 
 ## Pages are thin
 
-`pages/[Page]/[Page].vue` answers one question: *what's on this page?* It composes containers/components and lays them out — it does not itself call the store or a service. All of that lives in the page's `containers/`.
+`pages/[Page]/[Page].vue` answers one question: _what's on this page?_ It composes containers/components and lays them out — it does not itself call the store or a service. All of that lives in the page's `containers/`.
 
 `layouts/` is exempt from this rule: a layout's chrome and its behavior (theme toggle, locale toggle, snackbar state, initial data load) stay together in one file, because there's no natural sub-widget to split it into the way a page's table or board can be split out.
 
