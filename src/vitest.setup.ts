@@ -1,3 +1,8 @@
+// Force module mode so the top-level `await import(...)` below is legal: TypeScript treats a
+// file with zero static import/export statements as a script, where top-level await is not
+// allowed. This export is a no-op at runtime.
+export {};
+
 if (typeof window !== 'undefined') {
 	class ResizeObserverStub {
 		observe(): void {}
