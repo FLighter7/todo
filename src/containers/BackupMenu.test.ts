@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
@@ -76,8 +76,7 @@ describe('BackupMenu import', () => {
 		expect(wrapper.text()).toContain('Tasks to be deleted: 1');
 
 		await clickButtonByText(wrapper, 'Replace');
-		await wrapper.vm.$nextTick();
-		await new Promise((resolve) => setTimeout(resolve, 10));
+		await flushPromises();
 
 		expect(store.items.map((t) => t.id)).toEqual(['new-1']);
 		expect(wrapper.emitted('notify')?.at(-1)).toEqual(['Restored from the file. Tasks: 1.']);
