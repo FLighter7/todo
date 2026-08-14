@@ -27,6 +27,8 @@ The detailed reference for how this repository is organized. CLAUDE.md keeps onl
 src/
 	index.ts                — entry point
 	env.d.ts                — ambient types (vite/client, vite-plugin-pwa/client)
+	vitest.setup.ts         — Vitest setupFiles entry: stubs ResizeObserver/matchMedia for component tests
+	vitestHelpers.ts        — shared helpers for component tests (e.g. clickButtonByText)
 	App.vue                 — Vue root; renders the active layout, nothing else
 
 	layouts/                 — page frames (Nuxt-like): app chrome that wraps <router-view>
