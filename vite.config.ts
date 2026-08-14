@@ -65,5 +65,16 @@ export default defineConfig({
 		environment: 'node',
 		include: ['src/**/*.test.ts'],
 		setupFiles: ['src/vitest.setup.ts'],
+		server: {
+			deps: {
+				// vite-plugin-vuetify's autoImport injects a `.css` side-import per
+				// Vuetify component used. Vitest's SSR module runner externalizes
+				// `vuetify` to Node's native module loader by default (for speed),
+				// and that loader chokes on a raw `.css` extension. Inlining the
+				// package runs it through Vite's transform pipeline instead, which
+				// strips those CSS imports like the dev server and build already do.
+				inline: ['vuetify'],
+			},
+		},
 	},
 });

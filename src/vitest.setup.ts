@@ -38,10 +38,4 @@ if (typeof window !== 'undefined') {
 			length: 0,
 		};
 	}
-
-	if (!window.navigator) {
-		window.navigator = {
-			language: 'en',
-		} as unknown as Navigator;
-	}
 }
