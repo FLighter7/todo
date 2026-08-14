@@ -19,6 +19,25 @@ if (typeof window !== 'undefined') {
 			dispatchEvent: () => false,
 		}) as MediaQueryList;
 
+	// Vuetify's VOverlay (used by v-dialog) accesses visualViewport to calculate positioning.
+	// happy-dom doesn't define it, so we stub it following the pattern above.
+	if (!window.visualViewport) {
+		Object.defineProperty(window, 'visualViewport', {
+			value: {
+				width: 1024,
+				height: 768,
+				offsetLeft: 0,
+				offsetTop: 0,
+				pageLeft: 0,
+				pageTop: 0,
+				scale: 1,
+				addEventListener: () => {},
+				removeEventListener: () => {},
+			},
+			configurable: true,
+		});
+	}
+
 	if (!window.localStorage || typeof window.localStorage.getItem !== 'function') {
 		const store: Record<string, string> = {};
 		window.localStorage = {
@@ -38,4 +57,17 @@ if (typeof window !== 'undefined') {
 			length: 0,
 		};
 	}
+
+	// @vue/test-utils' wrapper.find()/get() only traverse the mounted
+	// component's own subtree, not <Teleport> targets -- but VDialog/VMenu
+	// (built on VOverlay) teleport their content to document.body by
+	// default. Rendering them inline keeps every component test's
+	// wrapper-based selectors working without each test needing to know
+	// about teleportation.
+	const testVuetify = (await import('@/plugins/vuetify')).default;
+	testVuetify.defaults.value = {
+		...(testVuetify.defaults.value ?? {}),
+		VDialog: { attach: true },
+		VMenu: { attach: true },
+	};
 }
