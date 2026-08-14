@@ -22,7 +22,6 @@ const { start, destroy, scannerState, QrScannerMock } = vi.hoisted(() => {
 	const QrScannerMock = vi.fn(function (
 		_video: HTMLVideoElement,
 		onDecode: (result: { data: string }) => void,
-		_options?: Record<string, unknown>,
 	) {
 		scannerState.onDecode = onDecode;
 		return { start, destroy };
