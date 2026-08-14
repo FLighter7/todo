@@ -16,6 +16,7 @@ Folder structure and architectural rules are documented in [.claude/Architecture
 | `npm test`              | Unit tests                                            |
 | `npm run lint`          | ESLint                                                |
 | `npm run format`        | Prettier                                              |
+| `npm run test:e2e`      | Playwright e2e tests                                  |
 
 ## Where the data lives and when it disappears
 

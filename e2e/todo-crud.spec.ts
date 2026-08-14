@@ -32,7 +32,10 @@ test('toggling done crosses the task out', async ({ page }) => {
 	const row = page.getByRole('row', { name: /Finish the report/ });
 	await row.getByRole('checkbox').click();
 
-	await expect(row.getByText('Finish the report')).toHaveCSS('text-decoration-line', 'line-through');
+	await expect(row.getByText('Finish the report')).toHaveCSS(
+		'text-decoration-line',
+		'line-through',
+	);
 });
 
 test('deleting a task removes it from the list', async ({ page }) => {
@@ -43,7 +46,10 @@ test('deleting a task removes it from the list', async ({ page }) => {
 	await page.getByRole('button', { name: 'Save' }).click();
 	await expect(page.getByText('Throwaway task')).toBeVisible();
 
-	await page.getByRole('row', { name: /Throwaway task/ }).getByRole('button', { name: 'Actions' }).click();
+	await page
+		.getByRole('row', { name: /Throwaway task/ })
+		.getByRole('button', { name: 'Actions' })
+		.click();
 
 	await expect(page.getByText('No tasks yet. Add the first one.')).toBeVisible();
 });

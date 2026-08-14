@@ -8,16 +8,17 @@ Every file in the repository is written in English — code, comments, docs, com
 
 ## Commands
 
-| Command           | What it does                          |
-| ----------------- | ------------------------------------- |
-| `npm run dev`     | Dev server                            |
-| `npm run build`   | `vue-tsc --noEmit` + build to `dist/` |
-| `npm run preview` | Serve the build on `localhost:4173`   |
-| `npm test`        | Unit tests, single run                |
-| `npm run lint`    | ESLint                                |
-| `npm run format`  | Prettier                              |
+| Command             | What it does                          |
+| ------------------- | ------------------------------------- |
+| `npm run dev`       | Dev server                            |
+| `npm run build`     | `vue-tsc --noEmit` + build to `dist/` |
+| `npm run preview`   | Serve the build on `localhost:4173`   |
+| `npm test`          | Unit tests, single run                |
+| `npm run lint`      | ESLint                                |
+| `npm run format`    | Prettier                              |
+| `npm run test:e2e`  | Playwright e2e tests                  |
 
-Before calling work finished, run all three: `npm test`, `npm run lint`, `npm run build`.
+Before calling work finished, run all four: `npm test`, `npm run lint`, `npm run build`, and `npm run test:e2e`.
 
 ## Conventions
 
