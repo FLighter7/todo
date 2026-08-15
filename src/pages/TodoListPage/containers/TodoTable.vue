@@ -1,10 +1,4 @@
 <style lang="scss" module>
-.fab {
-	position: fixed;
-	right: 1rem;
-	bottom: calc(1rem + env(safe-area-inset-bottom));
-}
-
 .doneRow {
 	opacity: 0.55;
 	text-decoration: line-through;
@@ -59,21 +53,7 @@
 			</template>
 		</v-data-table>
 
-		<v-btn
-			:class="$style.fab"
-			:icon="mdiPlus"
-			color="primary"
-			size="large"
-			:aria-label="t('form.add')"
-			@click="openAdd"
-		/>
-
-		<todo-form
-			v-model="dialogOpen"
-			:initial="initialDraft"
-			:mode="editing === null ? 'add' : 'edit'"
-			@submit="handleSubmit"
-		/>
+		<todo-form v-model="dialogOpen" :initial="initialDraft" mode="edit" @submit="handleSubmit" />
 	</v-container>
 </template>
 
@@ -81,7 +61,7 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { DataTableHeader } from 'vuetify';
-import { mdiCheck, mdiDeleteOutline, mdiPlus } from '@mdi/js';
+import { mdiCheck, mdiDeleteOutline } from '@mdi/js';
 import TodoForm from '@/components/TodoForm.vue';
 import type { Todo } from '@/types/todo';
 import { useTodosStore, type TodoDraft } from '@/stores/todos';
@@ -102,23 +82,13 @@ const initialDraft = computed<Partial<TodoDraft>>(() => {
 	return { title, note, period, important, urgent };
 });
 
-function openAdd(): void {
-	editing.value = null;
-	dialogOpen.value = true;
-}
-
-function openEdit(todo: Todo): void {
-	editing.value = todo;
-	dialogOpen.value = true;
-}
-
 function onRowClick(_event: Event, context: { item: Todo }): void {
-	openEdit(context.item);
+	editing.value = context.item;
+	dialogOpen.value = true;
 }
 
 async function handleSubmit(draft: TodoDraft): Promise<void> {
 	if (editing.value === null) {
-		await store.add(draft);
 		return;
 	}
 

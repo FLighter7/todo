@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { mdiCalendarClockOutline, mdiFire } from '@mdi/js';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
@@ -25,7 +26,7 @@ function makeTodo(overrides: Partial<Todo> = {}): Todo {
 describe('TodoQuadrant', () => {
 	it('renders every item it is given', () => {
 		const wrapper = mount(TodoQuadrant, {
-			props: { quadrant: 'do', items: [makeTodo()], color: 'error' },
+			props: { quadrant: 'do', items: [makeTodo()], icon: mdiFire, accent: true },
 			global: { plugins: [vuetify, i18n] },
 		});
 
@@ -34,7 +35,7 @@ describe('TodoQuadrant', () => {
 
 	it('shows the empty state when there are no items', () => {
 		const wrapper = mount(TodoQuadrant, {
-			props: { quadrant: 'do', items: [], color: 'error' },
+			props: { quadrant: 'do', items: [], icon: mdiFire, accent: true },
 			global: { plugins: [vuetify, i18n] },
 		});
 
@@ -43,7 +44,7 @@ describe('TodoQuadrant', () => {
 
 	it('strikes through a done item', () => {
 		const wrapper = mount(TodoQuadrant, {
-			props: { quadrant: 'do', items: [makeTodo({ done: true })], color: 'error' },
+			props: { quadrant: 'do', items: [makeTodo({ done: true })], icon: mdiFire, accent: true },
 			global: { plugins: [vuetify, i18n] },
 		});
 
@@ -53,7 +54,7 @@ describe('TodoQuadrant', () => {
 
 	it('emits toggle with the todo id when its checkbox is clicked', async () => {
 		const wrapper = mount(TodoQuadrant, {
-			props: { quadrant: 'do', items: [makeTodo({ id: 'target' })], color: 'error' },
+			props: { quadrant: 'do', items: [makeTodo({ id: 'target' })], icon: mdiFire, accent: true },
 			global: { plugins: [vuetify, i18n] },
 		});
 
@@ -64,7 +65,7 @@ describe('TodoQuadrant', () => {
 
 	it('emits add with the quadrant key when the add button is clicked', async () => {
 		const wrapper = mount(TodoQuadrant, {
-			props: { quadrant: 'schedule', items: [], color: 'primary' },
+			props: { quadrant: 'schedule', items: [], icon: mdiCalendarClockOutline },
 			global: { plugins: [vuetify, i18n] },
 		});
 

@@ -5,20 +5,8 @@
 </style>
 
 <template>
-	<v-menu>
-		<template #activator="{ props: activator }">
-			<v-btn v-bind="activator" :icon="mdiDatabaseCogOutline" :aria-label="t('backup.menu')" />
-		</template>
-
-		<v-list density="compact">
-			<v-list-item
-				:prepend-icon="mdiDownloadOutline"
-				:title="t('backup.export')"
-				@click="exportFile"
-			/>
-			<v-list-item :prepend-icon="mdiUploadOutline" :title="t('backup.import')" @click="pickFile" />
-		</v-list>
-	</v-menu>
+	<v-list-item :prepend-icon="mdiDownloadOutline" :title="t('backup.export')" @click="exportFile" />
+	<v-list-item :prepend-icon="mdiUploadOutline" :title="t('backup.import')" @click="pickFile" />
 
 	<input
 		ref="fileInput"
@@ -29,7 +17,7 @@
 	/>
 
 	<v-dialog v-model="confirmOpen" max-width="440">
-		<v-card>
+		<v-card variant="elevated">
 			<v-card-title>{{ t('backup.confirmTitle') }}</v-card-title>
 
 			<v-card-text>
@@ -53,7 +41,7 @@
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { mdiDatabaseCogOutline, mdiDownloadOutline, mdiUploadOutline } from '@mdi/js';
+import { mdiDownloadOutline, mdiUploadOutline } from '@mdi/js';
 import type { TodoBackup } from '@/services/backup/BackupService';
 import { BackupFormatError, backupService } from '@/services/backup/BackupService';
 import { backupFile } from '@/services/backup/BackupFile';

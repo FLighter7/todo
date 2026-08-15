@@ -7,7 +7,7 @@
 
 <template>
 	<v-dialog v-model="open" max-width="480">
-		<v-card>
+		<v-card variant="elevated">
 			<v-card-title>{{ mode === 'edit' ? t('form.edit') : t('form.add') }}</v-card-title>
 
 			<v-card-text>

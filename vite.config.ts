@@ -33,8 +33,8 @@ export default defineConfig({
 				// standalone is what exempts an installed app from Safari's
 				// seven-day deletion of site data. Do not weaken it to 'browser'.
 				display: 'standalone',
-				background_color: '#FFFFFF',
-				theme_color: '#1867C0',
+				background_color: '#F6F4EF',
+				theme_color: '#F6F4EF',
 				icons: [
 					{ src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
 					{ src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
@@ -47,7 +47,7 @@ export default defineConfig({
 				],
 			},
 			workbox: {
-				globPatterns: ['**/*.{js,css,html,svg,png}'],
+				globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
 				navigateFallback: '/todo/index.html',
 				cleanupOutdatedCaches: true,
 			},

@@ -9,7 +9,7 @@ import { backupService } from '@/services/backup/BackupService';
 import { backupFile } from '@/services/backup/BackupFile';
 import { useTodosStore } from '@/stores/todos';
 import { InMemoryRepository } from '@/repositories/InMemoryRepository';
-import BackupMenu from './BackupMenu.vue';
+import BackupActions from './BackupActions.vue';
 
 vi.mock('@/services/backup/BackupFile', () => ({
 	backupFile: { download: vi.fn(), readText: vi.fn() },
@@ -24,15 +24,14 @@ beforeEach(() => {
 	readText.mockReset();
 });
 
-describe('BackupMenu export', () => {
+describe('BackupActions export', () => {
 	it('downloads a backup built from the current items and notifies', async () => {
 		const store = useTodosStore();
 		await store.load(async () => new InMemoryRepository([]));
 		await store.add({ title: 'Buy milk', period: 'one-time', important: false, urgent: false });
 
-		const wrapper = mount(BackupMenu, { global: { plugins: [vuetify, i18n] } });
+		const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
 
-		await clickButtonByText(wrapper, ''); // opens the v-menu (icon-only activator button)
 		await clickButtonByText(wrapper, 'Export to a file');
 
 		expect(download).toHaveBeenCalledTimes(1);
@@ -41,7 +40,7 @@ describe('BackupMenu export', () => {
 	});
 });
 
-describe('BackupMenu import', () => {
+describe('BackupActions import', () => {
 	it('shows a confirmation with counts and replaces the list on confirm', async () => {
 		const store = useTodosStore();
 		await store.load(async () => new InMemoryRepository([]));
@@ -62,7 +61,7 @@ describe('BackupMenu import', () => {
 		]);
 		readText.mockResolvedValue(JSON.stringify(incoming));
 
-		const wrapper = mount(BackupMenu, { global: { plugins: [vuetify, i18n] } });
+		const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
 
 		const fileInput = wrapper.get('input[type="file"]');
 		Object.defineProperty(fileInput.element, 'files', {
@@ -89,7 +88,7 @@ describe('BackupMenu import', () => {
 
 		readText.mockResolvedValue('not json at all');
 
-		const wrapper = mount(BackupMenu, { global: { plugins: [vuetify, i18n] } });
+		const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
 
 		const fileInput = wrapper.get('input[type="file"]');
 		Object.defineProperty(fileInput.element, 'files', {

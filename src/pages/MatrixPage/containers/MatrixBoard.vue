@@ -20,7 +20,8 @@
 				:key="key"
 				:quadrant="key"
 				:items="store.quadrants[key]"
-				:color="colors[key]"
+				:icon="quadrantMeta[key].icon"
+				:accent="quadrantMeta[key].accent"
 				@add="openFor"
 				@toggle="store.toggleDone($event)"
 			/>
@@ -32,6 +33,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { mdiAccountArrowRightOutline, mdiCalendarClockOutline, mdiFire, mdiTrashCanOutline } from '@mdi/js';
 import TodoForm from '@/components/TodoForm.vue';
 import TodoQuadrant from '../TodoQuadrant.vue';
 import {
@@ -47,11 +49,11 @@ const store = useTodosStore();
 const dialogOpen = ref(false);
 const initialDraft = ref<Partial<TodoDraft>>({});
 
-const colors: Record<QuadrantKey, string> = {
-	do: 'error',
-	schedule: 'primary',
-	delegate: 'warning',
-	eliminate: 'surface-variant',
+const quadrantMeta: Record<QuadrantKey, { icon: string; accent?: boolean }> = {
+	do: { icon: mdiFire, accent: true },
+	schedule: { icon: mdiCalendarClockOutline },
+	delegate: { icon: mdiAccountArrowRightOutline },
+	eliminate: { icon: mdiTrashCanOutline },
 };
 
 function openFor(quadrant: QuadrantKey): void {

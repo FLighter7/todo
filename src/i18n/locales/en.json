@@ -6,7 +6,8 @@
 	},
 	"nav": {
 		"list": "List",
-		"matrix": "Matrix"
+		"matrix": "Matrix",
+		"settings": "Settings"
 	},
 	"storage": {
 		"unavailable": "Persistent storage is unavailable. Changes will be lost when you close the app.",
@@ -37,7 +38,7 @@
 		"empty": "No tasks yet. Add the first one."
 	},
 	"backup": {
-		"menu": "Backup",
+		"title": "Backup",
 		"export": "Export to a file",
 		"import": "Restore from a file",
 		"confirmTitle": "Replace all tasks?",
@@ -69,6 +70,9 @@
 		"failed": "Sync failed: {reason}",
 		"restart": "Start over",
 		"cancel": "Cancel"
+	},
+	"settings": {
+		"startPage": "Start page"
 	},
 	"quadrant": {
 		"do": "Do",

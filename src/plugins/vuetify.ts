@@ -1,4 +1,5 @@
 import 'vuetify/styles';
+import '@/assets/fonts/fonts.scss';
 import { createVuetify } from 'vuetify';
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg';
 import { en, ru } from 'vuetify/locale';
@@ -20,6 +21,42 @@ export function persistTheme(theme: AppTheme): void {
 export default createVuetify({
 	theme: {
 		defaultTheme: readStoredTheme(),
+		themes: {
+			light: {
+				colors: {
+					background: '#F6F4EF',
+					surface: '#FBFAF6',
+					'surface-variant': '#EAE5D8',
+					'on-surface-variant': '#6E6A5D',
+					outline: '#D6D0C0',
+					primary: '#2F5D50',
+					'on-primary': '#F6F4EF',
+					'on-background': '#2B2A26',
+					'on-surface': '#2B2A26',
+				},
+			},
+			dark: {
+				colors: {
+					background: '#1B1A17',
+					surface: '#221F1A',
+					'surface-variant': '#332E27',
+					'on-surface-variant': '#B3AC9C',
+					outline: '#4A453B',
+					primary: '#74AC90',
+					'on-primary': '#12241D',
+					'on-background': '#EFEBE0',
+					'on-surface': '#EFEBE0',
+				},
+			},
+		},
+	},
+	defaults: {
+		VAppBar: { elevation: 0, color: 'background' },
+		VBtn: { variant: 'tonal' },
+		VCard: { variant: 'outlined' },
+		VTextField: { variant: 'outlined' },
+		VSelect: { variant: 'outlined' },
+		VTextarea: { variant: 'outlined' },
 	},
 	icons: {
 		defaultSet: 'mdi',

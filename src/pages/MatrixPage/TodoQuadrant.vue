@@ -6,6 +6,16 @@
 	min-height: 12rem;
 }
 
+.title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.muted {
+	color: rgb(var(--v-theme-on-surface-variant));
+}
+
 .list {
 	flex: 1 1 auto;
 	overflow-y: auto;
@@ -18,9 +28,16 @@
 </style>
 
 <template>
-	<v-card :class="$style.card" variant="tonal" :color="color">
-		<v-card-title class="d-flex align-center">
-			<span class="text-subtitle-1">{{ t(`quadrant.${quadrant}`) }}</span>
+	<v-card
+		:class="$style.card"
+		:variant="accent ? 'tonal' : 'outlined'"
+		:color="accent ? 'primary' : undefined"
+	>
+		<v-card-title :class="$style.title">
+			<v-icon :icon="icon" size="small" />
+			<span class="text-subtitle-1" :class="quadrant === 'eliminate' ? $style.muted : undefined">
+				{{ t(`quadrant.${quadrant}`) }}
+			</span>
 			<v-spacer />
 			<v-btn
 				:icon="mdiPlus"
@@ -60,7 +77,8 @@ import type { QuadrantKey } from '@/stores/todos';
 defineProps<{
 	quadrant: QuadrantKey;
 	items: Todo[];
-	color: string;
+	icon: string;
+	accent?: boolean;
 }>();
 
 const emit = defineEmits<{
