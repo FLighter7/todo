@@ -9,17 +9,25 @@
 	<v-container :class="$style.page">
 		<v-list>
 			<v-list-subheader>{{ t('settings.startPage') }}</v-list-subheader>
-			<v-btn-toggle
+			<v-select
 				v-model="startPage"
-				mandatory
+				:items="startPageItems"
+				item-title="title"
+				item-value="value"
 				variant="outlined"
-				divided
+				hide-details
 				class="mx-4 mb-4"
 				@update:model-value="persistStartPage($event)"
 			>
-				<v-btn value="list" :prepend-icon="mdiViewListOutline">{{ t('nav.list') }}</v-btn>
-				<v-btn value="matrix" :prepend-icon="mdiViewGridOutline">{{ t('nav.matrix') }}</v-btn>
-			</v-btn-toggle>
+				<template #item="{ item, props: itemProps }">
+					<v-list-item v-bind="itemProps" :prepend-icon="item.icon" />
+				</template>
+
+				<template #selection="{ item }">
+					<v-icon :icon="item.icon" class="mr-2" />
+					{{ item.title }}
+				</template>
+			</v-select>
 
 			<v-list-item
 				:to="{ name: 'sync' }"
@@ -36,15 +44,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { mdiChevronRight, mdiSync, mdiViewGridOutline, mdiViewListOutline } from '@mdi/js';
+import { mdiChevronRight, mdiSync } from '@mdi/js';
 import BackupActions from '@/containers/BackupActions.vue';
-import { persistStartPage, readStoredStartPage, type StartPage } from '@/router';
+import { getStartPageOptions, persistStartPage, readStoredStartPage, type StartPage } from '@/router';
 
 const emit = defineEmits<{ notify: [message: string] }>();
 
 const { t } = useI18n();
 
 const startPage = ref<StartPage>(readStoredStartPage());
+
+const startPageItems = computed(() =>
+	getStartPageOptions().map((option) => ({
+		title: t(option.labelKey),
+		value: option.value,
+		icon: option.icon,
+	})),
+);
 </script>
