@@ -80,7 +80,7 @@ pages → containers / components → stores → services / repositories → typ
 
 `pages/[Page]/[Page].vue` answers one question: _what's on this page?_ It composes containers/components and lays them out — it does not itself call the store or a service. All of that lives in the page's `containers/`.
 
-`layouts/` is exempt from this rule: a layout's chrome and its behavior (theme toggle, locale toggle, snackbar state, initial data load) stay together in one file, because there's no natural sub-widget to split it into the way a page's table or board can be split out.
+`layouts/` is exempt from this rule: a layout's chrome and its behavior (snackbar state, initial data load) stay together in one file, because there's no natural sub-widget to split it into the way a page's table or board can be split out. Theme and locale switching are the exception: they're self-contained enough to live as their own containers (`ThemeMenu.vue`, `LocaleMenu.vue`), leaving the layout to just render them.
 
 ## Services vs. repositories
 

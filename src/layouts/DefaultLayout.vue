@@ -31,12 +31,7 @@
 
 			<template #append>
 				<theme-menu />
-				<v-btn
-					:icon="mdiTranslate"
-					variant="text"
-					:aria-label="t('app.toggleLanguage')"
-					@click="toggleLanguage"
-				/>
+				<locale-menu />
 			</template>
 		</v-app-bar>
 
@@ -65,10 +60,10 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useLocale } from 'vuetify';
-import { mdiCogOutline, mdiTranslate } from '@mdi/js';
+import { mdiCogOutline } from '@mdi/js';
 import BottomNav from './BottomNav.vue';
+import LocaleMenu from '@/containers/LocaleMenu.vue';
 import ThemeMenu from '@/containers/ThemeMenu.vue';
-import { setLocale } from '@/i18n';
 import { readStoredStartPage } from '@/router';
 import { storagePersistence } from '@/repositories/StoragePersistence';
 import { useTodosStore } from '@/stores/todos';
@@ -81,7 +76,9 @@ const router = useRouter();
 
 const notice = ref('');
 
-const lastMainRoute = ref<'list' | 'matrix'>(readStoredStartPage());
+const lastMainRoute = ref<'list' | 'matrix'>(
+	readStoredStartPage() === 'matrix' ? 'matrix' : 'list',
+);
 
 watch(
 	() => route.name,
@@ -117,10 +114,6 @@ const snackbarOpen = computed({
 		}
 	},
 });
-
-function toggleLanguage(): void {
-	setLocale(locale.value === 'ru' ? 'en' : 'ru');
-}
 
 function onGearClick(): void {
 	if (route.name === 'settings') {

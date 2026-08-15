@@ -2,7 +2,7 @@ import 'vuetify/styles';
 import '@/assets/fonts/fonts.scss';
 import { createVuetify } from 'vuetify';
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg';
-import { en, ru } from 'vuetify/locale';
+import { en, ru, pl } from 'vuetify/locale';
 import { initialLocale } from '@/i18n';
 
 const THEME_STORAGE_KEY = 'todo.theme';
@@ -81,6 +81,6 @@ export default createVuetify({
 	locale: {
 		locale: initialLocale,
 		fallback: 'en',
-		messages: { en, ru },
+		messages: { en, ru, pl },
 	},
 });

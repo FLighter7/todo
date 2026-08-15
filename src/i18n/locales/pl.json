@@ -1,0 +1,91 @@
+{
+	"app": {
+		"title": "Zadania",
+		"toggleTheme": "Wybierz motyw",
+		"toggleLanguage": "Wybierz język"
+	},
+	"nav": {
+		"list": "Lista",
+		"matrix": "Macierz",
+		"settings": "Ustawienia"
+	},
+	"storage": {
+		"unavailable": "Pamięć trwała jest niedostępna. Zmiany zostaną utracone po zamknięciu aplikacji.",
+		"writeFailed": "Nie udało się zapisać zmiany."
+	},
+	"todo": {
+		"title": "Nazwa",
+		"note": "Opis",
+		"period": "Częstotliwość",
+		"created": "Utworzono",
+		"important": "Ważne",
+		"urgent": "Pilne",
+		"done": "Zrobione",
+		"actions": "Czynności"
+	},
+	"period": {
+		"one-time": "Jednorazowe",
+		"periodic": "Cykliczne"
+	},
+	"form": {
+		"add": "Nowe zadanie",
+		"edit": "Edytuj zadanie",
+		"save": "Zapisz",
+		"cancel": "Anuluj",
+		"titleRequired": "Nazwa jest wymagana"
+	},
+	"list": {
+		"empty": "Brak zadań. Dodaj pierwsze."
+	},
+	"backup": {
+		"title": "Kopia zapasowa",
+		"export": "Zapisz do pliku",
+		"import": "Przywróć z pliku",
+		"confirmTitle": "Zastąpić wszystkie zadania?",
+		"confirmBody": "Zadania w pliku: {incoming}. Zadania do usunięcia: {current}. Tej operacji nie można cofnąć.",
+		"exportedAt": "Plik utworzono: {date}",
+		"replace": "Zastąp",
+		"restored": "Przywrócono z pliku. Zadania: {count}.",
+		"exported": "Kopia zapisana.",
+		"invalid": "Nie udało się odczytać pliku: {reason}"
+	},
+	"sync": {
+		"title": "Synchronizacja",
+		"intro": "Synchronizacja dwóch urządzeń przez bezpośrednie połączenie. Oba muszą być w tej samej sieci; nic nie przechodzi przez serwer.",
+		"startHere": "To urządzenie zaczyna",
+		"joinHere": "To urządzenie dołącza",
+		"showingCode": "Pokaż ten kod drugiemu urządzeniu",
+		"scanTheirCode": "Teraz zeskanuj kod pokazany w odpowiedzi",
+		"scanInvite": "Zeskanuj kod z drugiego urządzenia",
+		"showAnswer": "Pokaż ten kod z powrotem drugiemu urządzeniu",
+		"scanning": "Skieruj kamerę na kod",
+		"orPaste": "Brak kamery? Wklej kod tutaj",
+		"copy": "Skopiuj kod",
+		"copied": "Kod skopiowany.",
+		"paste": "Zastosuj kod",
+		"cameraFailed": "Kamera jest niedostępna. Wklej kod ręcznie.",
+		"connecting": "Łączenie…",
+		"waiting": "Oczekiwanie na drugie urządzenie…",
+		"done": "Synchronizacja zakończona. Dodano: {added}. Zaktualizowano: {updated}.",
+		"failed": "Synchronizacja nie powiodła się: {reason}",
+		"restart": "Zacznij od nowa",
+		"cancel": "Anuluj"
+	},
+	"settings": {
+		"startPage": "Strona początkowa",
+		"startPageList": "Lista",
+		"startPageMatrix": "Macierz",
+		"theme": "Motyw",
+		"themeSystem": "Systemowy",
+		"themeLight": "Jasny",
+		"themeDark": "Ciemny",
+		"language": "Język"
+	},
+	"quadrant": {
+		"do": "Zrób",
+		"schedule": "Zaplanuj",
+		"delegate": "Deleguj",
+		"eliminate": "Usuń",
+		"empty": "Pusto"
+	}
+}

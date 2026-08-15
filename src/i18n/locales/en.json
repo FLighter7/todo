@@ -2,7 +2,7 @@
 	"app": {
 		"title": "Todo",
 		"toggleTheme": "Choose theme",
-		"toggleLanguage": "Switch language"
+		"toggleLanguage": "Choose language"
 	},
 	"nav": {
 		"list": "List",
@@ -73,10 +73,13 @@
 	},
 	"settings": {
 		"startPage": "Start page",
+		"startPageList": "List",
+		"startPageMatrix": "Matrix",
 		"theme": "Theme",
 		"themeSystem": "System",
 		"themeLight": "Light",
-		"themeDark": "Dark"
+		"themeDark": "Dark",
+		"language": "Language"
 	},
 	"quadrant": {
 		"do": "Do",

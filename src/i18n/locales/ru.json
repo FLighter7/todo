@@ -2,7 +2,7 @@
 	"app": {
 		"title": "Дела",
 		"toggleTheme": "Выбрать тему",
-		"toggleLanguage": "Сменить язык"
+		"toggleLanguage": "Выбрать язык"
 	},
 	"nav": {
 		"list": "Список",
@@ -73,10 +73,13 @@
 	},
 	"settings": {
 		"startPage": "Стартовая страница",
+		"startPageList": "Список",
+		"startPageMatrix": "Матрица",
 		"theme": "Тема",
 		"themeSystem": "Системная",
 		"themeLight": "Светлая",
-		"themeDark": "Тёмная"
+		"themeDark": "Тёмная",
+		"language": "Язык"
 	},
 	"quadrant": {
 		"do": "Сделать",
