@@ -1,7 +1,7 @@
 {
 	"app": {
 		"title": "Дела",
-		"toggleTheme": "Переключить тему",
+		"toggleTheme": "Выбрать тему",
 		"toggleLanguage": "Сменить язык"
 	},
 	"nav": {
@@ -72,7 +72,11 @@
 		"cancel": "Отмена"
 	},
 	"settings": {
-		"startPage": "Стартовая страница"
+		"startPage": "Стартовая страница",
+		"theme": "Тема",
+		"themeSystem": "Системная",
+		"themeLight": "Светлая",
+		"themeDark": "Тёмная"
 	},
 	"quadrant": {
 		"do": "Сделать",

@@ -30,12 +30,7 @@
 			<span :class="$style.logo">{{ t('app.title') }}</span>
 
 			<template #append>
-				<v-btn
-					:icon="themeIcon"
-					variant="text"
-					:aria-label="t('app.toggleTheme')"
-					@click="toggleTheme"
-				/>
+				<theme-menu />
 				<v-btn
 					:icon="mdiTranslate"
 					variant="text"
@@ -69,17 +64,16 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
-import { useLocale, useTheme } from 'vuetify';
-import { mdiCogOutline, mdiTranslate, mdiWeatherNight, mdiWeatherSunny } from '@mdi/js';
+import { useLocale } from 'vuetify';
+import { mdiCogOutline, mdiTranslate } from '@mdi/js';
 import BottomNav from './BottomNav.vue';
-import { persistTheme } from '@/plugins/vuetify';
+import ThemeMenu from '@/containers/ThemeMenu.vue';
 import { setLocale } from '@/i18n';
 import { readStoredStartPage } from '@/router';
 import { storagePersistence } from '@/repositories/StoragePersistence';
 import { useTodosStore } from '@/stores/todos';
 
 const { t, locale } = useI18n();
-const theme = useTheme();
 const vuetifyLocale = useLocale();
 const store = useTodosStore();
 const route = useRoute();
@@ -108,10 +102,6 @@ watch(locale, (value) => {
 	vuetifyLocale.current.value = value;
 });
 
-const themeIcon = computed(() =>
-	theme.global.name.value === 'dark' ? mdiWeatherNight : mdiWeatherSunny,
-);
-
 // One snackbar for both kinds of message: store errors carry an i18n key,
 // everything else arrives already translated.
 const snackbarText = computed(() => (store.lastError === null ? notice.value : t(store.lastError)));
@@ -127,12 +117,6 @@ const snackbarOpen = computed({
 		}
 	},
 });
-
-function toggleTheme(): void {
-	const next = theme.global.name.value === 'dark' ? 'light' : 'dark';
-	theme.change(next);
-	persistTheme(next);
-}
 
 function toggleLanguage(): void {
 	setLocale(locale.value === 'ru' ? 'en' : 'ru');

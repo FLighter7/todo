@@ -8,8 +8,9 @@ import { initialLocale } from '@/i18n';
 const THEME_STORAGE_KEY = 'todo.theme';
 
 export type AppTheme = 'light' | 'dark' | 'system';
+export type ResolvedTheme = 'light' | 'dark';
 
-function readStoredTheme(): AppTheme {
+export function readStoredTheme(): AppTheme {
 	const stored = localStorage.getItem(THEME_STORAGE_KEY);
 	return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
 }
@@ -18,9 +19,20 @@ export function persistTheme(theme: AppTheme): void {
 	localStorage.setItem(THEME_STORAGE_KEY, theme);
 }
 
+// 'system' isn't a registered Vuetify theme name -- it has to resolve to
+// whichever of 'light'/'dark' the OS currently prefers before it can be
+// handed to createVuetify() or theme.change().
+export function resolveTheme(preference: AppTheme): ResolvedTheme {
+	if (preference !== 'system') {
+		return preference;
+	}
+
+	return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 export default createVuetify({
 	theme: {
-		defaultTheme: readStoredTheme(),
+		defaultTheme: resolveTheme(readStoredTheme()),
 		themes: {
 			light: {
 				colors: {
