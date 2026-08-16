@@ -53,20 +53,22 @@ export function collectGarbage<T extends EntityBase>(
  *
  * Marks are pruned by `occurrence`, the date the mark is about, not by
  * `at`, the moment it was made.
+ *
+ * Always returns a fresh object — never the original `task` reference —
+ * even when there are no completions to look at or nothing gets pruned.
+ * A caller that treats the result as an isolated copy, which the "does not
+ * mutate its input" contract invites, must never end up aliasing the
+ * original by accident.
  */
 export function pruneCompletions(task: Task, windowDays: number, now: Date): Task {
 	if (task.completions === undefined) {
-		return task;
+		return { ...task };
 	}
 
 	const cutoff = now.getTime() - windowDays * MS_PER_DAY;
 	const completions = task.completions.filter(
 		(completion) => Date.parse(completion.occurrence) >= cutoff,
 	);
-
-	if (completions.length === task.completions.length) {
-		return task;
-	}
 
 	return { ...task, completions };
 }

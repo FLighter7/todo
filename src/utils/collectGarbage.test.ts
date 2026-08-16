@@ -125,6 +125,14 @@ describe('pruneCompletions', () => {
 		expect(pruned.completions?.map((c) => c.occurrence)).toEqual(['2026-08-10T09:00']);
 	});
 
+	it('treats a completion exactly on the cutoff as inside the window', () => {
+		const task = makeTask({
+			completions: [{ occurrence: daysBefore(30), done: true, at: daysBefore(30) }],
+		});
+
+		expect(pruneCompletions(task, 30, NOW).completions).toHaveLength(1);
+	});
+
 	it('prunes by occurrence, not by the moment the mark was made', () => {
 		// Marked today, but for an occurrence from January: the occurrence decides.
 		const task = makeTask({
