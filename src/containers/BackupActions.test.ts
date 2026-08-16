@@ -122,6 +122,55 @@ describe('BackupActions import', () => {
 		expect(wrapper.emitted('notify')?.at(-1)).toEqual(['Restored from the file. Records: 3.']);
 	});
 
+	it('notifies restoreFailed and stops instead of continuing when a replaceAll call rejects', async () => {
+		await loadEmptyStores();
+		const dreams = useDreamsStore();
+		const goals = useGoalsStore();
+		const tasks = useTasksStore();
+		await tasks.add({ name: 'Old task', important: false, urgent: false });
+
+		const incoming = backupService.create(
+			[
+				{
+					id: 'dream-1',
+					name: 'Imported dream',
+					created: '2026-08-06T10:00:00.000Z',
+					updated: '2026-08-06T10:00:00.000Z',
+					status: Status.Opened,
+				},
+			],
+			[],
+			[],
+		);
+		readText.mockResolvedValue(JSON.stringify(incoming));
+
+		// dreams.replaceAll runs first and is left to succeed for real; goals is
+		// the second of the three calls, and rejecting it is what proves the
+		// third (tasks) never runs and the user hears about the failure.
+		vi.spyOn(goals, 'replaceAll').mockRejectedValue(new Error('quota exceeded'));
+		const tasksReplaceAll = vi.spyOn(tasks, 'replaceAll');
+
+		const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
+
+		const fileInput = wrapper.get('input[type="file"]');
+		Object.defineProperty(fileInput.element, 'files', {
+			value: [new File(['irrelevant, readText is mocked'], 'backup.json')],
+			configurable: true,
+		});
+		await fileInput.trigger('change');
+		await wrapper.vm.$nextTick();
+
+		await clickButtonByText(wrapper, 'Replace');
+		await flushPromises();
+
+		expect(dreams.records.map((r) => r.id)).toEqual(['dream-1']);
+		expect(tasksReplaceAll).not.toHaveBeenCalled();
+		expect(tasks.records.map((t) => t.name)).toEqual(['Old task']);
+		expect(wrapper.emitted('notify')?.at(-1)).toEqual([
+			'Could not restore from the file: quota exceeded',
+		]);
+	});
+
 	it('notifies with the reason and does not touch the stores when the file is invalid', async () => {
 		await loadEmptyStores();
 		const tasks = useTasksStore();

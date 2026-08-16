@@ -57,6 +57,7 @@
 		"exportedAt": "File created: {date}",
 		"replace": "Replace",
 		"restored": "Restored from the file. Records: {count}.",
+		"restoreFailed": "Could not restore from the file: {reason}",
 		"exported": "Backup saved.",
 		"invalid": "Could not read the file: {reason}"
 	},

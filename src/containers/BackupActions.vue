@@ -123,11 +123,28 @@ async function confirmImport(): Promise<void> {
 	confirmOpen.value = false;
 	pending.value = null;
 
-	await dreams.replaceAll(backup.dreams);
-	await goals.replaceAll(backup.goals);
-	await tasks.replaceAll(backup.tasks);
+	// Not atomic: three separate stores, each behind its own object store, and
+	// the repository contract offers no single transaction spanning all three
+	// (a known limitation carried over from the previous stage). A failure
+	// partway through can leave some collections replaced and others not, and
+	// no rollback is attempted here - the goal is only that the user is told
+	// the restore failed rather than being told, wrongly, that it succeeded.
+	// Note what this catch actually reaches: createEntityStore's persist()
+	// already swallows ordinary IndexedDB write failures itself and reports
+	// them through storageState.noteWriteFailure() rather than throwing, so
+	// replaceAll() resolves normally even when the underlying write failed.
+	// This only catches something that throws before persist() gets involved
+	// - a genuine bug, since parse() has already validated the backup.
+	try {
+		await dreams.replaceAll(backup.dreams);
+		await goals.replaceAll(backup.goals);
+		await tasks.replaceAll(backup.tasks);
 
-	emit('notify', t('backup.restored', { count: incomingTotal(backup) }));
+		emit('notify', t('backup.restored', { count: incomingTotal(backup) }));
+	} catch (error) {
+		const reason = error instanceof Error ? error.message : String(error);
+		emit('notify', t('backup.restoreFailed', { reason }));
+	}
 }
 
 function incomingTotal(backup: Backup): number {

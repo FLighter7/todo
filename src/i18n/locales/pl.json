@@ -57,6 +57,7 @@
 		"exportedAt": "Plik utworzono: {date}",
 		"replace": "Zastąp",
 		"restored": "Przywrócono z pliku. Rekordów: {count}.",
+		"restoreFailed": "Nie udało się przywrócić z pliku: {reason}",
 		"exported": "Kopia zapisana.",
 		"invalid": "Nie udało się odczytać pliku: {reason}"
 	},
