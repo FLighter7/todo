@@ -1,5 +1,5 @@
 import type { IDBPDatabase } from 'idb';
-import type { EntityBase } from '@/types';
+import { EntityFormatError, type EntityBase } from '@/types';
 import type { EntityStorage } from './EntityStorage';
 import { openAppDatabase, type AppDbSchema, type StoreName } from './AppDatabase';
 
@@ -36,7 +36,10 @@ export class EntityDbRepository<T extends EntityBase> implements EntityStorage<T
 		for (const row of rows) {
 			try {
 				parsed.push(this.parse(row));
-			} catch {
+			} catch (error) {
+				if (!(error instanceof EntityFormatError)) {
+					throw error;
+				}
 				skipped += 1;
 			}
 		}

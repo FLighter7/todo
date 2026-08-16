@@ -102,10 +102,34 @@ describe('EntityDbRepository', () => {
 
 	it('resets the skipped count on each load', async () => {
 		const repository = await EntityDbRepository.create('dreams', parseDream);
+		await repository.put(makeDream());
+
+		const raw = await openDB(APP_DB_NAME, 3);
+		await raw.put('dreams', { id: 'broken', status: 99 } as never);
+		raw.close();
 
 		await repository.getAll();
+		expect(repository.skipped).toBe(1);
 
+		// Remove the broken row directly — `remove` needs no parsing — so the
+		// next load has only valid rows and the count must drop back to zero.
+		await repository.remove('broken');
+
+		await repository.getAll();
 		expect(repository.skipped).toBe(0);
+	});
+
+	it('propagates an error from parse that is not an EntityFormatError', async () => {
+		const failingParse = (): Dream => {
+			throw new TypeError('boom');
+		};
+		const repository = await EntityDbRepository.create('dreams', failingParse);
+
+		const raw = await openDB(APP_DB_NAME, 3);
+		await raw.put('dreams', makeDream());
+		raw.close();
+
+		await expect(repository.getAll()).rejects.toThrow(TypeError);
 	});
 
 	it('drops a leftover todos store from the previous schema', async () => {
