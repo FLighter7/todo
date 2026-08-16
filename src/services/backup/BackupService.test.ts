@@ -74,6 +74,27 @@ describe('BackupService.parse', () => {
 		expect(parsed.tasks).toEqual([task]);
 	});
 
+	// A tombstone has to survive an actual file, not just the in-memory object
+	// `create()` returns: this is what an export followed by a restore does.
+	it('keeps a closed record through create, JSON.stringify and parse', () => {
+		const closed = { ...task, status: Status.Cancelled };
+		const text = serialize(backupService.create([], [], [closed]));
+
+		const parsed = backupService.parse(text);
+
+		expect(parsed.tasks).toEqual([closed]);
+	});
+
+	it('accepts a backup whose three collections are all empty', () => {
+		const text = serialize({ version: 3, exportedAt: '', dreams: [], goals: [], tasks: [] });
+
+		const parsed = backupService.parse(text);
+
+		expect(parsed.dreams).toEqual([]);
+		expect(parsed.goals).toEqual([]);
+		expect(parsed.tasks).toEqual([]);
+	});
+
 	it('rejects a version 1 or 2 file', () => {
 		for (const version of [1, 2]) {
 			const text = serialize({ version, exportedAt: '', todos: [] });
@@ -81,7 +102,7 @@ describe('BackupService.parse', () => {
 		}
 	});
 
-	it('rejects a file newer than this app', () => {
+	it('rejects a file whose version does not match the one this app supports', () => {
 		expect(() => backupService.parse(serialize({ version: 4 }))).toThrow(BackupFormatError);
 	});
 
@@ -97,7 +118,30 @@ describe('BackupService.parse', () => {
 		expect(() => backupService.parse(text)).toThrow(/tasks.*0/);
 	});
 
+	it('rejects a file missing any of the three collections, naming which one', () => {
+		for (const collection of ['dreams', 'goals', 'tasks'] as const) {
+			const backup: Record<string, unknown> = {
+				version: 3,
+				exportedAt: '',
+				dreams: [],
+				goals: [],
+				tasks: [],
+			};
+			delete backup[collection];
+
+			expect(() => backupService.parse(serialize(backup))).toThrow(new RegExp(`"${collection}"`));
+		}
+	});
+
 	it('rejects a file that is not JSON', () => {
 		expect(() => backupService.parse('{')).toThrow(BackupFormatError);
+	});
+
+	it('rejects a top-level bare array', () => {
+		expect(() => backupService.parse('[]')).toThrow(BackupFormatError);
+	});
+
+	it('rejects a top-level null', () => {
+		expect(() => backupService.parse('null')).toThrow(BackupFormatError);
 	});
 });
