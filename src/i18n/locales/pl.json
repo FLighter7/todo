@@ -27,12 +27,23 @@
 		"one-time": "Jednorazowe",
 		"periodic": "Cykliczne"
 	},
+	"task": {
+		"name": "Nazwa",
+		"note": "Opis",
+		"created": "Utworzono",
+		"important": "Ważne",
+		"urgent": "Pilne",
+		"done": "Zrobione",
+		"actions": "Czynności",
+		"cancel": "Anuluj zadanie"
+	},
 	"form": {
 		"add": "Nowe zadanie",
 		"edit": "Edytuj zadanie",
 		"save": "Zapisz",
 		"cancel": "Anuluj",
-		"titleRequired": "Nazwa jest wymagana"
+		"titleRequired": "Nazwa jest wymagana",
+		"nameRequired": "Nazwa jest wymagana"
 	},
 	"list": {
 		"empty": "Brak zadań. Dodaj pierwsze."

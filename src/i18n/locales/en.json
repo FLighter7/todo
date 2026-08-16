@@ -27,12 +27,23 @@
 		"one-time": "One-time",
 		"periodic": "Periodic"
 	},
+	"task": {
+		"name": "Name",
+		"note": "Note",
+		"created": "Created",
+		"important": "Important",
+		"urgent": "Urgent",
+		"done": "Done",
+		"actions": "Actions",
+		"cancel": "Cancel this task"
+	},
 	"form": {
 		"add": "Add task",
 		"edit": "Edit task",
 		"save": "Save",
 		"cancel": "Cancel",
-		"titleRequired": "Title is required"
+		"titleRequired": "Title is required",
+		"nameRequired": "Name is required"
 	},
 	"list": {
 		"empty": "No tasks yet. Add the first one."
