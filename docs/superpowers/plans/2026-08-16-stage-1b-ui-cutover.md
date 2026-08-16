@@ -96,13 +96,7 @@ Insert a `task` block after the existing `todo` block, extend `storage`, and ext
 	},
 ```
 
-and in `backup`:
-
-```json
-		"confirmTitle": "Replace everything?",
-		"confirmBody": "Records in the file: {incoming}. Records to be deleted: {current}. This cannot be undone.",
-		"restored": "Restored from the file. Records: {count}.",
-```
+The `backup.*` copy stays as it is here. Rewording it belongs to task 3, which updates `BackupActions.test.ts` in the same commit — that test asserts the English strings verbatim, so changing the copy on its own turns the suite red.
 
 `storage.recordsSkipped` may already exist if the stage 1a fix round added it. If so, leave it as it is — do not reword it.
 
@@ -124,15 +118,12 @@ and in `backup`:
 	},
 	"form": {
 		"nameRequired": "Название обязательно"
-	},
-	"backup": {
-		"confirmTitle": "Заменить всё?",
-		"confirmBody": "Записей в файле: {incoming}. Будет удалено записей: {current}. Отменить это нельзя.",
-		"restored": "Восстановлено из файла. Записей: {count}."
 	}
 ```
 
 Merge these into the existing blocks rather than replacing them — the snippet above lists only what is new.
+
+The Russian locale calls a task «дело» throughout. The new `task.*` block uses «задача» instead, because that is what the entity is now called in the model, and the `todo.*` block that holds the old wording disappears in task 5. Bring `form.add`, `form.edit` and `list.empty` along with it so the register stays uniform: «Новая задача», «Изменить задачу», «Задач пока нет. Заведи первую.»
 
 - [ ] **Step 3: Mirror the same keys in `pl.json`**
 
@@ -152,11 +143,6 @@ Merge these into the existing blocks rather than replacing them — the snippet 
 	},
 	"form": {
 		"nameRequired": "Nazwa jest wymagana"
-	},
-	"backup": {
-		"confirmTitle": "Zastąpić wszystko?",
-		"confirmBody": "Rekordów w pliku: {incoming}. Rekordów do usunięcia: {current}. Tego nie można cofnąć.",
-		"restored": "Przywrócono z pliku. Rekordów: {count}."
 	}
 ```
 
@@ -603,6 +589,7 @@ git commit -m "feat: move the list and matrix onto the task store"
 - Modify: `src/services/backup/BackupFile.ts`
 - Modify: `src/containers/BackupActions.vue`
 - Modify: `src/containers/BackupActions.test.ts`
+- Modify: `src/i18n/locales/en.json`, `ru.json`, `pl.json` (the `backup.*` copy)
 
 **Interfaces:**
 
@@ -853,17 +840,45 @@ function incomingTotal(backup: Backup): number {
 
 In the template, `store.items.length` becomes `currentCount`.
 
-- [ ] **Step 6: Update `BackupActions.test.ts`**
+- [ ] **Step 6: Reword the backup copy in all three locales**
 
-Read it first and keep its shape. What has to change: the stubbed store becomes the three entity stores, the exported file is asserted to be version 3 with `dreams`/`goals`/`tasks` arrays, and the restore path is expected to call `replaceAll` on all three. If a test asserts on the confirmation copy, update it to the new `backup.confirmBody` wording from task 1.
+The dialog now counts records of three kinds, not tasks. In `en.json`:
 
-- [ ] **Step 7: Run the checks**
+```json
+		"confirmTitle": "Replace everything?",
+		"confirmBody": "Records in the file: {incoming}. Records to be deleted: {current}. This cannot be undone.",
+		"restored": "Restored from the file. Records: {count}.",
+```
+
+`ru.json`:
+
+```json
+		"confirmTitle": "Заменить всё?",
+		"confirmBody": "Записей в файле: {incoming}. Будет удалено записей: {current}. Отменить это будет нельзя.",
+		"restored": "Восстановлено из файла. Записей: {count}.",
+```
+
+`pl.json`:
+
+```json
+		"confirmTitle": "Zastąpić wszystko?",
+		"confirmBody": "Rekordów w pliku: {incoming}. Rekordów do usunięcia: {current}. Tej operacji nie można cofnąć.",
+		"restored": "Przywrócono z pliku. Rekordów: {count}.",
+```
+
+This lands here rather than in task 1 for a reason: `BackupActions.test.ts` asserts `Tasks in the file: 1` verbatim, so the copy and the test have to move in one commit or the suite goes red between them.
+
+- [ ] **Step 7: Update `BackupActions.test.ts`**
+
+Read it first and keep its shape. What has to change: the stubbed store becomes the three entity stores, the exported file is asserted to be version 3 with `dreams`/`goals`/`tasks` arrays, and the restore path is expected to call `replaceAll` on all three. The assertion on the confirmation copy moves to the new `Records in the file:` wording from the previous step.
+
+- [ ] **Step 8: Run the checks**
 
 Run: `npm test`, then `npm run lint`, then `npm run build`
 
 Expected: all PASS.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
 git add -A
