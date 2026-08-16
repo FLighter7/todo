@@ -56,6 +56,8 @@ The app installs onto the device and works without a network.
 
 ## Testing the PWA locally
 
+**`npm run dev` never registers a service worker, on purpose.** `vite-plugin-pwa` only wires one up in a production build; under the dev server `registerSW()` resolves to a no-op, so nothing gets cached and closing the dev server takes the page down with it. That is expected, not a bug — use the build below to see or test offline behavior.
+
 A service worker requires a secure context. HTTPS qualifies, and browsers also trust `http://localhost` and `http://127.0.0.1` — specifically for development. So all of it can be checked locally:
 
 ```bash
