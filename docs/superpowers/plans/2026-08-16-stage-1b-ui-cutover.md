@@ -6,7 +6,11 @@
 
 **Architecture:** Stage 1a built the new data layer beside the old one and wired it to nothing. This stage reverses that: the UI, the backup format and the sync envelope all move to the new stores, and `types/todo.ts`, `stores/todos.ts`, `repositories/TodoStorage.ts`, `repositories/IndexedDbRepository.ts` and `repositories/InMemoryRepository.ts` are removed. The visible app does not change shape — two pages, a list and a matrix, at the same routes. Dream and goal *pages* arrive in stages 3 and 4; here the two new stores exist, load, back up and sync, but nothing renders them.
 
-The cutover order keeps each task green in the real sense, not merely compiling. Task 2 leaves one temporary line in `DefaultLayout` that also loads the old `todos` store, so `BackupActions` and `SyncFlow` keep working on real data until tasks 3 and 4 move them; task 5 removes that line together with the store it feeds.
+**Interim breakage, known and accepted.** Task 2 moves everything that *writes* onto the task store while `BackupActions` and `SyncFlow` still read the old `todos` store. From that moment the old store is loaded but never written, so `e2e/sync.spec.ts` — which adds a task through the UI on one device and expects it on the other after a pairing — cannot pass until task 4 rewires the exchange. It fails between task 2 and task 4 and is expected to.
+
+The first draft of this plan claimed the opposite, and the temporary `void todos.load()` line in `DefaultLayout` was justified by it. That line no longer preserves anything: loading a store nothing writes to yields an empty list either way. It stays only because removing it early would mean editing `DefaultLayout` twice, and task 5 removes it with the store it feeds.
+
+Everything else stays green throughout: unit tests, lint, build and the other eight e2e tests.
 
 **Tech Stack:** Vue 3.5, Pinia 4, Vuetify 4.1, vue-i18n 11, Vitest 4, `fake-indexeddb`, Playwright.
 
@@ -25,7 +29,8 @@ The cutover order keeps each task green in the real sense, not merely compiling.
 - Records written to storage must be plain, proxy-free copies. The store factory's `toStorable()` does this; never hand `storage.put` a value taken straight out of `records.value`.
 - `updated` moves on every user-facing change — but **never** on garbage collection.
 - Three locales exist and all three must stay complete: `en.json`, `ru.json`, `pl.json`. A key added to one is added to all three.
-- After every task: `npm test`, `npm run lint` and `npm run build` must pass. `npm run test:e2e` must pass after tasks 2, 4 and 6.
+- After every task: `npm test`, `npm run lint` and `npm run build` must pass.
+- `npm run test:e2e` must pass **fully** after tasks 4, 5 and 6. Between task 2 and task 4 exactly one test is expected to fail — `e2e/sync.spec.ts`, for the reason given under "Interim breakage" below. Every other e2e test must pass throughout.
 - Do not add a git remote, do not push, do not deploy.
 
 ## Interfaces from stage 1a
