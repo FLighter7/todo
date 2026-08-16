@@ -53,3 +53,17 @@ test('deleting a task removes it from the list', async ({ page }) => {
 
 	await expect(page.getByText('No tasks yet. Add the first one.')).toBeVisible();
 });
+
+test('a task survives a page reload', async ({ page }) => {
+	await page.goto('/');
+
+	await page.getByRole('button', { name: 'Add task' }).click();
+	await page.getByLabel('Title').fill('Survives reload');
+	await page.getByRole('button', { name: 'Save' }).click();
+	await expect(page.getByText('Survives reload')).toBeVisible();
+
+	await page.reload();
+
+	// Rendering the task is not enough: it has to come back from IndexedDB.
+	await expect(page.getByText('Survives reload')).toBeVisible();
+});
