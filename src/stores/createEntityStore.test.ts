@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import { Status, type Dream } from '@/types';
+import { isReactive, reactive } from 'vue';
+import { Status, type Dream, type Task } from '@/types';
 import { StorageUnavailableError, type EntityStorage } from '@/repositories/EntityStorage';
 import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
 import { defineEntityStore } from './createEntityStore';
@@ -24,6 +25,26 @@ const useTestStore = defineEntityStore<Dream, DreamDraft>({
 	}),
 });
 
+interface TaskDraft {
+	name: string;
+}
+
+const useTestTaskStore = defineEntityStore<Task, TaskDraft>({
+	id: 'test-tasks',
+	createRepository: async () => new EntityMemoryRepository<Task>(),
+	build: (draft, id, now) => ({
+		id,
+		name: draft.name,
+		created: now,
+		updated: now,
+		status: Status.Opened,
+		important: false,
+		urgent: false,
+		schedule: { start: '2026-08-06T10:00' },
+		completions: [{ occurrence: '2026-08-06T10:00', done: true, at: now }],
+	}),
+});
+
 function makeDream(overrides: Partial<Dream> = {}): Dream {
 	return {
 		id: 'seeded',
@@ -31,6 +52,21 @@ function makeDream(overrides: Partial<Dream> = {}): Dream {
 		created: '2026-08-06T10:00:00.000Z',
 		updated: '2026-08-06T10:00:00.000Z',
 		status: Status.Opened,
+		...overrides,
+	};
+}
+
+function makeTask(overrides: Partial<Task> = {}): Task {
+	return {
+		id: 'seeded-task',
+		name: 'Water the plants',
+		created: '2026-08-06T10:00:00.000Z',
+		updated: '2026-08-06T10:00:00.000Z',
+		status: Status.Opened,
+		important: false,
+		urgent: false,
+		schedule: { start: '2026-08-06T10:00' },
+		completions: [{ occurrence: '2026-08-06T10:00', done: true, at: '2026-08-06T10:00:00.000Z' }],
 		...overrides,
 	};
 }
@@ -215,5 +251,107 @@ describe('defineEntityStore replaceAll', () => {
 
 		expect(store.records).toEqual([]);
 		await expect(storage.getAll()).resolves.toEqual([]);
+	});
+});
+
+/**
+ * Regression coverage for the `toRaw` correction: every test above uses
+ * `Dream`, which has no nested fields, so it cannot detect a reactive proxy
+ * leaking into storage. A `Task`'s `schedule` and `completions` can. These
+ * tests capture the exact object handed to `EntityStorage.put` and assert
+ * none of it — top level or nested — is still a Vue reactive proxy.
+ */
+describe('defineEntityStore reactive proxy regression', () => {
+	function spyingStorage(seed: Task[]): { storage: EntityStorage<Task>; received: Task[] } {
+		const received: Task[] = [];
+		const storage: EntityStorage<Task> = {
+			async getAll() {
+				return seed;
+			},
+			async put(record) {
+				received.push(record);
+			},
+			async remove() {},
+			async clear() {},
+		};
+
+		return { storage, received };
+	}
+
+	it('writes a plain object to storage on update, not a reactive proxy', async () => {
+		const { storage, received } = spyingStorage([makeTask()]);
+		const store = useTestTaskStore();
+		await store.load(async () => storage);
+
+		await store.update('seeded-task', { name: 'Renamed' });
+
+		expect(received).toHaveLength(1);
+		const [record] = received;
+		expect(isReactive(record)).toBe(false);
+		expect(isReactive(record.schedule)).toBe(false);
+		expect(isReactive(record.completions)).toBe(false);
+	});
+
+	it('writes plain objects to storage on replaceAll, not reactive proxies', async () => {
+		const { storage, received } = spyingStorage([]);
+		const store = useTestTaskStore();
+		await store.load(async () => storage);
+
+		// A caller can hand replaceAll a list sourced from another reactive
+		// store's `records` — e.g. a sync or restore path. `reactive()` here
+		// stands in for that: a genuine Vue proxy, nested fields included.
+		const incoming = reactive(makeTask({ id: 'replaced' })) as Task;
+
+		await store.replaceAll([incoming]);
+
+		expect(received).toHaveLength(1);
+		const [record] = received;
+		expect(isReactive(record)).toBe(false);
+		expect(isReactive(record.schedule)).toBe(false);
+		expect(isReactive(record.completions)).toBe(false);
+	});
+});
+
+describe('defineEntityStore load skipped rows', () => {
+	it('surfaces a load error when storage reports skipped rows', async () => {
+		const storage: EntityStorage<Dream> = {
+			async getAll() {
+				return [];
+			},
+			async put() {},
+			async remove() {},
+			async clear() {},
+			skipped: 2,
+		};
+		const store = useTestStore();
+
+		await store.load(async () => storage);
+
+		expect(useStorageStore().lastError).toBe('storage.recordsSkipped');
+	});
+
+	it('does not surface a load error when storage cannot report a skipped count', async () => {
+		const store = useTestStore();
+
+		await store.load(async () => new EntityMemoryRepository<Dream>());
+
+		expect(useStorageStore().lastError).toBeNull();
+	});
+
+	it('does not surface a load error when the skipped count is zero', async () => {
+		const storage: EntityStorage<Dream> = {
+			async getAll() {
+				return [];
+			},
+			async put() {},
+			async remove() {},
+			async clear() {},
+			skipped: 0,
+		};
+		const store = useTestStore();
+
+		await store.load(async () => storage);
+
+		expect(useStorageStore().lastError).toBeNull();
 	});
 });

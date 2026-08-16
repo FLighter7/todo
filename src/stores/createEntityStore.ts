@@ -60,6 +60,7 @@ export function defineEntityStore<T extends EntityBase, D>(options: EntityStoreO
 			}
 
 			const loaded = await storage.getAll();
+			storageState.noteLoadSkipped(storage.skipped ?? 0);
 			const { keep, purge } = collectGarbage(loaded, cleanupDays.value, new Date());
 			records.value = keep;
 

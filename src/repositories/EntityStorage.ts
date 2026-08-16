@@ -9,6 +9,12 @@ export interface EntityStorage<T extends EntityBase> {
 	put(record: T): Promise<void>;
 	remove(id: string): Promise<void>;
 	clear(): Promise<void>;
+	/**
+	 * Rows the last `getAll()` rejected as unparseable. Absent when the
+	 * storage has no way to tell — an in-memory repository, for instance,
+	 * never holds anything it didn't already accept.
+	 */
+	readonly skipped?: number;
 }
 
 export class StorageUnavailableError extends Error {
