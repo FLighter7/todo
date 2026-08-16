@@ -1,12 +1,22 @@
-import type { Todo, TodoPeriod } from '@/types/todo';
+import {
+	EntityFormatError,
+	parseDream,
+	parseGoal,
+	parseTask,
+	type Dream,
+	type Goal,
+	type Task,
+} from '@/types';
 
-export const BACKUP_VERSION = 2;
+export const BACKUP_VERSION = 3;
 
-export interface TodoBackup {
+export interface Backup {
 	version: number;
 	/** ISO 8601 timestamp in UTC. */
 	exportedAt: string;
-	todos: Todo[];
+	dreams: Dream[];
+	goals: Goal[];
+	tasks: Task[];
 }
 
 export class BackupFormatError extends Error {
@@ -16,78 +26,51 @@ export class BackupFormatError extends Error {
 	}
 }
 
-const PERIODS: readonly TodoPeriod[] = ['one-time', 'periodic'];
-
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function readTodo(value: unknown, index: number): Todo {
-	const fail = (reason: string): never => {
-		throw new BackupFormatError(`Task ${index} is invalid: ${reason}`);
-	};
-
-	if (!isRecord(value)) {
-		fail('it is not an object');
+/**
+ * Wraps the shared parsers so a bad record reports where it is. The parsers
+ * already say what is wrong with it; only its address has to be added.
+ */
+function readAll<T>(raw: unknown, collection: string, parse: (value: unknown) => T): T[] {
+	if (!Array.isArray(raw)) {
+		throw new BackupFormatError(`The backup has no "${collection}" list`);
 	}
 
-	const entry = value as Record<string, unknown>;
+	return raw.map((value, index) => {
+		try {
+			return parse(value);
+		} catch (error) {
+			if (error instanceof EntityFormatError) {
+				throw new BackupFormatError(`${collection}[${index}] is invalid: ${error.message}`);
+			}
 
-	for (const key of ['id', 'title', 'created'] as const) {
-		if (typeof entry[key] !== 'string') fail(`"${key}" must be a string`);
-	}
-
-	for (const key of ['important', 'urgent', 'done'] as const) {
-		if (typeof entry[key] !== 'boolean') fail(`"${key}" must be true or false`);
-	}
-
-	if (!PERIODS.includes(entry.period as TodoPeriod)) {
-		fail(`"period" must be one of ${PERIODS.join(', ')}`);
-	}
-
-	if (entry.note !== undefined && typeof entry.note !== 'string') {
-		fail('"note" must be a string when present');
-	}
-
-	if (entry.updated !== undefined && typeof entry.updated !== 'string') {
-		fail('"updated" must be a string when present');
-	}
-
-	if (entry.deleted !== undefined && typeof entry.deleted !== 'boolean') {
-		fail('"deleted" must be true or false when present');
-	}
-
-	return {
-		id: entry.id as string,
-		title: entry.title as string,
-		note: entry.note as string | undefined,
-		created: entry.created as string,
-		// Version 1 files predate sync. Filling updated from created is honest —
-		// nothing known to this app has changed the record since it was made —
-		// and unlike stamping "now" it grants no unearned win in a merge.
-		updated: (entry.updated as string | undefined) ?? (entry.created as string),
-		period: entry.period as TodoPeriod,
-		important: entry.important as boolean,
-		urgent: entry.urgent as boolean,
-		done: entry.done as boolean,
-		deleted: (entry.deleted as boolean | undefined) ?? false,
-	};
+			throw error;
+		}
+	});
 }
 
 export class BackupService {
-	create(todos: Todo[]): TodoBackup {
+	create(dreams: Dream[], goals: Goal[], tasks: Task[]): Backup {
 		return {
 			version: BACKUP_VERSION,
 			exportedAt: new Date().toISOString(),
-			todos: todos.map((todo) => ({ ...todo })),
+			// Closed records are included on purpose: a backup restores a complete
+			// state, and dropping the tombstones would resurrect everything ever
+			// finished or abandoned.
+			dreams: dreams.map((dream) => ({ ...dream })),
+			goals: goals.map((goal) => ({ ...goal })),
+			tasks: tasks.map((task) => ({ ...task })),
 		};
 	}
 
 	/**
 	 * Parses and fully validates a backup file. Callers may only touch storage
-	 * after this returns: a malformed file must never cost the user their list.
+	 * after this returns: a malformed file must never cost the user their data.
 	 */
-	parse(text: string): TodoBackup {
+	parse(text: string): Backup {
 		let raw: unknown;
 		try {
 			raw = JSON.parse(text);
@@ -103,20 +86,21 @@ export class BackupService {
 			throw new BackupFormatError('The backup has no version');
 		}
 
-		if (raw.version > BACKUP_VERSION) {
+		// Versions 1 and 2 held a single `todos` list against a model this app no
+		// longer has. Guessing at a migration would invent dreams and goals that
+		// were never written, so the file is refused instead.
+		if (raw.version !== BACKUP_VERSION) {
 			throw new BackupFormatError(
-				`The backup is newer than this app supports (version ${raw.version})`,
+				`This app reads backup version ${BACKUP_VERSION} only, and the file is version ${raw.version}`,
 			);
-		}
-
-		if (!Array.isArray(raw.todos)) {
-			throw new BackupFormatError('The backup has no list of tasks');
 		}
 
 		return {
 			version: raw.version,
 			exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : '',
-			todos: raw.todos.map(readTodo),
+			dreams: readAll(raw.dreams, 'dreams', parseDream),
+			goals: readAll(raw.goals, 'goals', parseGoal),
+			tasks: readAll(raw.tasks, 'tasks', parseTask),
 		};
 	}
 }

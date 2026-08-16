@@ -1,18 +1,38 @@
 import { describe, expect, it } from 'vitest';
-import type { Todo } from '@/types/todo';
-import { BACKUP_VERSION, BackupFormatError, BackupService } from './BackupService';
+import { Status, type Dream, type Goal, type Task } from '@/types';
+import { BackupFormatError, BackupService } from './BackupService';
 
-function makeTodo(overrides: Partial<Todo> = {}): Todo {
+function makeDream(overrides: Partial<Dream> = {}): Dream {
 	return {
-		id: 'id-1',
-		title: 'Buy milk',
+		id: 'dream-1',
+		name: 'Visit Japan',
 		created: '2026-08-06T10:00:00.000Z',
 		updated: '2026-08-06T10:00:00.000Z',
-		period: 'one-time',
+		status: Status.Opened,
+		...overrides,
+	};
+}
+
+function makeGoal(overrides: Partial<Goal> = {}): Goal {
+	return {
+		id: 'goal-1',
+		name: 'Save for the trip',
+		created: '2026-08-06T10:00:00.000Z',
+		updated: '2026-08-06T10:00:00.000Z',
+		status: Status.Opened,
+		...overrides,
+	};
+}
+
+function makeTask(overrides: Partial<Task> = {}): Task {
+	return {
+		id: 'task-1',
+		name: 'Book flights',
+		created: '2026-08-06T10:00:00.000Z',
+		updated: '2026-08-06T10:00:00.000Z',
+		status: Status.Opened,
 		important: false,
 		urgent: false,
-		done: false,
-		deleted: false,
 		...overrides,
 	};
 }
@@ -21,122 +41,63 @@ function serialize(value: unknown): string {
 	return JSON.stringify(value);
 }
 
-const service = new BackupService();
+const dream = makeDream();
+const goal = makeGoal();
+const task = makeTask();
+
+const backupService = new BackupService();
 
 describe('BackupService.create', () => {
-	it('wraps todos with the current version and a timestamp', () => {
-		const backup = service.create([makeTodo()]);
+	it('creates a version 3 backup holding all three collections', () => {
+		const backup = backupService.create([dream], [goal], [task]);
 
-		expect(backup.version).toBe(BACKUP_VERSION);
+		expect(backup.version).toBe(3);
+		expect(backup.dreams).toEqual([dream]);
+		expect(backup.goals).toEqual([goal]);
+		expect(backup.tasks).toEqual([task]);
 		expect(Number.isNaN(Date.parse(backup.exportedAt))).toBe(false);
-		expect(backup.todos).toHaveLength(1);
 	});
 
-	it('round-trips through parse', () => {
-		const todos = [makeTodo(), makeTodo({ id: 'id-2', period: 'periodic', done: true })];
-
-		const parsed = service.parse(serialize(service.create(todos)));
-
-		expect(parsed.todos).toEqual(todos);
+	it('includes closed records', () => {
+		const closed = { ...task, status: Status.Cancelled };
+		expect(backupService.create([], [], [closed]).tasks).toEqual([closed]);
 	});
 });
 
 describe('BackupService.parse', () => {
-	it('accepts an empty list', () => {
-		const parsed = service.parse(
-			serialize({ version: 1, exportedAt: '2026-08-06T10:00:00.000Z', todos: [] }),
-		);
+	it('reads a version 3 file back', () => {
+		const text = serialize(backupService.create([dream], [goal], [task]));
+		const parsed = backupService.parse(text);
 
-		expect(parsed.todos).toEqual([]);
+		expect(parsed.dreams).toEqual([dream]);
+		expect(parsed.goals).toEqual([goal]);
+		expect(parsed.tasks).toEqual([task]);
 	});
 
-	it('keeps an optional note', () => {
-		const parsed = service.parse(serialize(service.create([makeTodo({ note: 'with milk' })])));
-
-		expect(parsed.todos[0].note).toBe('with milk');
+	it('rejects a version 1 or 2 file', () => {
+		for (const version of [1, 2]) {
+			const text = serialize({ version, exportedAt: '', todos: [] });
+			expect(() => backupService.parse(text)).toThrow(BackupFormatError);
+		}
 	});
 
-	it('rejects text that is not json', () => {
-		expect(() => service.parse('not json at all')).toThrow(BackupFormatError);
+	it('rejects a file newer than this app', () => {
+		expect(() => backupService.parse(serialize({ version: 4 }))).toThrow(BackupFormatError);
 	});
 
-	it('rejects a bare array', () => {
-		expect(() => service.parse(serialize([makeTodo()]))).toThrow(BackupFormatError);
+	it('names the collection and the index of a broken record', () => {
+		const text = serialize({
+			version: 3,
+			exportedAt: '',
+			dreams: [],
+			goals: [],
+			tasks: [{ id: 'a' }],
+		});
+
+		expect(() => backupService.parse(text)).toThrow(/tasks.*0/);
 	});
 
-	it('rejects null', () => {
-		expect(() => service.parse(serialize(null))).toThrow(BackupFormatError);
-	});
-
-	it('rejects a missing todos array', () => {
-		expect(() => service.parse(serialize({ version: 1, exportedAt: 'x' }))).toThrow(
-			BackupFormatError,
-		);
-	});
-
-	it('rejects a version newer than supported', () => {
-		const text = serialize({ version: BACKUP_VERSION + 1, exportedAt: 'x', todos: [] });
-
-		expect(() => service.parse(text)).toThrow(/newer/i);
-	});
-
-	it('rejects a missing required field', () => {
-		const todo = makeTodo();
-		delete (todo as Partial<Todo>).title;
-
-		expect(() => service.parse(serialize({ version: 1, exportedAt: 'x', todos: [todo] }))).toThrow(
-			BackupFormatError,
-		);
-	});
-
-	it('rejects a field of the wrong type', () => {
-		const todo = { ...makeTodo(), done: 'yes' };
-
-		expect(() => service.parse(serialize({ version: 1, exportedAt: 'x', todos: [todo] }))).toThrow(
-			BackupFormatError,
-		);
-	});
-
-	it('rejects an unknown period value', () => {
-		const todo = { ...makeTodo(), period: 'weekly' };
-
-		expect(() => service.parse(serialize({ version: 1, exportedAt: 'x', todos: [todo] }))).toThrow(
-			BackupFormatError,
-		);
-	});
-
-	it('reads a version 1 file and fills in the sync fields', () => {
-		const legacy = {
-			id: 'old-1',
-			title: 'Written before sync existed',
-			created: '2026-07-01T09:00:00.000Z',
-			period: 'one-time',
-			important: true,
-			urgent: false,
-			done: false,
-		};
-
-		const parsed = service.parse(serialize({ version: 1, exportedAt: 'x', todos: [legacy] }));
-
-		expect(parsed.todos[0].updated).toBe(legacy.created);
-		expect(parsed.todos[0].deleted).toBe(false);
-	});
-
-	it('keeps tombstones from a version 2 file', () => {
-		const text = serialize(service.create([makeTodo({ deleted: true })]));
-
-		expect(service.parse(text).todos[0].deleted).toBe(true);
-	});
-
-	it('rejects a non-object entry inside todos', () => {
-		expect(() => service.parse(serialize({ version: 1, exportedAt: 'x', todos: ['nope'] }))).toThrow(
-			BackupFormatError,
-		);
-	});
-
-	it('reports which entry failed so the file can be fixed', () => {
-		const todos = [makeTodo(), { ...makeTodo({ id: 'id-2' }), title: 42 }];
-
-		expect(() => service.parse(serialize({ version: 1, exportedAt: 'x', todos }))).toThrow(/1/);
+	it('rejects a file that is not JSON', () => {
+		expect(() => backupService.parse('{')).toThrow(BackupFormatError);
 	});
 });

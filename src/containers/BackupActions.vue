@@ -22,7 +22,7 @@
 
 			<v-card-text>
 				<p>
-					{{ t('backup.confirmBody', { incoming: incomingCount, current: store.items.length }) }}
+					{{ t('backup.confirmBody', { incoming: incomingCount, current: currentCount }) }}
 				</p>
 				<p v-if="exportedAt" class="text-medium-emphasis mt-2">
 					{{ t('backup.exportedAt', { date: exportedAt }) }}
@@ -42,21 +42,33 @@
 import { computed, ref, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { mdiDownloadOutline, mdiUploadOutline } from '@mdi/js';
-import type { TodoBackup } from '@/services/backup/BackupService';
+import type { Backup } from '@/services/backup/BackupService';
 import { BackupFormatError, backupService } from '@/services/backup/BackupService';
 import { backupFile } from '@/services/backup/BackupFile';
-import { useTodosStore } from '@/stores/todos';
+import { useDreamsStore } from '@/stores/dreams';
+import { useGoalsStore } from '@/stores/goals';
+import { useTasksStore } from '@/stores/tasks';
 
 const emit = defineEmits<{ notify: [message: string] }>();
 
 const { t, locale } = useI18n();
-const store = useTodosStore();
+const dreams = useDreamsStore();
+const goals = useGoalsStore();
+const tasks = useTasksStore();
 
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput');
-const pending = ref<TodoBackup | null>(null);
+const pending = ref<Backup | null>(null);
 const confirmOpen = ref(false);
 
-const incomingCount = computed(() => pending.value?.todos.length ?? 0);
+const incomingCount = computed(() => {
+	const backup = pending.value;
+
+	return backup === null ? 0 : backup.dreams.length + backup.goals.length + backup.tasks.length;
+});
+
+const currentCount = computed(
+	() => dreams.records.length + goals.records.length + tasks.records.length,
+);
 
 const exportedAt = computed(() => {
 	const raw = pending.value?.exportedAt;
@@ -68,7 +80,9 @@ const exportedAt = computed(() => {
 });
 
 function exportFile(): void {
-	backupFile.download(backupService.create(store.items));
+	// records, not active: a backup that omitted closed records would resurrect
+	// everything ever finished or abandoned on the next restore.
+	backupFile.download(backupService.create(dreams.records, goals.records, tasks.records));
 	emit('notify', t('backup.exported'));
 }
 
@@ -86,7 +100,7 @@ async function onFileChosen(event: Event): Promise<void> {
 	}
 
 	try {
-		// Parse before touching anything: a broken file must not cost the list.
+		// Parse before touching anything: a broken file must not cost the data.
 		pending.value = backupService.parse(await backupFile.readText(file));
 		confirmOpen.value = true;
 	} catch (error) {
@@ -108,7 +122,15 @@ async function confirmImport(): Promise<void> {
 
 	confirmOpen.value = false;
 	pending.value = null;
-	await store.replaceAll(backup.todos);
-	emit('notify', t('backup.restored', { count: backup.todos.length }));
+
+	await dreams.replaceAll(backup.dreams);
+	await goals.replaceAll(backup.goals);
+	await tasks.replaceAll(backup.tasks);
+
+	emit('notify', t('backup.restored', { count: incomingTotal(backup) }));
+}
+
+function incomingTotal(backup: Backup): number {
+	return backup.dreams.length + backup.goals.length + backup.tasks.length;
 }
 </script>

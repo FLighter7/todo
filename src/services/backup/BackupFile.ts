@@ -1,4 +1,4 @@
-import type { TodoBackup } from './BackupService';
+import type { Backup } from './BackupService';
 
 export class BackupFile {
 	/** Deliberately thin: all logic that deserves a test lives in BackupService. */
@@ -6,7 +6,7 @@ export class BackupFile {
 		return `todo-backup-${date.toISOString().slice(0, 10)}.json`;
 	}
 
-	download(backup: TodoBackup, fileName = this.fileName()): void {
+	download(backup: Backup, fileName = this.fileName()): void {
 		const blob = new Blob([JSON.stringify(backup, null, '\t')], { type: 'application/json' });
 		const url = URL.createObjectURL(blob);
 		const link = document.createElement('a');
