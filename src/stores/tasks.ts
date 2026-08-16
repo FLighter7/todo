@@ -55,17 +55,19 @@ const useBaseTasksStore = defineEntityStore<Task, TaskDraft>({
  * matrix is for deciding what to do next.
  *
  * `Object.assign`-ing the base store with `{ quadrants }` type-checks
- * `quadrants` as a raw `ComputedRef` instead of its unwrapped value, and —
- * worse — even wrapping a plain `{ ...store, quadrants }` spread in a new
- * `defineStore` setup silently freezes scalar state (`loading`,
- * `cleanupDays`) at whatever value it held the instant the spread ran,
- * because a spread copies a primitive by value, not by reference, and only
- * object/array-shaped state stays live by virtue of being the same
- * underlying reactive object. `storeToRefs` is Pinia's documented answer for
- * composing one store from another: it hands back real `Ref`s that stay
- * wired to the source, so every state and getter here keeps updating after
- * the source store changes. Actions are passed through directly — Pinia
- * already binds them to their own store.
+ * `quadrants` as a raw `ComputedRef` instead of its unwrapped value. A plain
+ * `{ ...store, quadrants }` spread — even inside a new `defineStore` setup —
+ * fares no better at runtime: a spread just copies each property's current
+ * value out once, so nothing behind it stays connected to the source store.
+ * Scalars (`loading`) freeze at that value, and so do `records`, `active`
+ * and `closed`, despite being arrays — `load()` reassigns `records` outright
+ * rather than mutating it in place, and `active`/`closed` are computeds that
+ * return a fresh array on every recalculation, so the copied snapshot is
+ * already stale. `storeToRefs` is Pinia's documented answer for composing
+ * one store from another: it hands back real `Ref`s that stay wired to the
+ * source, so every state and getter here keeps updating after the source
+ * store changes. Actions are passed through directly — Pinia already binds
+ * them to their own store.
  */
 export const useTasksStore = defineStore('tasksMatrix', () => {
 	const store = useBaseTasksStore();

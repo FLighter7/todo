@@ -122,3 +122,36 @@ describe('useTasksStore quadrants', () => {
 		expect(store.quadrants.do).toHaveLength(1);
 	});
 });
+
+/**
+ * `useTasksStore` composes `useBaseTasksStore` with `storeToRefs` rather
+ * than a plain object spread, because a spread only copies each property's
+ * value out once and nothing behind it stays connected to the source store
+ * afterwards — see the comment on `useTasksStore` for why that bites both
+ * scalars and arrays. These tests would pass against `quadrants` alone even
+ * with a naive spread, since `quadrants` is a computed added directly in the
+ * same setup call; they exist to catch a regression in the composition of
+ * the *base* store's own state, which nothing above touches.
+ */
+describe('useTasksStore composition reactivity', () => {
+	it('keeps loading live across an unawaited load()', async () => {
+		const store = useTasksStore();
+		expect(store.loading).toBe(false);
+
+		const pending = store.load(async () => new EntityMemoryRepository<Task>());
+		expect(store.loading).toBe(true);
+
+		await pending;
+		expect(store.loading).toBe(false);
+	});
+
+	it('keeps active live after an add()', async () => {
+		const store = useTasksStore();
+		await store.load(async () => new EntityMemoryRepository<Task>());
+		expect(store.active).toEqual([]);
+
+		await store.add({ name: 'Ship the release', important: true, urgent: true });
+
+		expect(store.active).toHaveLength(1);
+	});
+});
