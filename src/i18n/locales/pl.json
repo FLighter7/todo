@@ -10,7 +10,8 @@
 	},
 	"storage": {
 		"unavailable": "Pamięć trwała jest niedostępna. Zmiany zostaną utracone po zamknięciu aplikacji.",
-		"writeFailed": "Nie udało się zapisać zmiany."
+		"writeFailed": "Nie udało się zapisać zmiany.",
+		"recordsSkipped": "Części rekordów nie udało się odczytać i zostały pominięte. W pliku eksportu nadal są."
 	},
 	"todo": {
 		"title": "Nazwa",

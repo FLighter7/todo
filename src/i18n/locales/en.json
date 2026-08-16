@@ -10,7 +10,8 @@
 	},
 	"storage": {
 		"unavailable": "Persistent storage is unavailable. Changes will be lost when you close the app.",
-		"writeFailed": "Could not save the change."
+		"writeFailed": "Could not save the change.",
+		"recordsSkipped": "Some records could not be read and were skipped. They are still in the file you can export."
 	},
 	"todo": {
 		"title": "Title",
