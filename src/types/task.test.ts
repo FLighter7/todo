@@ -68,6 +68,55 @@ describe('parseTask', () => {
 		expect(parseTask(makeRaw({ schedule })).schedule?.tzid).toBe('Europe/Moscow');
 	});
 
+	it('rejects a start with a trailing Z', () => {
+		expect(() => parseTask(makeRaw({ schedule: { start: '2026-08-07T09:00:00.000Z' } }))).toThrow(
+			EntityFormatError,
+		);
+	});
+
+	it('rejects a start with a numeric offset', () => {
+		expect(() => parseTask(makeRaw({ schedule: { start: '2026-08-07T09:00:00+03:00' } }))).toThrow(
+			EntityFormatError,
+		);
+	});
+
+	it('rejects a start with seconds', () => {
+		expect(() => parseTask(makeRaw({ schedule: { start: '2026-08-07T09:00:00' } }))).toThrow(
+			EntityFormatError,
+		);
+	});
+
+	it('accepts a valid wall-clock start', () => {
+		const schedule = { start: '2026-08-07T09:00' };
+
+		expect(parseTask(makeRaw({ schedule })).schedule?.start).toBe('2026-08-07T09:00');
+	});
+
+	it('rejects an exdate entry with a trailing Z', () => {
+		expect(() =>
+			parseTask(
+				makeRaw({
+					schedule: {
+						start: '2026-08-07T09:00',
+						exdate: ['2026-08-14T09:00:00.000Z'],
+					},
+				}),
+			),
+		).toThrow(EntityFormatError);
+	});
+
+	it('accepts a valid exdate and rdate pair', () => {
+		const schedule = {
+			start: '2026-08-07T09:00',
+			exdate: ['2026-08-14T09:00'],
+			rdate: ['2026-08-21T09:00'],
+		};
+
+		const parsed = parseTask(makeRaw({ schedule })).schedule;
+		expect(parsed?.exdate).toEqual(['2026-08-14T09:00']);
+		expect(parsed?.rdate).toEqual(['2026-08-21T09:00']);
+	});
+
 	it('parses completions', () => {
 		const completions = [
 			{ occurrence: '2026-08-07T09:00', done: true, at: '2026-08-07T11:00:00.000Z' },

@@ -73,6 +73,23 @@ function parseStringArray(value: unknown, key: string): string[] | undefined {
 	return value as string[];
 }
 
+/**
+ * Exactly 'YYYY-MM-DDTHH:mm' — no seconds, no trailing 'Z', no numeric
+ * offset. `start`, `exdate` and `rdate` are wall-clock fields: a baked-in
+ * UTC or offset is rejected outright rather than converted, because a
+ * floating time interpreted as UTC means something else entirely, and a
+ * zone-anchored one with a baked-in offset silently slides by an hour
+ * across daylight saving. A zone is named through `tzid`, never encoded
+ * into the timestamp itself.
+ */
+const WALL_CLOCK_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+
+function assertWallClock(value: string, key: string): void {
+	if (!WALL_CLOCK_PATTERN.test(value)) {
+		fail(`"${key}" must be a wall-clock time 'YYYY-MM-DDTHH:mm', not UTC or an offset: ${value}`);
+	}
+}
+
 export function parseSchedule(value: unknown): Schedule {
 	if (!isRecordObject(value)) {
 		fail('"schedule" must be an object');
@@ -97,13 +114,22 @@ export function parseSchedule(value: unknown): Schedule {
 		}
 	}
 
+	const start = readString(value, 'start');
+	assertWallClock(start, 'schedule.start');
+
+	const exdate = parseStringArray(value.exdate, 'schedule.exdate');
+	exdate?.forEach((entry) => assertWallClock(entry, 'schedule.exdate'));
+
+	const rdate = parseStringArray(value.rdate, 'schedule.rdate');
+	rdate?.forEach((entry) => assertWallClock(entry, 'schedule.rdate'));
+
 	return {
-		start: readString(value, 'start'),
+		start,
 		tzid,
 		duration: readOptionalString(value, 'duration'),
 		rrule: rule,
-		exdate: parseStringArray(value.exdate, 'schedule.exdate'),
-		rdate: parseStringArray(value.rdate, 'schedule.rdate'),
+		exdate,
+		rdate,
 	};
 }
 
