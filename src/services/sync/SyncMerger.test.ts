@@ -254,9 +254,23 @@ describe('SyncMerger.mergeTasks', () => {
 		expect(merger.mergeTasks([makeTask()], [makeTask()])[0].completions).toBeUndefined();
 	});
 
-	it('takes a task that exists only on one side', () => {
-		expect(merger.mergeTasks([], [makeTask({ id: 'remote-only' })])).toHaveLength(1);
-		expect(merger.mergeTasks([makeTask({ id: 'local-only' })], [])).toHaveLength(1);
+	it('takes a task that exists only on one side, completions included', () => {
+		const remoteMark = mark('2026-08-07T09:00', true, '2026-08-07T00:00:00.000Z');
+		const localMark = mark('2026-08-14T09:00', true, '2026-08-14T00:00:00.000Z');
+
+		const remoteOnly = merger.mergeTasks(
+			[],
+			[makeTask({ id: 'remote-only', completions: [remoteMark] })],
+		);
+		expect(remoteOnly).toHaveLength(1);
+		expect(remoteOnly[0].completions).toEqual([remoteMark]);
+
+		const localOnly = merger.mergeTasks(
+			[makeTask({ id: 'local-only', completions: [localMark] })],
+			[],
+		);
+		expect(localOnly).toHaveLength(1);
+		expect(localOnly[0].completions).toEqual([localMark]);
 	});
 
 	it('does not mutate either input', () => {
@@ -290,6 +304,11 @@ describe('SyncMerger.mergeTasks', () => {
 	});
 
 	it('gives the same completions regardless of which side runs it', () => {
+		// Also the tie scenario: both records share the default `updated`, so
+		// the whole-record tie-break favours local. That makes this the
+		// sharpest case in the file — a bug that only shows up when the
+		// winner is read from the same side that built the lookup map (the
+		// one this suite already caught once) hides here.
 		const local = [
 			makeTask({ completions: [mark('2026-08-07T09:00', true, '2026-08-07T00:00:00.000Z')] }),
 		];
@@ -297,11 +316,22 @@ describe('SyncMerger.mergeTasks', () => {
 			makeTask({ completions: [mark('2026-08-14T09:00', true, '2026-08-14T00:00:00.000Z')] }),
 		];
 
-		const one = merger.mergeTasks(local, remote)[0].completions ?? [];
-		const other = merger.mergeTasks(remote, local)[0].completions ?? [];
+		const sortByOccurrence = (completions: Completion[]) =>
+			[...completions].sort((a, b) => a.occurrence.localeCompare(b.occurrence));
 
-		expect([...one].sort((a, b) => a.occurrence.localeCompare(b.occurrence))).toEqual(
-			[...other].sort((a, b) => a.occurrence.localeCompare(b.occurrence)),
-		);
+		const one = sortByOccurrence(merger.mergeTasks(local, remote)[0].completions ?? []);
+		const other = sortByOccurrence(merger.mergeTasks(remote, local)[0].completions ?? []);
+
+		expect(one).toEqual(other);
+
+		// The equality above also holds if both directions dropped the same
+		// occurrence, so assert the content too: the surviving set must be
+		// the union of both marks, not merely an agreement between the runs.
+		const union = sortByOccurrence([
+			mark('2026-08-07T09:00', true, '2026-08-07T00:00:00.000Z'),
+			mark('2026-08-14T09:00', true, '2026-08-14T00:00:00.000Z'),
+		]);
+		expect(one).toEqual(union);
+		expect(other).toEqual(union);
 	});
 });
