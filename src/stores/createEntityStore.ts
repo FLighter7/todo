@@ -16,6 +16,37 @@ export interface EntityStoreOptions<T extends EntityBase, D> {
 }
 
 /**
+ * A copy safe to hand to storage. `toRaw` unwraps the record itself, but a
+ * shallow spread carries nested objects — a Task's `schedule` and
+ * `completions`, a Goal's `deadline` — out as whatever they already were, and
+ * a draft bound to a form hands those in as reactive proxies. IndexedDB's
+ * structured clone rejects a Proxy outright, so every level has to be
+ * unwrapped, not just the first.
+ *
+ * Total for these records by construction: they are JSON-shaped throughout —
+ * strings, numbers, booleans, arrays and plain objects, no Date, Map or Set.
+ */
+function toStorable<T>(value: T): T {
+	const raw = toRaw(value);
+
+	if (Array.isArray(raw)) {
+		return raw.map((item) => toStorable(item)) as T;
+	}
+
+	if (raw !== null && typeof raw === 'object') {
+		const copy: Record<string, unknown> = {};
+
+		for (const [key, item] of Object.entries(raw)) {
+			copy[key] = toStorable(item);
+		}
+
+		return copy as T;
+	}
+
+	return raw;
+}
+
+/**
  * The half of every entity store that is identical for dreams, goals and
  * tasks. Each store adds only what is genuinely its own — the task store's
  * quadrants, for instance.
@@ -78,7 +109,7 @@ export function defineEntityStore<T extends EntityBase, D>(options: EntityStoreO
 			const record = options.build(draft, crypto.randomUUID(), now);
 
 			records.value.push(record);
-			await persist(() => storage.put({ ...record }));
+			await persist(() => storage.put(toStorable(record)));
 
 			return record;
 		}
@@ -90,17 +121,20 @@ export function defineEntityStore<T extends EntityBase, D>(options: EntityStoreO
 			}
 
 			// toRaw() before spreading: records.value[index] is a reactive proxy,
-			// and a shallow spread of a proxy carries nested objects (a Task's
-			// schedule and completions) out as proxies too. IndexedDB's structured
-			// clone rejects a Proxy outright, so the write must start from the raw
-			// object instead.
+			// and a shallow spread of a proxy carries nested objects out as
+			// whatever they already were. That is enough for the record's own
+			// top-level shape — the in-memory `updated` below is correct — but a
+			// nested field (a Task's schedule, say) can itself already be a
+			// reactive proxy handed in by `patch`, and toRaw() only unwraps the
+			// first level. toStorable() below is what unwraps the rest before the
+			// write.
 			const updated: T = {
 				...toRaw(records.value[index]),
 				...patch,
 				updated: new Date().toISOString(),
 			};
 			records.value[index] = updated;
-			await persist(() => storage.put({ ...updated }));
+			await persist(() => storage.put(toStorable(updated)));
 		}
 
 		/**
@@ -118,16 +152,17 @@ export function defineEntityStore<T extends EntityBase, D>(options: EntityStoreO
 
 		/** Replaces the whole list, e.g. after restoring a backup or a sync. */
 		async function replaceAll(incoming: T[]): Promise<void> {
-			// Plain copies: reading these back out of a reactive array would yield
-			// proxies, which IndexedDB cannot structured-clone. toRaw() first in
-			// case `incoming` itself came from another store's reactive `records`.
-			const copies = incoming.map((record) => ({ ...toRaw(record) }));
+			// Plain copies, every level unwrapped: reading these back out of a
+			// reactive array would yield proxies, which IndexedDB cannot
+			// structured-clone. toStorable() first in case `incoming` itself came
+			// from another store's reactive `records`.
+			const copies = incoming.map((record) => toStorable(record));
 			records.value = copies;
 
 			await persist(async () => {
 				await storage.clear();
 				for (const record of copies) {
-					await storage.put({ ...record });
+					await storage.put(toStorable(record));
 				}
 			});
 		}

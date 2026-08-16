@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { isReactive, reactive } from 'vue';
-import { Status, type Dream, type Task } from '@/types';
+import { Status, type Dream, type Schedule, type Task } from '@/types';
 import { StorageUnavailableError, type EntityStorage } from '@/repositories/EntityStorage';
 import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
 import { defineEntityStore } from './createEntityStore';
@@ -27,6 +27,7 @@ const useTestStore = defineEntityStore<Dream, DreamDraft>({
 
 interface TaskDraft {
 	name: string;
+	schedule?: Schedule;
 }
 
 const useTestTaskStore = defineEntityStore<Task, TaskDraft>({
@@ -40,7 +41,9 @@ const useTestTaskStore = defineEntityStore<Task, TaskDraft>({
 		status: Status.Opened,
 		important: false,
 		urgent: false,
-		schedule: { start: '2026-08-06T10:00' },
+		// Straight passthrough, same as the real tasks.ts build(): a draft's
+		// schedule reaches the record exactly as the caller handed it in.
+		schedule: draft.schedule ?? { start: '2026-08-06T10:00' },
 		completions: [{ occurrence: '2026-08-06T10:00', done: true, at: now }],
 	}),
 });
@@ -309,6 +312,52 @@ describe('defineEntityStore reactive proxy regression', () => {
 		expect(isReactive(record)).toBe(false);
 		expect(isReactive(record.schedule)).toBe(false);
 		expect(isReactive(record.completions)).toBe(false);
+	});
+
+	it('writes a plain object to storage on add, not a reactive proxy in a nested field', async () => {
+		const { storage, received } = spyingStorage([]);
+		const store = useTestTaskStore();
+		await store.load(async () => storage);
+
+		// A draft field bound to a Vuetify form is exactly this: a `reactive()`
+		// object handed in as one field of an otherwise plain draft, not the
+		// whole draft wrapped at once.
+		const schedule = reactive<Schedule>({
+			start: '2026-08-06T10:00',
+			exdate: ['2026-08-07T10:00'],
+		});
+
+		await store.add({ name: 'Water the plants', schedule });
+
+		expect(received).toHaveLength(1);
+		const [record] = received;
+		expect(isReactive(record)).toBe(false);
+		expect(isReactive(record.schedule)).toBe(false);
+		expect(isReactive(record.schedule?.exdate)).toBe(false);
+	});
+
+	it('writes a plain object to storage on update when only a nested field is reactive', async () => {
+		// Unlike the replaceAll case above, the record itself is a plain
+		// object here — only `schedule` carries a live proxy into
+		// records.value. This is the transitive gap: toRaw() on the record
+		// unwraps the top level fine, but the reference it hands back for
+		// `schedule` is still the original proxy, untouched.
+		const nestedSchedule = reactive<Schedule>({
+			start: '2026-08-06T10:00',
+			exdate: ['2026-08-07T10:00'],
+		});
+		const seeded: Task = { ...makeTask(), schedule: nestedSchedule };
+		const { storage, received } = spyingStorage([seeded]);
+		const store = useTestTaskStore();
+		await store.load(async () => storage);
+
+		await store.update('seeded-task', { name: 'Renamed' });
+
+		expect(received).toHaveLength(1);
+		const [record] = received;
+		expect(isReactive(record)).toBe(false);
+		expect(isReactive(record.schedule)).toBe(false);
+		expect(isReactive(record.schedule?.exdate)).toBe(false);
 	});
 });
 
