@@ -1,6 +1,5 @@
 {
 	"app": {
-		"title": "Todo",
 		"toggleTheme": "Choose theme",
 		"toggleLanguage": "Choose language"
 	},

@@ -27,7 +27,7 @@
 				/>
 			</template>
 
-			<span :class="$style.logo">{{ t('app.title') }}</span>
+			<span :class="$style.logo">TODO</span>
 
 			<template #append>
 				<theme-menu />

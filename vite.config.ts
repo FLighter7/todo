@@ -24,8 +24,8 @@ export default defineConfig({
 			// exists", and the app silently ends up with no offline mode at all.
 			includeManifestIcons: false,
 			manifest: {
-				name: 'Todo',
-				short_name: 'Todo',
+				name: 'TODO',
+				short_name: 'TODO',
 				// The manifest carries one fixed language; English matches the i18n
 				// fallback locale. It cannot follow the in-app language switch.
 				description: 'A personal todo list with an Eisenhower matrix',
