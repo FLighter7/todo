@@ -1,4 +1,4 @@
-import type { Todo } from '@/types/todo';
+import type { Dream, Goal, Task } from '@/types';
 import { syncSignal } from './SyncSignal';
 
 /** Data channel messages cap at 256 KB; stay well clear and fail loudly. */
@@ -7,6 +7,22 @@ const MAX_PAYLOAD_BYTES = 200_000;
 const CHANNEL_LABEL = 'todo-sync';
 const GATHER_TIMEOUT_MS = 5000;
 const CONNECT_TIMEOUT_MS = 30_000;
+
+/**
+ * `kind` discriminates what the envelope carries. Only `'data'` exists so
+ * far; a later stage adds a `'settings'` variant alongside it, which is why
+ * the discriminator goes in now rather than when that variant lands — so it
+ * arrives as a new case rather than a breaking change to this shape.
+ */
+export const SYNC_SCHEMA = 3;
+
+export interface SyncDataPayload {
+	schema: number;
+	kind: 'data';
+	dreams: Dream[];
+	goals: Goal[];
+	tasks: Task[];
+}
 
 export class SyncError extends Error {
 	constructor(message: string) {
@@ -114,15 +130,15 @@ export class SyncConnection {
 	}
 
 	/** Sends our records and resolves with theirs. */
-	async exchange(records: Todo[]): Promise<Todo[]> {
+	async exchange(payload: SyncDataPayload): Promise<SyncDataPayload> {
 		const open = await this.channelReady;
-		const payload = JSON.stringify({ records });
+		const body = JSON.stringify(payload);
 
-		if (payload.length > MAX_PAYLOAD_BYTES) {
+		if (body.length > MAX_PAYLOAD_BYTES) {
 			throw new SyncError('The list is too large to send in one go');
 		}
 
-		const incoming = new Promise<Todo[]>((resolve, reject) => {
+		const incoming = new Promise<SyncDataPayload>((resolve, reject) => {
 			const timer = setTimeout(
 				() => reject(new SyncError('The other device sent nothing')),
 				CONNECT_TIMEOUT_MS,
@@ -131,20 +147,35 @@ export class SyncConnection {
 			open.addEventListener('message', (event: MessageEvent<string>) => {
 				clearTimeout(timer);
 				try {
-					const parsed = JSON.parse(event.data) as { records?: unknown };
-					if (!Array.isArray(parsed.records)) {
+					const parsed = JSON.parse(event.data) as Partial<SyncDataPayload>;
+
+					// The schema check comes before anything is read. Without it a
+					// device on an older build would merge a shape it does not
+					// understand and destroy data on both sides.
+					if (parsed.schema !== SYNC_SCHEMA) {
+						reject(
+							new SyncError('The other device runs a different version. Update it and retry.'),
+						);
+						return;
+					}
+
+					if (
+						!Array.isArray(parsed.dreams) ||
+						!Array.isArray(parsed.goals) ||
+						!Array.isArray(parsed.tasks)
+					) {
 						reject(new SyncError('The other device sent something unexpected'));
 						return;
 					}
 
-					resolve(parsed.records as Todo[]);
+					resolve(parsed as SyncDataPayload);
 				} catch {
 					reject(new SyncError('The other device sent something unexpected'));
 				}
 			});
 		});
 
-		open.send(payload);
+		open.send(body);
 
 		return incoming;
 	}

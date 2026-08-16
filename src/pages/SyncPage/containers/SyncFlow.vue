@@ -68,16 +68,22 @@ import { onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SyncCode from '../SyncCode.vue';
 import SyncScanner from '../SyncScanner.vue';
-import { SyncConnection } from '@/services/sync/SyncConnection';
+import type { EntityBase } from '@/types';
+import { SyncConnection, SYNC_SCHEMA } from '@/services/sync/SyncConnection';
 import { syncMerger } from '@/services/sync/SyncMerger';
-import { useTodosStore } from '@/stores/todos';
+import { collectGarbage, pruneCompletions } from '@/utils';
+import { useDreamsStore } from '@/stores/dreams';
+import { useGoalsStore } from '@/stores/goals';
+import { useTasksStore } from '@/stores/tasks';
 
 type Step = 'idle' | 'show-offer' | 'scan-offer' | 'show-answer' | 'working' | 'done' | 'failed';
 
 const emit = defineEmits<{ notify: [message: string] }>();
 
 const { t } = useI18n();
-const store = useTodosStore();
+const dreams = useDreamsStore();
+const goals = useGoalsStore();
+const tasks = useTasksStore();
 
 const step = ref<Step>('idle');
 const ourCode = ref('');
@@ -152,24 +158,58 @@ async function runExchange(): Promise<void> {
 	}
 
 	try {
-		const before = new Map(store.records.map((todo) => [todo.id, todo.updated]));
-		const theirs = await connection.exchange([...store.records]);
-		const merged = syncMerger.merge([...store.records], theirs);
+		const before = new Map(
+			[...dreams.records, ...goals.records, ...tasks.records].map((record) => [
+				record.id,
+				record.updated,
+			]),
+		);
+
+		const theirs = await connection.exchange({
+			schema: SYNC_SCHEMA,
+			kind: 'data',
+			dreams: [...dreams.records],
+			goals: [...goals.records],
+			tasks: [...tasks.records],
+		});
+
+		const now = new Date();
+		const mergedDreams = sweep(syncMerger.merge([...dreams.records], theirs.dreams), now);
+		const mergedGoals = sweep(syncMerger.merge([...goals.records], theirs.goals), now);
+		const mergedTasks = sweep(syncMerger.mergeTasks([...tasks.records], theirs.tasks), now).map(
+			(task) => pruneCompletions(task, tasks.cleanupDays, now),
+		);
+
+		const merged = [...mergedDreams, ...mergedGoals, ...mergedTasks];
 
 		result.value = {
-			added: merged.filter((todo) => !before.has(todo.id)).length,
-			updated: merged.filter((todo) => {
-				const was = before.get(todo.id);
-				return was !== undefined && was !== todo.updated;
+			added: merged.filter((record) => !before.has(record.id)).length,
+			updated: merged.filter((record) => {
+				const was = before.get(record.id);
+				return was !== undefined && was !== record.updated;
 			}).length,
 		};
 
-		await store.replaceAll(merged);
+		await dreams.replaceAll(mergedDreams);
+		await goals.replaceAll(mergedGoals);
+		await tasks.replaceAll(mergedTasks);
+
 		step.value = 'done';
 		connection.close();
 		connection = null;
 	} catch (error) {
 		fail(error);
 	}
+}
+
+/**
+ * Collection runs on the merged result rather than after it is written: a
+ * record the other device still holds past our window would otherwise land on
+ * disk and be swept only on the next load, one write too late.
+ *
+ * The three stores share one `cleanupDays`, so any of them can supply it.
+ */
+function sweep<T extends EntityBase>(records: T[], now: Date): T[] {
+	return collectGarbage(records, tasks.cleanupDays, now).keep;
 }
 </script>
