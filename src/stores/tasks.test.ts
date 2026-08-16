@@ -1,0 +1,124 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
+import { Status, type Task } from '@/types';
+import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import { QUADRANT_KEYS, quadrantFlags, quadrantOf, useTasksStore } from './tasks';
+
+function makeTask(overrides: Partial<Task> = {}): Task {
+	return {
+		id: 'task-1',
+		name: 'File the report',
+		created: '2026-08-06T10:00:00.000Z',
+		updated: '2026-08-06T10:00:00.000Z',
+		status: Status.Opened,
+		important: false,
+		urgent: false,
+		...overrides,
+	};
+}
+
+beforeEach(() => {
+	setActivePinia(createPinia());
+});
+
+describe('quadrantOf', () => {
+	it('maps important and urgent to do', () => {
+		expect(quadrantOf(makeTask({ important: true, urgent: true }))).toBe('do');
+	});
+
+	it('maps important and not urgent to schedule', () => {
+		expect(quadrantOf(makeTask({ important: true, urgent: false }))).toBe('schedule');
+	});
+
+	it('maps not important and urgent to delegate', () => {
+		expect(quadrantOf(makeTask({ important: false, urgent: true }))).toBe('delegate');
+	});
+
+	it('maps not important and not urgent to eliminate', () => {
+		expect(quadrantOf(makeTask({ important: false, urgent: false }))).toBe('eliminate');
+	});
+});
+
+describe('quadrantFlags', () => {
+	it('is the inverse of quadrantOf for every quadrant', () => {
+		for (const key of QUADRANT_KEYS) {
+			expect(quadrantOf(makeTask(quadrantFlags(key)))).toBe(key);
+		}
+	});
+});
+
+describe('useTasksStore quadrants', () => {
+	it('exposes all four quadrants even when empty', async () => {
+		const store = useTasksStore();
+		await store.load(async () => new EntityMemoryRepository<Task>());
+
+		expect(Object.keys(store.quadrants).sort()).toEqual([
+			'delegate',
+			'do',
+			'eliminate',
+			'schedule',
+		]);
+	});
+
+	it('groups every open task into its quadrant', async () => {
+		const store = useTasksStore();
+		await store.load(
+			async () =>
+				new EntityMemoryRepository([
+					makeTask({ id: 'a', important: true, urgent: true }),
+					makeTask({ id: 'b', important: true, urgent: false }),
+					makeTask({ id: 'c', important: false, urgent: true }),
+					makeTask({ id: 'd', important: false, urgent: false }),
+					makeTask({ id: 'e', important: true, urgent: true }),
+				]),
+		);
+
+		expect(store.quadrants.do.map((task) => task.id)).toEqual(['a', 'e']);
+		expect(store.quadrants.schedule.map((task) => task.id)).toEqual(['b']);
+		expect(store.quadrants.delegate.map((task) => task.id)).toEqual(['c']);
+		expect(store.quadrants.eliminate.map((task) => task.id)).toEqual(['d']);
+	});
+
+	it('leaves closed tasks out of the matrix', async () => {
+		const store = useTasksStore();
+		await store.load(
+			async () =>
+				new EntityMemoryRepository([
+					makeTask({ id: 'open', important: true, urgent: true }),
+					makeTask({ id: 'done', important: true, urgent: true, status: Status.Done }),
+					makeTask({ id: 'gone', important: true, urgent: true, status: Status.Cancelled }),
+				]),
+		);
+
+		expect(store.quadrants.do.map((task) => task.id)).toEqual(['open']);
+	});
+
+	it('moves a task between quadrants when its flags change', async () => {
+		const store = useTasksStore();
+		await store.load(
+			async () =>
+				new EntityMemoryRepository([makeTask({ id: 'a', important: false, urgent: false })]),
+		);
+
+		await store.update('a', { important: true, urgent: true });
+
+		expect(store.quadrants.eliminate).toEqual([]);
+		expect(store.quadrants.do).toHaveLength(1);
+	});
+
+	it('builds a task from a draft with both flags', async () => {
+		const store = useTasksStore();
+		await store.load(async () => new EntityMemoryRepository<Task>());
+
+		const created = await store.add({
+			name: 'Ship the release',
+			important: true,
+			urgent: true,
+		});
+
+		expect(created.important).toBe(true);
+		expect(created.urgent).toBe(true);
+		expect(created.status).toBe(Status.Opened);
+		expect(store.quadrants.do).toHaveLength(1);
+	});
+});
