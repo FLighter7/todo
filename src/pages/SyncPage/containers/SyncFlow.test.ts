@@ -83,6 +83,10 @@ async function loadStores(dreams: Dream[], goals: Goal[], tasks: Task[]): Promis
 	await useTasksStore().load(async () => new EntityMemoryRepository(tasks));
 }
 
+function daysAgo(days: number): string {
+	return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
+
 /**
  * Local has one record per collection; remote sends back a newer copy of
  * that same record (an "updated") plus a brand-new one (an "added"), for all
@@ -222,6 +226,61 @@ describe('SyncFlow as responder', () => {
 		expect(goals.records.map((r) => r.id).sort()).toEqual(['goal-local', 'goal-remote']);
 		expect(tasks.records.map((r) => r.id).sort()).toEqual(['task-local', 'task-remote']);
 		expect(wrapper.text()).toContain('Sync finished');
+	});
+});
+
+describe('SyncFlow task completions', () => {
+	it('merges per-occurrence marks instead of letting the newer whole record take all', async () => {
+		createOffer.mockResolvedValue('1oc.offer');
+		acceptAnswer.mockResolvedValue(undefined);
+
+		// Two devices out of contact, one marking a different occurrence than
+		// the other: mergeTasks has to preserve both marks no matter which
+		// whole record wins the last-write-wins tie-break. Giving the remote
+		// task a strictly newer `updated` makes it win that tie-break outright,
+		// so a plain merge() would return exactly the remote object -
+		// completions and all - and the local mark would vanish with nothing in
+		// the UI saying so. That silent loss is exactly what this test exists
+		// to catch: it fails if and only if SyncFlow.vue calls merge() instead
+		// of mergeTasks() for the task collection.
+		const localTask = makeTask({
+			completions: [{ occurrence: daysAgo(7), done: true, at: daysAgo(7) }],
+		});
+		const remoteTask = makeTask({
+			updated: '2026-08-07T10:00:00.000Z',
+			completions: [{ occurrence: daysAgo(1), done: true, at: daysAgo(1) }],
+		});
+
+		exchange.mockResolvedValue({
+			schema: 3,
+			kind: 'data',
+			dreams: [],
+			goals: [],
+			tasks: [remoteTask],
+		});
+
+		await loadStores([], [], [localTask]);
+		const tasks = useTasksStore();
+		const replaceAll = vi.spyOn(tasks, 'replaceAll');
+
+		const wrapper = mount(SyncFlow, {
+			global: { plugins: [vuetify, i18n], stubs: { SyncCode: true, SyncScanner: true } },
+		});
+
+		await clickButtonByText(wrapper, 'This device starts');
+		await wrapper.findComponent(SyncScanner).vm.$emit('code', '1oa.answer');
+		await flushPromises();
+
+		expect(replaceAll).toHaveBeenCalledTimes(1);
+		const synced = replaceAll.mock.calls[0][0];
+		expect(synced).toHaveLength(1);
+
+		// mergeCompletions documents that its output order carries no meaning,
+		// so the comparison sorts both sides rather than asserting on order.
+		const occurrences = (synced[0].completions ?? []).map((completion) => completion.occurrence);
+		expect(occurrences.sort()).toEqual(
+			[localTask.completions![0].occurrence, remoteTask.completions![0].occurrence].sort(),
+		);
 	});
 });
 
