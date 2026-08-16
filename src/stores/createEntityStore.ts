@@ -13,6 +13,13 @@ export interface EntityStoreOptions<T extends EntityBase, D> {
 	createRepository: () => Promise<EntityStorage<T>>;
 	/** Turns a draft into a complete record. */
 	build: (draft: D, id: string, now: string) => T;
+	/**
+	 * Optional per-record cleanup run on load, after the closed-record sweep.
+	 * Only the task store needs it — completions have to be pruned by occurrence,
+	 * and only a Task has any. Returning the record unchanged (same reference)
+	 * means nothing was pruned and nothing needs rewriting.
+	 */
+	prune?: (record: T, windowDays: number, now: Date) => T;
 }
 
 /**
@@ -90,14 +97,24 @@ export function defineEntityStore<T extends EntityBase, D>(options: EntityStoreO
 				storageState.noteUnavailable();
 			}
 
+			const now = new Date();
 			const loaded = await storage.getAll();
 			storageState.noteLoadSkipped(storage.skipped ?? 0);
-			const { keep, purge } = collectGarbage(loaded, cleanupDays.value, new Date());
-			records.value = keep;
+
+			const { keep, purge } = collectGarbage(loaded, cleanupDays.value, now);
+			const prune = options.prune;
+			const pruned = prune ? keep.map((record) => prune(record, cleanupDays.value, now)) : keep;
+			records.value = pruned;
 
 			await persist(async () => {
 				for (const id of purge) {
 					await storage.remove(id);
+				}
+
+				for (const [index, record] of pruned.entries()) {
+					if (record !== keep[index]) {
+						await storage.put(toStorable(record));
+					}
 				}
 			});
 

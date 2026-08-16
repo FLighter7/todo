@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { Status, type Task } from '@/types';
 import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import type { EntityStorage } from '@/repositories/EntityStorage';
 import { QUADRANT_KEYS, quadrantFlags, quadrantOf, useTasksStore } from './tasks';
 
 function makeTask(overrides: Partial<Task> = {}): Task {
@@ -15,6 +16,31 @@ function makeTask(overrides: Partial<Task> = {}): Task {
 		urgent: false,
 		...overrides,
 	};
+}
+
+function daysAgo(days: number): string {
+	return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
+
+/**
+ * Wraps a real `EntityMemoryRepository` so assertions can read back what
+ * `load()` actually wrote (`getAll()` reflects it), while also recording
+ * which ids were ever handed to `put`, to prove a record was *not* rewritten.
+ */
+function spyingRepository(seed: Task[]): { storage: EntityStorage<Task>; putIds: string[] } {
+	const repo = new EntityMemoryRepository<Task>(seed);
+	const putIds: string[] = [];
+	const storage: EntityStorage<Task> = {
+		getAll: () => repo.getAll(),
+		put: async (record) => {
+			putIds.push(record.id);
+			await repo.put(record);
+		},
+		remove: (id) => repo.remove(id),
+		clear: () => repo.clear(),
+	};
+
+	return { storage, putIds };
 }
 
 beforeEach(() => {
@@ -153,5 +179,72 @@ describe('useTasksStore composition reactivity', () => {
 		await store.add({ name: 'Ship the release', important: true, urgent: true });
 
 		expect(store.active).toHaveLength(1);
+	});
+});
+
+/**
+ * `createEntityStore.load()` calls the `prune` hook the task store supplies
+ * on every kept record, right after the closed-record sweep, and rewrites to
+ * storage only the records that hook actually changed. Without this, a
+ * recurring task's `completions` grows without bound — the exact thing
+ * `pruneCompletions` exists to prevent (see `src/utils/collectGarbage.ts`).
+ */
+describe('useTasksStore load pruning', () => {
+	it('drops a completion past the prune window and keeps a recent one', async () => {
+		const task = makeTask({
+			completions: [
+				{ occurrence: daysAgo(400), done: true, at: daysAgo(400) },
+				{ occurrence: daysAgo(1), done: true, at: daysAgo(1) },
+			],
+		});
+		const { storage } = spyingRepository([task]);
+		const store = useTasksStore();
+
+		await store.load(async () => storage);
+
+		expect(store.records[0].completions).toHaveLength(1);
+		expect(store.records[0].completions?.[0].occurrence).toBe(task.completions![1].occurrence);
+	});
+
+	it('writes the pruned record back to storage, not just the in-memory store', async () => {
+		const task = makeTask({
+			completions: [
+				{ occurrence: daysAgo(400), done: true, at: daysAgo(400) },
+				{ occurrence: daysAgo(1), done: true, at: daysAgo(1) },
+			],
+		});
+		const { storage, putIds } = spyingRepository([task]);
+		const store = useTasksStore();
+
+		await store.load(async () => storage);
+
+		expect(putIds).toEqual(['task-1']);
+		const stored = await storage.getAll();
+		expect(stored[0].completions).toHaveLength(1);
+	});
+
+	it('does not move updated when pruning completions on load', async () => {
+		const task = makeTask({
+			updated: daysAgo(200),
+			completions: [{ occurrence: daysAgo(400), done: true, at: daysAgo(400) }],
+		});
+		const { storage } = spyingRepository([task]);
+		const store = useTasksStore();
+
+		await store.load(async () => storage);
+
+		expect(store.records[0].updated).toBe(task.updated);
+	});
+
+	it('does not rewrite a task to storage when none of its completions are pruned', async () => {
+		const task = makeTask({
+			completions: [{ occurrence: daysAgo(1), done: true, at: daysAgo(1) }],
+		});
+		const { storage, putIds } = spyingRepository([task]);
+		const store = useTasksStore();
+
+		await store.load(async () => storage);
+
+		expect(putIds).toEqual([]);
 	});
 });
