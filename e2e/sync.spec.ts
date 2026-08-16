@@ -8,7 +8,7 @@ test('a task added on one device reaches the other after pairing', async ({ brow
 
 	await pageA.goto('/');
 	await pageA.getByRole('button', { name: 'Add task' }).click();
-	await pageA.getByLabel('Title').fill('Buy milk');
+	await pageA.getByLabel('Name').fill('Buy milk');
 	await pageA.getByRole('button', { name: 'Save' }).click();
 	await expect(pageA.getByText('Buy milk')).toBeVisible();
 

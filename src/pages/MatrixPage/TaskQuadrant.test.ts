@@ -5,28 +5,26 @@ import { mdiCalendarClockOutline, mdiFire } from '@mdi/js';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
-import type { Todo } from '@/types/todo';
-import TodoQuadrant from './TodoQuadrant.vue';
+import { Status, type Task } from '@/types';
+import TaskQuadrant from './TaskQuadrant.vue';
 
-function makeTodo(overrides: Partial<Todo> = {}): Todo {
+function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
 		id: 'id-1',
-		title: 'Buy milk',
+		name: 'Buy milk',
 		created: '2026-08-06T10:00:00.000Z',
 		updated: '2026-08-06T10:00:00.000Z',
-		period: 'one-time',
+		status: Status.Opened,
 		important: false,
 		urgent: false,
-		done: false,
-		deleted: false,
 		...overrides,
 	};
 }
 
-describe('TodoQuadrant', () => {
+describe('TaskQuadrant', () => {
 	it('renders every item it is given', () => {
-		const wrapper = mount(TodoQuadrant, {
-			props: { quadrant: 'do', items: [makeTodo()], icon: mdiFire, accent: true },
+		const wrapper = mount(TaskQuadrant, {
+			props: { quadrant: 'do', items: [makeTask()], icon: mdiFire, accent: true },
 			global: { plugins: [vuetify, i18n] },
 		});
 
@@ -34,7 +32,7 @@ describe('TodoQuadrant', () => {
 	});
 
 	it('shows the empty state when there are no items', () => {
-		const wrapper = mount(TodoQuadrant, {
+		const wrapper = mount(TaskQuadrant, {
 			props: { quadrant: 'do', items: [], icon: mdiFire, accent: true },
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -42,29 +40,19 @@ describe('TodoQuadrant', () => {
 		expect(wrapper.text()).toContain('Empty');
 	});
 
-	it('strikes through a done item', () => {
-		const wrapper = mount(TodoQuadrant, {
-			props: { quadrant: 'do', items: [makeTodo({ done: true })], icon: mdiFire, accent: true },
-			global: { plugins: [vuetify, i18n] },
-		});
-
-		const title = wrapper.find('.v-list-item-title');
-		expect(title.classes().some((cls) => cls.includes('done'))).toBe(true);
-	});
-
-	it('emits toggle with the todo id when its checkbox is clicked', async () => {
-		const wrapper = mount(TodoQuadrant, {
-			props: { quadrant: 'do', items: [makeTodo({ id: 'target' })], icon: mdiFire, accent: true },
+	it('emits done with the task id when its checkbox is clicked', async () => {
+		const wrapper = mount(TaskQuadrant, {
+			props: { quadrant: 'do', items: [makeTask({ id: 'target' })], icon: mdiFire, accent: true },
 			global: { plugins: [vuetify, i18n] },
 		});
 
 		await wrapper.get('input[type="checkbox"]').setValue(true);
 
-		expect(wrapper.emitted('toggle')).toEqual([['target']]);
+		expect(wrapper.emitted('done')).toEqual([['target']]);
 	});
 
 	it('emits add with the quadrant key when the add button is clicked', async () => {
-		const wrapper = mount(TodoQuadrant, {
+		const wrapper = mount(TaskQuadrant, {
 			props: { quadrant: 'schedule', items: [], icon: mdiCalendarClockOutline },
 			global: { plugins: [vuetify, i18n] },
 		});

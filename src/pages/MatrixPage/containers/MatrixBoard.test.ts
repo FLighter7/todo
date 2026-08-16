@@ -5,22 +5,20 @@ import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
-import type { Todo } from '@/types/todo';
-import { InMemoryRepository } from '@/repositories/InMemoryRepository';
-import { useTodosStore } from '@/stores/todos';
+import { Status, type Task } from '@/types';
+import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import { useTasksStore } from '@/stores/tasks';
 import MatrixBoard from './MatrixBoard.vue';
 
-function makeTodo(overrides: Partial<Todo> = {}): Todo {
+function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
 		id: 'id-1',
-		title: 'Buy milk',
+		name: 'Buy milk',
 		created: '2026-08-06T10:00:00.000Z',
 		updated: '2026-08-06T10:00:00.000Z',
-		period: 'one-time',
+		status: Status.Opened,
 		important: false,
 		urgent: false,
-		done: false,
-		deleted: false,
 		...overrides,
 	};
 }
@@ -31,12 +29,12 @@ beforeEach(() => {
 
 describe('MatrixBoard', () => {
 	it('places each seeded task in its own quadrant', async () => {
-		const store = useTodosStore();
+		const store = useTasksStore();
 		await store.load(
 			async () =>
-				new InMemoryRepository([
-					makeTodo({ id: 'a', title: 'Do task', important: true, urgent: true }),
-					makeTodo({ id: 'b', title: 'Schedule task', important: true, urgent: false }),
+				new EntityMemoryRepository([
+					makeTask({ id: 'a', name: 'Do task', important: true, urgent: true }),
+					makeTask({ id: 'b', name: 'Schedule task', important: true, urgent: false }),
 				]),
 		);
 
@@ -47,8 +45,8 @@ describe('MatrixBoard', () => {
 	});
 
 	it('opens the form pre-flagged for the quadrant whose add button was clicked', async () => {
-		const store = useTodosStore();
-		await store.load(async () => new InMemoryRepository());
+		const store = useTasksStore();
+		await store.load(async () => new EntityMemoryRepository<Task>());
 
 		const wrapper = mount(MatrixBoard, { global: { plugins: [vuetify, i18n] } });
 
@@ -59,28 +57,29 @@ describe('MatrixBoard', () => {
 		await wrapper.get('input').setValue('Call the bank');
 		await clickButtonByText(wrapper, 'Save');
 
-		expect(store.items[0]).toMatchObject({
-			title: 'Call the bank',
+		expect(store.records[0]).toMatchObject({
+			name: 'Call the bank',
 			important: false,
 			urgent: true,
 		});
 	});
 
-	it('moves a task to its new quadrant reactively when it is toggled', async () => {
-		const store = useTodosStore();
+	it('closes a task with Status.Done when its checkbox is checked, and it leaves the quadrant', async () => {
+		const store = useTasksStore();
 		await store.load(
 			async () =>
-				new InMemoryRepository([
-					makeTodo({ id: 'a', title: 'Eliminate task', important: false, urgent: false }),
+				new EntityMemoryRepository([
+					makeTask({ id: 'a', name: 'Eliminate task', important: false, urgent: false }),
 				]),
 		);
 
 		const wrapper = mount(MatrixBoard, { global: { plugins: [vuetify, i18n] } });
 		expect(wrapper.text()).toContain('Eliminate task');
 
-		await store.update('a', { important: true, urgent: true });
+		await wrapper.get('input[type="checkbox"]').setValue(true);
 		await wrapper.vm.$nextTick();
 
-		expect(store.quadrants.do.map((t) => t.id)).toEqual(['a']);
+		expect(store.records.find((task) => task.id === 'a')?.status).toBe(Status.Done);
+		expect(wrapper.text()).not.toContain('Eliminate task');
 	});
 });

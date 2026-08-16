@@ -15,7 +15,7 @@
 <template>
 	<v-container>
 		<div :class="$style.grid">
-			<todo-quadrant
+			<task-quadrant
 				v-for="key in QUADRANT_KEYS"
 				:key="key"
 				:quadrant="key"
@@ -23,31 +23,37 @@
 				:icon="quadrantMeta[key].icon"
 				:accent="quadrantMeta[key].accent"
 				@add="openFor"
-				@toggle="store.toggleDone($event)"
+				@done="store.close($event, Status.Done)"
 			/>
 		</div>
 
-		<todo-form v-model="dialogOpen" :initial="initialDraft" @submit="store.add($event)" />
+		<task-form v-model="dialogOpen" :initial="initialDraft" @submit="store.add($event)" />
 	</v-container>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { mdiAccountArrowRightOutline, mdiCalendarClockOutline, mdiFire, mdiTrashCanOutline } from '@mdi/js';
-import TodoForm from '@/components/TodoForm.vue';
-import TodoQuadrant from '../TodoQuadrant.vue';
+import {
+	mdiAccountArrowRightOutline,
+	mdiCalendarClockOutline,
+	mdiFire,
+	mdiTrashCanOutline,
+} from '@mdi/js';
+import TaskForm from '@/components/TaskForm.vue';
+import TaskQuadrant from '../TaskQuadrant.vue';
+import { Status } from '@/types';
 import {
 	QUADRANT_KEYS,
 	quadrantFlags,
-	useTodosStore,
+	useTasksStore,
 	type QuadrantKey,
-	type TodoDraft,
-} from '@/stores/todos';
+	type TaskDraft,
+} from '@/stores/tasks';
 
-const store = useTodosStore();
+const store = useTasksStore();
 
 const dialogOpen = ref(false);
-const initialDraft = ref<Partial<TodoDraft>>({});
+const initialDraft = ref<Partial<TaskDraft>>({});
 
 const quadrantMeta: Record<QuadrantKey, { icon: string; accent?: boolean }> = {
 	do: { icon: mdiFire, accent: true },

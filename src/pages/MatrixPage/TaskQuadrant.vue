@@ -20,11 +20,6 @@
 	flex: 1 1 auto;
 	overflow-y: auto;
 }
-
-.done {
-	opacity: 0.55;
-	text-decoration: line-through;
-}
 </style>
 
 <template>
@@ -51,18 +46,16 @@
 		<v-list :class="$style.list" bg-color="transparent" density="compact">
 			<v-list-item v-if="items.length === 0" :title="t('quadrant.empty')" disabled />
 
-			<v-list-item v-for="todo in items" :key="todo.id">
+			<v-list-item v-for="task in items" :key="task.id">
 				<template #prepend>
 					<v-checkbox-btn
-						:model-value="todo.done"
-						:aria-label="t('todo.done')"
-						@update:model-value="emit('toggle', todo.id)"
+						:model-value="false"
+						:aria-label="t('task.done')"
+						@update:model-value="emit('done', task.id)"
 					/>
 				</template>
 
-				<v-list-item-title :class="todo.done ? $style.done : undefined">
-					{{ todo.title }}
-				</v-list-item-title>
+				<v-list-item-title>{{ task.name }}</v-list-item-title>
 			</v-list-item>
 		</v-list>
 	</v-card>
@@ -71,19 +64,19 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { mdiPlus } from '@mdi/js';
-import type { Todo } from '@/types/todo';
-import type { QuadrantKey } from '@/stores/todos';
+import type { Task } from '@/types';
+import type { QuadrantKey } from '@/stores/tasks';
 
 defineProps<{
 	quadrant: QuadrantKey;
-	items: Todo[];
+	items: Task[];
 	icon: string;
 	accent?: boolean;
 }>();
 
 const emit = defineEmits<{
 	add: [quadrant: QuadrantKey];
-	toggle: [id: string];
+	done: [id: string];
 }>();
 
 const { t } = useI18n();

@@ -4,11 +4,11 @@ import { mount } from '@vue/test-utils';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
-import TodoForm from './TodoForm.vue';
+import TaskForm from './TaskForm.vue';
 
-describe('TodoForm', () => {
-	it('blocks submit and shows an error when the title is empty', async () => {
-		const wrapper = mount(TodoForm, {
+describe('TaskForm', () => {
+	it('blocks submit and shows an error when the name is empty', async () => {
+		const wrapper = mount(TaskForm, {
 			props: { modelValue: true },
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -16,11 +16,11 @@ describe('TodoForm', () => {
 		await clickButtonByText(wrapper, 'Save');
 
 		expect(wrapper.emitted('submit')).toBeUndefined();
-		expect(wrapper.text()).toContain('Title is required');
+		expect(wrapper.text()).toContain('Name is required');
 	});
 
 	it('emits a trimmed draft and closes on a valid submit', async () => {
-		const wrapper = mount(TodoForm, {
+		const wrapper = mount(TaskForm, {
 			props: { modelValue: true },
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -32,9 +32,8 @@ describe('TodoForm', () => {
 		expect(wrapper.emitted('submit')).toEqual([
 			[
 				{
-					title: 'Buy milk',
+					name: 'Buy milk',
 					note: undefined,
-					period: 'one-time',
 					important: true,
 					urgent: false,
 				},
@@ -44,7 +43,7 @@ describe('TodoForm', () => {
 	});
 
 	it('closes without emitting submit when cancelled', async () => {
-		const wrapper = mount(TodoForm, {
+		const wrapper = mount(TaskForm, {
 			props: { modelValue: true },
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -57,11 +56,11 @@ describe('TodoForm', () => {
 	});
 
 	it('prefills from the initial draft when it opens in edit mode', async () => {
-		const wrapper = mount(TodoForm, {
+		const wrapper = mount(TaskForm, {
 			props: {
 				modelValue: false,
 				mode: 'edit',
-				initial: { title: 'Existing task', important: true, urgent: true, period: 'periodic' },
+				initial: { name: 'Existing task', important: true, urgent: true },
 			},
 			global: { plugins: [vuetify, i18n] },
 		});

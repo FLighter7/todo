@@ -1,7 +1,7 @@
 <template>
-	<todo-table />
+	<tasks-table />
 </template>
 
 <script setup lang="ts">
-import TodoTable from './containers/TodoTable.vue';
+import TasksTable from './containers/TasksTable.vue';
 </script>

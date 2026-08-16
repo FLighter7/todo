@@ -15,22 +15,22 @@
 		@click="dialogOpen = true"
 	/>
 
-	<todo-form v-model="dialogOpen" @submit="handleSubmit" />
+	<task-form v-model="dialogOpen" @submit="handleSubmit" />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { mdiPlus } from '@mdi/js';
-import TodoForm from '@/components/TodoForm.vue';
-import { useTodosStore, type TodoDraft } from '@/stores/todos';
+import TaskForm from '@/components/TaskForm.vue';
+import { useTasksStore, type TaskDraft } from '@/stores/tasks';
 
 const { t } = useI18n();
-const store = useTodosStore();
+const store = useTasksStore();
 
 const dialogOpen = ref(false);
 
-async function handleSubmit(draft: TodoDraft): Promise<void> {
+async function handleSubmit(draft: TaskDraft): Promise<void> {
 	await store.add(draft);
 }
 </script>
