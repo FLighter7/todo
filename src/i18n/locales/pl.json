@@ -109,5 +109,10 @@
 	},
 	"dream": {
 		"title": "Marzenie"
+	},
+	"goal": {
+		"title": "Cel",
+		"dreamLabel": "Marzenie",
+		"noDream": "Bez marzenia"
 	}
 }

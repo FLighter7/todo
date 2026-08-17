@@ -109,5 +109,10 @@
 	},
 	"dream": {
 		"title": "Dream"
+	},
+	"goal": {
+		"title": "Goal",
+		"dreamLabel": "Dream",
+		"noDream": "No dream"
 	}
 }
