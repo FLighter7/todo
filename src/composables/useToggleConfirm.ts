@@ -1,4 +1,4 @@
-import { computed, ref, type ComputedRef, type Ref } from 'vue';
+import { computed, ref, shallowRef, type ComputedRef, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Status, type EntityBase } from '@/types';
 import { useSettingsStore, type SettingsEntity } from '@/stores/settings';
@@ -34,7 +34,7 @@ export function useToggleConfirm<T extends EntityBase>(
 	const settings = useSettingsStore();
 	const { t } = useI18n();
 
-	const pendingToggle = ref<{ record: T; done: boolean } | null>(null);
+	const pendingToggle = shallowRef<{ record: T; done: boolean } | null>(null);
 	const toggleConfirmOpen = ref(false);
 
 	const toggleConfirmTitle = computed(() =>

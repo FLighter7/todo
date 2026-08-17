@@ -61,7 +61,9 @@ describe('useToggleConfirm immediate apply', () => {
 		const records = [makeRecord()];
 		const store = makeStore(records);
 		useSettingsStore().updatePageSettings('tasks', { confirmDone: false });
-		const { onToggle } = useComposableInSetup(() => useToggleConfirm(store, 'tasks', ref('active')));
+		const { onToggle } = useComposableInSetup(() =>
+			useToggleConfirm(store, 'tasks', ref('active')),
+		);
 
 		onToggle('a');
 
@@ -72,7 +74,9 @@ describe('useToggleConfirm immediate apply', () => {
 		const records = [makeRecord({ status: Status.Done })];
 		const store = makeStore(records);
 		useSettingsStore().updatePageSettings('tasks', { confirmReopen: false });
-		const { onToggle } = useComposableInSetup(() => useToggleConfirm(store, 'tasks', ref('history')));
+		const { onToggle } = useComposableInSetup(() =>
+			useToggleConfirm(store, 'tasks', ref('history')),
+		);
 
 		onToggle('a');
 
@@ -85,13 +89,8 @@ describe('useToggleConfirm confirmation gate', () => {
 		const records = [makeRecord()];
 		const store = makeStore(records);
 		useSettingsStore().updatePageSettings('tasks', { confirmDone: true });
-		const { onToggle, toggleConfirmOpen, toggleConfirmTitle, toggleConfirmBody } = useComposableInSetup(
-			() => useToggleConfirm(
-				store,
-				'tasks',
-				ref('active'),
-			),
-		);
+		const { onToggle, toggleConfirmOpen, toggleConfirmTitle, toggleConfirmBody } =
+			useComposableInSetup(() => useToggleConfirm(store, 'tasks', ref('active')));
 
 		onToggle('a');
 
@@ -105,7 +104,9 @@ describe('useToggleConfirm confirmation gate', () => {
 		const records = [makeRecord()];
 		const store = makeStore(records);
 		useSettingsStore().updatePageSettings('tasks', { confirmDone: true });
-		const { onToggle, onToggleChoice } = useComposableInSetup(() => useToggleConfirm(store, 'tasks', ref('active')));
+		const { onToggle, onToggleChoice } = useComposableInSetup(() =>
+			useToggleConfirm(store, 'tasks', ref('active')),
+		);
 
 		onToggle('a');
 		await onToggleChoice('yes');
@@ -117,7 +118,9 @@ describe('useToggleConfirm confirmation gate', () => {
 		const records = [makeRecord()];
 		const store = makeStore(records);
 		useSettingsStore().updatePageSettings('tasks', { confirmDone: true });
-		const { onToggle, onToggleChoice } = useComposableInSetup(() => useToggleConfirm(store, 'tasks', ref('active')));
+		const { onToggle, onToggleChoice } = useComposableInSetup(() =>
+			useToggleConfirm(store, 'tasks', ref('active')),
+		);
 
 		onToggle('a');
 		await onToggleChoice('no');
@@ -131,7 +134,9 @@ describe('useToggleConfirm History-tab derivation', () => {
 		const records = [makeRecord({ status: Status.Cancelled })];
 		const store = makeStore(records);
 		useSettingsStore().updatePageSettings('tasks', { confirmReopen: false });
-		const { onToggle } = useComposableInSetup(() => useToggleConfirm(store, 'tasks', ref('history')));
+		const { onToggle } = useComposableInSetup(() =>
+			useToggleConfirm(store, 'tasks', ref('history')),
+		);
 
 		onToggle('a');
 
@@ -144,7 +149,9 @@ describe('useToggleConfirm unknown id', () => {
 		const records = [makeRecord()];
 		const store = makeStore(records);
 		useSettingsStore().updatePageSettings('tasks', { confirmDone: false });
-		const { onToggle, toggleConfirmOpen } = useComposableInSetup(() => useToggleConfirm(store, 'tasks', ref('active')));
+		const { onToggle, toggleConfirmOpen } = useComposableInSetup(() =>
+			useToggleConfirm(store, 'tasks', ref('active')),
+		);
 
 		onToggle('missing');
 
