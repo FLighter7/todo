@@ -26,7 +26,8 @@
 		"cancel": "Cancel this task",
 		"title": "Task",
 		"goalLabel": "Goal",
-		"noGoal": "No goal"
+		"noGoal": "No goal",
+		"empty": "No tasks yet. Add the first one."
 	},
 	"form": {
 		"add": "Add task",

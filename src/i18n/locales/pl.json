@@ -26,7 +26,8 @@
 		"cancel": "Anuluj zadanie",
 		"title": "Zadanie",
 		"goalLabel": "Cel",
-		"noGoal": "Bez celu"
+		"noGoal": "Bez celu",
+		"empty": "Brak zadań. Dodaj pierwsze."
 	},
 	"form": {
 		"add": "Nowe zadanie",
