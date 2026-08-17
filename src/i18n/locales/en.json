@@ -103,6 +103,11 @@
 	},
 	"entity": {
 		"edit": "Edit",
-		"cancelRecord": "Cancel this record"
+		"cancelRecord": "Cancel this record",
+		"name": "Name",
+		"note": "Note"
+	},
+	"dream": {
+		"title": "Dream"
 	}
 }

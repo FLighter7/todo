@@ -103,6 +103,11 @@
 	},
 	"entity": {
 		"edit": "Edytuj",
-		"cancelRecord": "Anuluj wpis"
+		"cancelRecord": "Anuluj wpis",
+		"name": "Nazwa",
+		"note": "Opis"
+	},
+	"dream": {
+		"title": "Marzenie"
 	}
 }
