@@ -23,7 +23,10 @@
 		"urgent": "Pilne",
 		"done": "Zrobione",
 		"actions": "Czynności",
-		"cancel": "Anuluj zadanie"
+		"cancel": "Anuluj zadanie",
+		"title": "Zadanie",
+		"goalLabel": "Cel",
+		"noGoal": "Bez celu"
 	},
 	"form": {
 		"add": "Nowe zadanie",

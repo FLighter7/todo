@@ -23,7 +23,10 @@
 		"urgent": "Urgent",
 		"done": "Done",
 		"actions": "Actions",
-		"cancel": "Cancel this task"
+		"cancel": "Cancel this task",
+		"title": "Task",
+		"goalLabel": "Goal",
+		"noGoal": "No goal"
 	},
 	"form": {
 		"add": "Add task",
