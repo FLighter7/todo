@@ -16,6 +16,10 @@
 		<p class="text-medium-emphasis mb-4">{{ t('sync.intro') }}</p>
 
 		<div v-if="step === 'idle'" :class="$style.choices">
+			<v-btn-toggle v-model="mode" mandatory color="primary" class="mb-2">
+				<v-btn value="data">{{ t('sync.modeData') }}</v-btn>
+				<v-btn value="settings">{{ t('sync.modeSettings') }}</v-btn>
+			</v-btn-toggle>
 			<v-btn color="primary" size="large" @click="startAsInitiator">
 				{{ t('sync.startHere') }}
 			</v-btn>
@@ -49,8 +53,24 @@
 			<v-progress-linear indeterminate class="mt-2" />
 		</template>
 
+		<template v-else-if="step === 'confirm-settings'">
+			<p class="mb-3">{{ t('sync.confirmSettingsBody') }}</p>
+			<div :class="$style.choices">
+				<v-btn color="primary" size="large" @click="acceptSettings">
+					{{ t('sync.confirmSettingsAccept') }}
+				</v-btn>
+				<v-btn variant="tonal" size="large" @click="declineSettings">
+					{{ t('sync.confirmSettingsDecline') }}
+				</v-btn>
+			</div>
+		</template>
+
 		<v-alert v-else-if="step === 'done'" type="success" variant="tonal" class="mb-4">
-			{{ t('sync.done', { added: result.added, updated: result.updated }) }}
+			{{
+				mode === 'settings'
+					? t('sync.settingsDone')
+					: t('sync.done', { added: result.added, updated: result.updated })
+			}}
 		</v-alert>
 
 		<v-alert v-else-if="step === 'failed'" type="error" variant="tonal" class="mb-4">
@@ -68,8 +88,13 @@ import { onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SyncCode from '../SyncCode.vue';
 import SyncScanner from '../SyncScanner.vue';
-import type { EntityBase } from '@/types';
-import { SyncConnection, SYNC_SCHEMA } from '@/services/sync/SyncConnection';
+import type { AppSettings, EntityBase } from '@/types';
+import {
+	SyncConnection,
+	SYNC_SCHEMA,
+	type SyncDataPayload,
+	type SyncSettingsPayload,
+} from '@/services/sync/SyncConnection';
 import { syncMerger } from '@/services/sync/SyncMerger';
 import { collectGarbage, pruneCompletions } from '@/utils';
 import { useDreamsStore } from '@/stores/dreams';
@@ -77,7 +102,16 @@ import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
 import { useSettingsStore } from '@/stores/settings';
 
-type Step = 'idle' | 'show-offer' | 'scan-offer' | 'show-answer' | 'working' | 'done' | 'failed';
+type Step =
+	| 'idle'
+	| 'show-offer'
+	| 'scan-offer'
+	| 'show-answer'
+	| 'working'
+	| 'confirm-settings'
+	| 'done'
+	| 'failed';
+type Mode = 'data' | 'settings';
 
 const emit = defineEmits<{ notify: [message: string] }>();
 
@@ -88,9 +122,11 @@ const tasks = useTasksStore();
 const settings = useSettingsStore();
 
 const step = ref<Step>('idle');
+const mode = ref<Mode>('data');
 const ourCode = ref('');
 const failure = ref('');
 const result = ref({ added: 0, updated: 0 });
+const incomingSettings = ref<AppSettings | null>(null);
 
 let connection: SyncConnection | null = null;
 
@@ -103,6 +139,7 @@ function reset(): void {
 	connection = null;
 	ourCode.value = '';
 	failure.value = '';
+	incomingSettings.value = null;
 	step.value = 'idle';
 }
 
@@ -153,13 +190,32 @@ async function onAnswerScanned(code: string): Promise<void> {
 	}
 }
 
-/** Both sides run this; each sends everything it has and merges what arrives. */
+/** Both sides run this; what they send and how they handle the reply depends on `mode`. */
 async function runExchange(): Promise<void> {
 	if (!connection) {
 		return;
 	}
 
 	try {
+		if (mode.value === 'settings') {
+			const theirs = (await connection.exchange({
+				schema: SYNC_SCHEMA,
+				kind: 'settings',
+				settings: {
+					general: settings.general,
+					dreams: settings.dreams,
+					goals: settings.goals,
+					tasks: settings.tasks,
+				},
+			})) as SyncSettingsPayload;
+
+			incomingSettings.value = theirs.settings;
+			step.value = 'confirm-settings';
+			connection.close();
+			connection = null;
+			return;
+		}
+
 		const before = new Map(
 			[...dreams.records, ...goals.records, ...tasks.records].map((record) => [
 				record.id,
@@ -167,17 +223,13 @@ async function runExchange(): Promise<void> {
 			]),
 		);
 
-		const theirs = await connection.exchange({
+		const theirs = (await connection.exchange({
 			schema: SYNC_SCHEMA,
 			kind: 'data',
 			dreams: [...dreams.records],
 			goals: [...goals.records],
 			tasks: [...tasks.records],
-		});
-
-		if (theirs.kind !== 'data') {
-			throw new Error('Expected data payload but received settings');
-		}
+		})) as SyncDataPayload;
 
 		const now = new Date();
 		const mergedDreams = sweep(syncMerger.merge([...dreams.records], theirs.dreams), now);
@@ -206,6 +258,23 @@ async function runExchange(): Promise<void> {
 	} catch (error) {
 		fail(error);
 	}
+}
+
+/**
+ * Settings sync is not a merge: both sides sent their whole document, and
+ * each independently decides whether to keep it or take the other side's.
+ */
+function acceptSettings(): void {
+	if (incomingSettings.value) {
+		settings.replaceAll(incomingSettings.value);
+	}
+	incomingSettings.value = null;
+	step.value = 'done';
+}
+
+function declineSettings(): void {
+	incomingSettings.value = null;
+	step.value = 'done';
 }
 
 /**

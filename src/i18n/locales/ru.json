@@ -66,7 +66,13 @@
 		"done": "Синхронизация завершена. Добавлено: {added}. Обновлено: {updated}.",
 		"failed": "Синхронизация не удалась: {reason}",
 		"restart": "Начать заново",
-		"cancel": "Отмена"
+		"cancel": "Отмена",
+		"modeData": "Данные",
+		"modeSettings": "Настройки",
+		"confirmSettingsBody": "Второе устройство прислало свои настройки. Заменить ими локальные?",
+		"confirmSettingsAccept": "Заменить",
+		"confirmSettingsDecline": "Оставить свои",
+		"settingsDone": "Настройки синхронизированы."
 	},
 	"settings": {
 		"startPage": "Стартовая страница",

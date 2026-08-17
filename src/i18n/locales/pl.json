@@ -66,7 +66,13 @@
 		"done": "Synchronizacja zakończona. Dodano: {added}. Zaktualizowano: {updated}.",
 		"failed": "Synchronizacja nie powiodła się: {reason}",
 		"restart": "Zacznij od nowa",
-		"cancel": "Anuluj"
+		"cancel": "Anuluj",
+		"modeData": "Dane",
+		"modeSettings": "Ustawienia",
+		"confirmSettingsBody": "Drugie urządzenie przesłało swoje ustawienia. Zastąpić nimi lokalne?",
+		"confirmSettingsAccept": "Zastąp",
+		"confirmSettingsDecline": "Zachowaj swoje",
+		"settingsDone": "Ustawienia zsynchronizowane."
 	},
 	"settings": {
 		"startPage": "Strona początkowa",

@@ -5,12 +5,20 @@ import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
-import { Status, type Dream, type Goal, type Task } from '@/types';
-import type { SyncDataPayload } from '@/services/sync/SyncConnection';
+import {
+	DEFAULT_SETTINGS,
+	Status,
+	type AppSettings,
+	type Dream,
+	type Goal,
+	type Task,
+} from '@/types';
+import type { SyncDataPayload, SyncSettingsPayload } from '@/services/sync/SyncConnection';
 import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
+import { useSettingsStore } from '@/stores/settings';
 import SyncCode from '../SyncCode.vue';
 import SyncScanner from '../SyncScanner.vue';
 import SyncFlow from './SyncFlow.vue';
@@ -110,6 +118,14 @@ function remotePayload(): SyncDataPayload {
 			makeTask({ updated: '2026-08-07T10:00:00.000Z' }),
 			makeTask({ id: 'task-remote', name: 'Remote task' }),
 		],
+	};
+}
+
+function remoteSettingsPayload(general: Partial<AppSettings['general']> = {}): SyncSettingsPayload {
+	return {
+		schema: 3,
+		kind: 'settings',
+		settings: { ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, ...general } },
 	};
 }
 
@@ -299,5 +315,113 @@ describe('SyncFlow reset', () => {
 
 		expect(close).toHaveBeenCalledTimes(1);
 		expect(wrapper.text()).toContain('This device starts');
+	});
+});
+
+describe('SyncFlow settings mode', () => {
+	it('sends the local settings and shows a confirmation with the incoming ones', async () => {
+		createOffer.mockResolvedValue('1oc.offer');
+		acceptAnswer.mockResolvedValue(undefined);
+		exchange.mockResolvedValue(
+			remoteSettingsPayload({ theme: 'dark', locale: 'ru', startPage: 'matrix', cleanupDays: 90 }),
+		);
+
+		await loadStores([], [], []);
+		const settings = useSettingsStore();
+
+		const wrapper = mount(SyncFlow, {
+			global: { plugins: [vuetify, i18n], stubs: { SyncCode: true, SyncScanner: true } },
+		});
+
+		await clickButtonByText(wrapper, 'Settings');
+		await clickButtonByText(wrapper, 'This device starts');
+		await wrapper.findComponent(SyncScanner).vm.$emit('code', '1oa.answer');
+		await flushPromises();
+
+		expect(exchange).toHaveBeenCalledWith({
+			schema: 3,
+			kind: 'settings',
+			settings: {
+				general: settings.general,
+				dreams: settings.dreams,
+				goals: settings.goals,
+				tasks: settings.tasks,
+			},
+		});
+		expect(wrapper.text()).toContain('The other device sent its settings');
+		expect(settings.general.theme).not.toBe('dark');
+	});
+
+	it('replaces local settings when the incoming ones are accepted', async () => {
+		createOffer.mockResolvedValue('1oc.offer');
+		acceptAnswer.mockResolvedValue(undefined);
+		exchange.mockResolvedValue(
+			remoteSettingsPayload({ theme: 'dark', locale: 'ru', startPage: 'matrix', cleanupDays: 90 }),
+		);
+
+		await loadStores([], [], []);
+		const settings = useSettingsStore();
+
+		const wrapper = mount(SyncFlow, {
+			global: { plugins: [vuetify, i18n], stubs: { SyncCode: true, SyncScanner: true } },
+		});
+
+		await clickButtonByText(wrapper, 'Settings');
+		await clickButtonByText(wrapper, 'This device starts');
+		await wrapper.findComponent(SyncScanner).vm.$emit('code', '1oa.answer');
+		await flushPromises();
+
+		await clickButtonByText(wrapper, 'Replace');
+		await flushPromises();
+
+		expect(settings.general.theme).toBe('dark');
+		expect(settings.general.cleanupDays).toBe(90);
+		expect(wrapper.text()).toContain('Settings synced');
+	});
+
+	it('leaves local settings untouched when the incoming ones are declined', async () => {
+		createOffer.mockResolvedValue('1oc.offer');
+		acceptAnswer.mockResolvedValue(undefined);
+		exchange.mockResolvedValue(
+			remoteSettingsPayload({ theme: 'dark', locale: 'ru', startPage: 'matrix', cleanupDays: 90 }),
+		);
+
+		await loadStores([], [], []);
+		const settings = useSettingsStore();
+		const originalTheme = settings.general.theme;
+
+		const wrapper = mount(SyncFlow, {
+			global: { plugins: [vuetify, i18n], stubs: { SyncCode: true, SyncScanner: true } },
+		});
+
+		await clickButtonByText(wrapper, 'Settings');
+		await clickButtonByText(wrapper, 'This device starts');
+		await wrapper.findComponent(SyncScanner).vm.$emit('code', '1oa.answer');
+		await flushPromises();
+
+		await clickButtonByText(wrapper, 'Keep mine');
+		await flushPromises();
+
+		expect(settings.general.theme).toBe(originalTheme);
+		expect(wrapper.text()).toContain('Settings synced');
+	});
+
+	it('closes the connection as soon as the settings exchange resolves, before the user decides', async () => {
+		createOffer.mockResolvedValue('1oc.offer');
+		acceptAnswer.mockResolvedValue(undefined);
+		exchange.mockResolvedValue(remoteSettingsPayload());
+
+		await loadStores([], [], []);
+
+		const wrapper = mount(SyncFlow, {
+			global: { plugins: [vuetify, i18n], stubs: { SyncCode: true, SyncScanner: true } },
+		});
+
+		await clickButtonByText(wrapper, 'Settings');
+		await clickButtonByText(wrapper, 'This device starts');
+		await wrapper.findComponent(SyncScanner).vm.$emit('code', '1oa.answer');
+		await flushPromises();
+
+		expect(close).toHaveBeenCalledTimes(1);
 	});
 });
