@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import { mdiFlagOutline, mdiTelescope, mdiViewGridOutline, mdiViewListOutline } from '@mdi/js';
-import TodoListPage from '@/pages/TodoListPage/TodoListPage.vue';
+import TasksPage from '@/pages/TasksPage/TasksPage.vue';
 import { settingsService } from '@/services/settings/SettingsService';
 
 declare module 'vue-router' {
@@ -28,10 +28,10 @@ export interface StartPageOption {
 const routes: RouteRecordRaw[] = [
 	{ path: '/', redirect: () => ({ name: readStoredStartPage() }) },
 	{
-		path: '/list',
-		name: 'list',
-		component: TodoListPage,
-		meta: { startPage: { icon: mdiViewListOutline, labelKey: 'settings.startPageList' } },
+		path: '/tasks',
+		name: 'tasks',
+		component: TasksPage,
+		meta: { startPage: { icon: mdiViewListOutline, labelKey: 'settings.startPageTasks' } },
 	},
 	{
 		path: '/matrix',
@@ -78,7 +78,7 @@ export function getStartPageOptions(): StartPageOption[] {
 export function readStoredStartPage(): StartPage {
 	const stored = settingsService.load().general.startPage;
 	const options = getStartPageOptions();
-	const fallback = options[0]?.value ?? 'list';
+	const fallback = options[0]?.value ?? 'tasks';
 
 	return options.some((option) => option.value === stored) ? stored : fallback;
 }

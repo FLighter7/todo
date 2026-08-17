@@ -6,7 +6,7 @@
 	"nav": {
 		"dreams": "Dreams",
 		"goals": "Goals",
-		"list": "List",
+		"tasks": "Tasks",
 		"matrix": "Matrix",
 		"settings": "Settings"
 	},
@@ -35,9 +35,6 @@
 		"save": "Save",
 		"cancel": "Cancel",
 		"nameRequired": "Name is required"
-	},
-	"list": {
-		"empty": "No tasks yet. Add the first one."
 	},
 	"backup": {
 		"title": "Backup",
@@ -84,7 +81,7 @@
 		"startPage": "Start page",
 		"startPageDreams": "Dreams",
 		"startPageGoals": "Goals",
-		"startPageList": "List",
+		"startPageTasks": "Tasks",
 		"startPageMatrix": "Matrix",
 		"theme": "Theme",
 		"themeSystem": "System",

@@ -6,7 +6,7 @@
 	"nav": {
 		"dreams": "Мечты",
 		"goals": "Цели",
-		"list": "Список",
+		"tasks": "Задачи",
 		"matrix": "Матрица",
 		"settings": "Настройки"
 	},
@@ -35,9 +35,6 @@
 		"save": "Сохранить",
 		"cancel": "Отмена",
 		"nameRequired": "Название обязательно"
-	},
-	"list": {
-		"empty": "Задач пока нет. Заведи первую."
 	},
 	"backup": {
 		"title": "Резервная копия",
@@ -84,7 +81,7 @@
 		"startPage": "Стартовая страница",
 		"startPageDreams": "Мечты",
 		"startPageGoals": "Цели",
-		"startPageList": "Список",
+		"startPageTasks": "Задачи",
 		"startPageMatrix": "Матрица",
 		"theme": "Тема",
 		"themeSystem": "Системная",
