@@ -116,7 +116,8 @@
 		"cascadeTitle": "Отменить всю ветку?",
 		"cascadeDreamBody": "Активных целей в этой мечте: {goals}. Активных задач в них: {tasks}.",
 		"cascadeOnly": "Отменить только это",
-		"cascadeBranch": "Отменить всю ветку"
+		"cascadeBranch": "Отменить всю ветку",
+		"cascadeGoalBody": "Активных задач в этой цели: {count}."
 	},
 	"dream": {
 		"title": "Мечта",
@@ -125,6 +126,7 @@
 	"goal": {
 		"title": "Цель",
 		"dreamLabel": "Мечта",
-		"noDream": "Без мечты"
+		"noDream": "Без мечты",
+		"empty": "Пока нет целей."
 	}
 }

@@ -116,7 +116,8 @@
 		"cascadeTitle": "Cancel this branch?",
 		"cascadeDreamBody": "Active goals under this dream: {goals}. Active tasks under them: {tasks}.",
 		"cascadeOnly": "Cancel only this",
-		"cascadeBranch": "Cancel the whole branch"
+		"cascadeBranch": "Cancel the whole branch",
+		"cascadeGoalBody": "Active tasks under this goal: {count}."
 	},
 	"dream": {
 		"title": "Dream",
@@ -125,6 +126,7 @@
 	"goal": {
 		"title": "Goal",
 		"dreamLabel": "Dream",
-		"noDream": "No dream"
+		"noDream": "No dream",
+		"empty": "No goals yet."
 	}
 }

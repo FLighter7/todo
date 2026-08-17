@@ -116,7 +116,8 @@
 		"cascadeTitle": "Anulować całą gałąź?",
 		"cascadeDreamBody": "Aktywnych celów w tym marzeniu: {goals}. Aktywnych zadań w nich: {tasks}.",
 		"cascadeOnly": "Anuluj tylko to",
-		"cascadeBranch": "Anuluj całą gałąź"
+		"cascadeBranch": "Anuluj całą gałąź",
+		"cascadeGoalBody": "Aktywnych zadań w tym celu: {count}."
 	},
 	"dream": {
 		"title": "Marzenie",
@@ -125,6 +126,7 @@
 	"goal": {
 		"title": "Cel",
 		"dreamLabel": "Marzenie",
-		"noDream": "Bez marzenia"
+		"noDream": "Bez marzenia",
+		"empty": "Brak celów."
 	}
 }
