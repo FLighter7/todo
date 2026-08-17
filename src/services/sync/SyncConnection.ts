@@ -1,4 +1,4 @@
-import type { Dream, Goal, Task } from '@/types';
+import { parseDream, parseGoal, parseTask, type Dream, type Goal, type Task } from '@/types';
 import { syncSignal } from './SyncSignal';
 
 /** Data channel messages cap at 256 KB; stay well clear and fail loudly. */
@@ -167,6 +167,16 @@ export class SyncConnection {
 						reject(new SyncError('The other device sent something unexpected'));
 						return;
 					}
+
+					// Shape-checking the arrays is not enough: each element still has
+					// to be a valid record. This is data from another device, not the
+					// user's own file, so a bad record must not reach the merge and
+					// garbage-collection steps — parseDream/parseGoal/parseTask throw
+					// on the first invalid one, and the catch below turns that into
+					// the same full-reject as every other malformed-payload case here.
+					parsed.dreams.forEach(parseDream);
+					parsed.goals.forEach(parseGoal);
+					parsed.tasks.forEach(parseTask);
 
 					resolve(parsed as SyncDataPayload);
 				} catch {

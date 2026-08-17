@@ -219,7 +219,7 @@ Two consumers:
 
 The database schema goes to version 3 with three object stores — `dreams`, `goals`, `tasks` — and drops `todos`. Existing data is not migrated: the user has none worth keeping, and backup files of versions 1 and 2 are rejected for the same reason.
 
-The connection is opened **once** for all three stores, in `repositories/AppDatabase.ts`. Three separate connections would mean three copies of the `versionchange` handler, and forgetting one of them is the documented trap where a second tab carrying a new schema hangs forever.
+The schema and config are defined **once**, in `repositories/AppDatabase.ts`, shared by all three stores. Connections themselves are not pooled — each caller opens its own — but because they all go through this one `openAppDatabase()`, the `versionchange` handler only has to be attached in the one place, not once per caller. Three hand-rolled `openDB` calls would mean three copies of that handler, and forgetting one of them is the documented trap where a second tab carrying a new schema hangs forever.
 
 ## Stores
 

@@ -15,10 +15,12 @@ export interface AppDbSchema extends DBSchema {
 }
 
 /**
- * One connection for all three stores. Three separate connections would
- * mean three copies of the `versionchange` handler, and forgetting one is
- * the documented trap where a second tab carrying a new schema hangs
- * forever waiting for the first to let go.
+ * One shared schema for all three stores, and one place that attaches the
+ * `versionchange` handler. Each caller gets its own connection — nothing is
+ * pooled — so the handler has to live here: three hand-rolled `openDB` calls
+ * would mean three copies of it, and forgetting one is the documented trap
+ * where a second tab carrying a new schema hangs forever waiting for the
+ * first to let go.
  */
 export async function openAppDatabase(): Promise<IDBPDatabase<AppDbSchema>> {
 	if (typeof indexedDB === 'undefined') {
