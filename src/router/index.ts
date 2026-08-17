@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import { mdiViewGridOutline, mdiViewListOutline } from '@mdi/js';
 import TodoListPage from '@/pages/TodoListPage/TodoListPage.vue';
+import { settingsService } from '@/services/settings/SettingsService';
 
 declare module 'vue-router' {
 	interface RouteMeta {
@@ -11,8 +12,6 @@ declare module 'vue-router' {
 		};
 	}
 }
-
-const START_PAGE_STORAGE_KEY = 'todo.startPage';
 
 /**
  * Not a real union — the set of eligible routes is derived at runtime from
@@ -61,19 +60,11 @@ export function getStartPageOptions(): StartPageOption[] {
 }
 
 export function readStoredStartPage(): StartPage {
-	const stored = localStorage.getItem(START_PAGE_STORAGE_KEY);
+	const stored = settingsService.load().general.startPage;
 	const options = getStartPageOptions();
 	const fallback = options[0]?.value ?? 'list';
 
-	if (stored === null) {
-		return fallback;
-	}
-
 	return options.some((option) => option.value === stored) ? stored : fallback;
-}
-
-export function persistStartPage(page: StartPage): void {
-	localStorage.setItem(START_PAGE_STORAGE_KEY, page);
 }
 
 export default createRouter({

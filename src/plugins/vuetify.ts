@@ -3,21 +3,11 @@ import '@/assets/fonts/fonts.scss';
 import { createVuetify } from 'vuetify';
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg';
 import { en, ru, pl } from 'vuetify/locale';
+import type { AppTheme } from '@/types';
+import { settingsService } from '@/services/settings/SettingsService';
 import { initialLocale } from '@/i18n';
 
-const THEME_STORAGE_KEY = 'todo.theme';
-
-export type AppTheme = 'light' | 'dark' | 'system';
 export type ResolvedTheme = 'light' | 'dark';
-
-export function readStoredTheme(): AppTheme {
-	const stored = localStorage.getItem(THEME_STORAGE_KEY);
-	return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
-}
-
-export function persistTheme(theme: AppTheme): void {
-	localStorage.setItem(THEME_STORAGE_KEY, theme);
-}
 
 // 'system' isn't a registered Vuetify theme name -- it has to resolve to
 // whichever of 'light'/'dark' the OS currently prefers before it can be
@@ -32,7 +22,7 @@ export function resolveTheme(preference: AppTheme): ResolvedTheme {
 
 export default createVuetify({
 	theme: {
-		defaultTheme: resolveTheme(readStoredTheme()),
+		defaultTheme: resolveTheme(settingsService.load().general.theme),
 		themes: {
 			light: {
 				colors: {

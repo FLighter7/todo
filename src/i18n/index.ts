@@ -2,11 +2,10 @@ import { createI18n } from 'vue-i18n';
 import usFlag from 'flag-icons/flags/4x3/us.svg';
 import ruFlag from 'flag-icons/flags/4x3/ru.svg';
 import plFlag from 'flag-icons/flags/4x3/pl.svg';
+import { settingsService } from '@/services/settings/SettingsService';
 import en from './locales/en.json';
 import ru from './locales/ru.json';
 import pl from './locales/pl.json';
-
-const LOCALE_STORAGE_KEY = 'todo.locale';
 
 export const SUPPORTED_LOCALES = ['en', 'ru', 'pl'] as const;
 
@@ -33,10 +32,13 @@ function isSupported(value: string | null): value is AppLocale {
 /**
  * There's no backend to read a real Accept-Language header from, so
  * navigator.languages (the browser's own ordered preference list) is the
- * closest client-side equivalent.
+ * closest client-side equivalent. `loadRaw()`, not `load()`: only a device
+ * that has never saved settings at all should fall through to scanning the
+ * browser -- `load()`'s DEFAULT_SETTINGS fallback would otherwise read as
+ * "the user chose English" on every first run.
  */
 export function detectLocale(): AppLocale {
-	const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+	const stored = settingsService.loadRaw()?.general.locale ?? null;
 	if (isSupported(stored)) {
 		return stored;
 	}
@@ -58,8 +60,3 @@ export const i18n = createI18n({
 	fallbackLocale: 'en',
 	messages: { en, ru, pl },
 });
-
-export function setLocale(locale: AppLocale): void {
-	i18n.global.locale.value = locale;
-	localStorage.setItem(LOCALE_STORAGE_KEY, locale);
-}

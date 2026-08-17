@@ -1,5 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { DEFAULT_SETTINGS } from '@/types';
+import { settingsService } from '@/services/settings/SettingsService';
 import { detectLocale } from '@/i18n';
 
 function stubLanguages(languages: string[]): void {
@@ -24,7 +26,7 @@ afterEach(() => {
 
 describe('detectLocale', () => {
 	it('returns the stored locale without consulting navigator.languages', () => {
-		window.localStorage.setItem('todo.locale', 'pl');
+		settingsService.save({ ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, locale: 'pl' } });
 		stubLanguages(['en-US']);
 
 		expect(detectLocale()).toBe('pl');
@@ -40,5 +42,12 @@ describe('detectLocale', () => {
 		stubLanguages(['de-DE', 'fr-FR']);
 
 		expect(detectLocale()).toBe('en');
+	});
+
+	it('falls back to scanning navigator.languages when the stored settings are corrupt', () => {
+		window.localStorage.setItem('todo.settings', '{not json');
+		stubLanguages(['ru-RU']);
+
+		expect(detectLocale()).toBe('ru');
 	});
 });
