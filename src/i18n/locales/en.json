@@ -76,7 +76,16 @@
 		"themeSystem": "System",
 		"themeLight": "Light",
 		"themeDark": "Dark",
-		"language": "Language"
+		"language": "Language",
+		"cleanupDays": "Keep closed items for",
+		"cleanupDaysOption": "{days} days",
+		"dreams": "Dreams",
+		"goals": "Goals",
+		"tasks": "Tasks",
+		"rows1": "1 row",
+		"rows2": "2 rows",
+		"confirmDone": "Confirm before marking done",
+		"confirmReopen": "Confirm before reopening"
 	},
 	"quadrant": {
 		"do": "Do",

@@ -76,7 +76,16 @@
 		"themeSystem": "Systemowy",
 		"themeLight": "Jasny",
 		"themeDark": "Ciemny",
-		"language": "Język"
+		"language": "Język",
+		"cleanupDays": "Przechowuj zamknięte pozycje",
+		"cleanupDaysOption": "{days} dni",
+		"dreams": "Marzenia",
+		"goals": "Cele",
+		"tasks": "Zadania",
+		"rows1": "1 wiersz",
+		"rows2": "2 wiersze",
+		"confirmDone": "Potwierdzaj oznaczanie jako zrobione",
+		"confirmReopen": "Potwierdzaj wznowienie"
 	},
 	"quadrant": {
 		"do": "Zrób",

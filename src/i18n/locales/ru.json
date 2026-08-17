@@ -76,7 +76,16 @@
 		"themeSystem": "Системная",
 		"themeLight": "Светлая",
 		"themeDark": "Тёмная",
-		"language": "Язык"
+		"language": "Язык",
+		"cleanupDays": "Хранить закрытые записи",
+		"cleanupDaysOption": "{days} дней",
+		"dreams": "Мечты",
+		"goals": "Цели",
+		"tasks": "Задачи",
+		"rows1": "1 строка",
+		"rows2": "2 строки",
+		"confirmDone": "Подтверждать завершение",
+		"confirmReopen": "Подтверждать возврат"
 	},
 	"quadrant": {
 		"do": "Сделать",
