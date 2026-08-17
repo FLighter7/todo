@@ -27,7 +27,12 @@
 			</v-card-text>
 
 			<v-card-actions v-if="mode === 'edit'">
-				<v-btn color="error" variant="text" :prepend-icon="mdiDeleteOutline" @click="emit('cancel')">
+				<v-btn
+					color="error"
+					variant="text"
+					:prepend-icon="mdiDeleteOutline"
+					@click="emit('cancel')"
+				>
 					{{ t('entity.cancelRecord') }}
 				</v-btn>
 				<v-spacer />

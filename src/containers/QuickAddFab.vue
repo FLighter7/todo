@@ -15,7 +15,12 @@
 		@click="dialogOpen = true"
 	/>
 
-	<dream-dialog v-if="route.name === 'dreams'" v-model="dialogOpen" mode="add" @save="handleDreamSave" />
+	<dream-dialog
+		v-if="route.name === 'dreams'"
+		v-model="dialogOpen"
+		mode="add"
+		@save="handleDreamSave"
+	/>
 	<goal-dialog
 		v-else-if="route.name === 'goals'"
 		v-model="dialogOpen"

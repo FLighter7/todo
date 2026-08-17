@@ -42,6 +42,7 @@ on top of what this one ships:
 ## Scope
 
 **In scope:**
+
 - `DreamsPage`, `GoalsPage` (thin page → containers, mirroring
   `TodoListPage`'s existing split).
 - Shared presentational primitives, sized for what this stage actually
@@ -52,7 +53,7 @@ on top of what this one ships:
 - Routes `/dreams`, `/goals`, both `meta.startPage`-tagged like the existing
   four routes.
 - `BottomNav` moves to its final five-item layout: `Dreams · Goals · [+] ·
-  Tasks · Matrix` (the existing `list`/`matrix` routes and labels are
+Tasks · Matrix` (the existing `list`/`matrix` routes and labels are
   untouched — the `/list` → `/tasks` rename is stage 4's job, so it doesn't
   get tangled with this stage's routing change).
 - `QuickAddFab` becomes route-aware: opens a Dream-create dialog on
@@ -67,6 +68,7 @@ on top of what this one ships:
   get their first real reader here.
 
 **Explicitly out of scope** (deferred to later stages):
+
 - Any change to the existing `TasksTable`/`MatrixBoard`/`TaskQuadrant` beyond
   what's needed for cascade-cancel counting (read-only queries into the
   tasks store — no UI changes there).
@@ -161,7 +163,7 @@ no new mechanism required.
 `DreamDialog` wraps `EntityDialog` around `name`/`note` only — `Dream` adds
 nothing to `EntityBase`. `GoalDialog` wraps the same around `name`/`note`
 plus a Dream picker: a `select` listing active Dreams, plus a "no parent"
-option. A closed Dream is never offered as a *new* choice — but if the Goal
+option. A closed Dream is never offered as a _new_ choice — but if the Goal
 being edited already points to one, that Dream stays present as the
 currently-selected option so editing doesn't silently clear an existing link
 just because its target closed in the meantime; it only drops out of the

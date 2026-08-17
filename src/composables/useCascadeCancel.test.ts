@@ -44,7 +44,7 @@ describe('useCascadeCancel counting', () => {
 		expect(cascade.countGoalTasks('goal-1')).toBe(0);
 	});
 
-	it('counts only active tasks under a goal, not closed ones or another goal\'s', async () => {
+	it("counts only active tasks under a goal, not closed ones or another goal's", async () => {
 		const tasks = useTasksStore();
 		await tasks.load(
 			async () =>
