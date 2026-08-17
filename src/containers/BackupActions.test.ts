@@ -11,6 +11,7 @@ import { backupFile } from '@/services/backup/BackupFile';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
+import { useSettingsStore } from '@/stores/settings';
 import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
 import BackupActions from './BackupActions.vue';
 
@@ -54,6 +55,19 @@ describe('BackupActions export', () => {
 		expect(backup.goals).toHaveLength(1);
 		expect(backup.tasks).toHaveLength(1);
 		expect(wrapper.emitted('notify')).toEqual([['Backup saved.']]);
+	});
+
+	it('includes the current settings in the export', async () => {
+		await loadEmptyStores();
+		const settings = useSettingsStore();
+		settings.setTheme('dark');
+
+		const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
+
+		await clickButtonByText(wrapper, 'Export to a file');
+
+		const backup = download.mock.calls[0][0];
+		expect(backup.settings!.general.theme).toBe('dark');
 	});
 });
 
@@ -120,6 +134,59 @@ describe('BackupActions import', () => {
 		expect(goals.records.map((r) => r.id)).toEqual(['goal-1']);
 		expect(tasks.records.map((r) => r.id)).toEqual(['task-1']);
 		expect(wrapper.emitted('notify')?.at(-1)).toEqual(['Restored from the file. Records: 3.']);
+	});
+
+	it('replaces local settings when the backup includes them', async () => {
+		await loadEmptyStores();
+		const settings = useSettingsStore();
+		settings.setTheme('dark');
+
+		const incoming = backupService.create([], [], [], {
+			general: { theme: 'light', locale: 'ru', startPage: 'matrix', cleanupDays: 90 },
+			dreams: { rows: 2, confirmDone: true, confirmReopen: true },
+			goals: { rows: 2, confirmDone: true, confirmReopen: true },
+			tasks: { rows: 2, confirmDone: true, confirmReopen: true },
+		});
+		readText.mockResolvedValue(JSON.stringify(incoming));
+
+		const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
+		const fileInput = wrapper.get('input[type="file"]');
+		Object.defineProperty(fileInput.element, 'files', {
+			value: [new File(['irrelevant, readText is mocked'], 'backup.json')],
+			configurable: true,
+		});
+		await fileInput.trigger('change');
+		await wrapper.vm.$nextTick();
+
+		await clickButtonByText(wrapper, 'Replace');
+		await flushPromises();
+
+		expect(settings.general.theme).toBe('light');
+		expect(settings.general.locale).toBe('ru');
+		expect(settings.dreams.rows).toBe(2);
+	});
+
+	it('leaves local settings untouched when the backup has none', async () => {
+		await loadEmptyStores();
+		const settings = useSettingsStore();
+		settings.setTheme('dark');
+
+		const incoming = backupService.create([], [], []);
+		readText.mockResolvedValue(JSON.stringify(incoming));
+
+		const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
+		const fileInput = wrapper.get('input[type="file"]');
+		Object.defineProperty(fileInput.element, 'files', {
+			value: [new File(['irrelevant, readText is mocked'], 'backup.json')],
+			configurable: true,
+		});
+		await fileInput.trigger('change');
+		await wrapper.vm.$nextTick();
+
+		await clickButtonByText(wrapper, 'Replace');
+		await flushPromises();
+
+		expect(settings.general.theme).toBe('dark');
 	});
 
 	it('notifies restoreFailed and stops instead of continuing when a replaceAll call rejects', async () => {

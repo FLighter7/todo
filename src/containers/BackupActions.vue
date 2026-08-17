@@ -48,6 +48,7 @@ import { backupFile } from '@/services/backup/BackupFile';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
+import { useSettingsStore } from '@/stores/settings';
 
 const emit = defineEmits<{ notify: [message: string] }>();
 
@@ -55,6 +56,7 @@ const { t, locale } = useI18n();
 const dreams = useDreamsStore();
 const goals = useGoalsStore();
 const tasks = useTasksStore();
+const settings = useSettingsStore();
 
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput');
 const pending = ref<Backup | null>(null);
@@ -82,7 +84,14 @@ const exportedAt = computed(() => {
 function exportFile(): void {
 	// records, not active: a backup that omitted closed records would resurrect
 	// everything ever finished or abandoned on the next restore.
-	backupFile.download(backupService.create(dreams.records, goals.records, tasks.records));
+	backupFile.download(
+		backupService.create(dreams.records, goals.records, tasks.records, {
+			general: settings.general,
+			dreams: settings.dreams,
+			goals: settings.goals,
+			tasks: settings.tasks,
+		}),
+	);
 	emit('notify', t('backup.exported'));
 }
 
@@ -139,6 +148,9 @@ async function confirmImport(): Promise<void> {
 		await dreams.replaceAll(backup.dreams);
 		await goals.replaceAll(backup.goals);
 		await tasks.replaceAll(backup.tasks);
+		if (backup.settings) {
+			settings.replaceAll(backup.settings);
+		}
 
 		emit('notify', t('backup.restored', { count: incomingTotal(backup) }));
 	} catch (error) {
