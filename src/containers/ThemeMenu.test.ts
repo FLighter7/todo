@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
+import { nextTick } from 'vue';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
@@ -35,7 +36,10 @@ describe('ThemeMenu', () => {
 	});
 
 	it('marks the currently stored preference with a checkmark', async () => {
-		settingsService.save({ ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, theme: 'dark' } });
+		settingsService.save({
+			...DEFAULT_SETTINGS,
+			general: { ...DEFAULT_SETTINGS.general, theme: 'dark' },
+		});
 		const wrapper = mount(ThemeMenu, { global: { plugins: [vuetify, i18n] } });
 
 		await openMenu(wrapper);
@@ -55,6 +59,15 @@ describe('ThemeMenu', () => {
 		await clickButtonByText(wrapper, 'Dark');
 
 		expect(useSettingsStore().general.theme).toBe('dark');
+		expect(vuetify.theme.global.name.value).toBe('dark');
+	});
+
+	it('applies a theme change made through the store directly, without going through select()', async () => {
+		mount(ThemeMenu, { global: { plugins: [vuetify, i18n] } });
+
+		useSettingsStore().setTheme('dark');
+		await nextTick();
+
 		expect(vuetify.theme.global.name.value).toBe('dark');
 	});
 
@@ -87,7 +100,10 @@ describe('ThemeMenu', () => {
 		});
 
 		it('follows OS theme changes while "system" is selected', () => {
-			settingsService.save({ ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, theme: 'system' } });
+			settingsService.save({
+				...DEFAULT_SETTINGS,
+				general: { ...DEFAULT_SETTINGS.general, theme: 'system' },
+			});
 			mount(ThemeMenu, { global: { plugins: [vuetify, i18n] } });
 
 			for (const listener of listeners) {
@@ -98,7 +114,10 @@ describe('ThemeMenu', () => {
 		});
 
 		it('ignores OS theme changes when a manual preference is selected', () => {
-			settingsService.save({ ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, theme: 'light' } });
+			settingsService.save({
+				...DEFAULT_SETTINGS,
+				general: { ...DEFAULT_SETTINGS.general, theme: 'light' },
+			});
 			mount(ThemeMenu, { global: { plugins: [vuetify, i18n] } });
 
 			for (const listener of listeners) {

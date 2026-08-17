@@ -14,7 +14,12 @@
 </style>
 
 <template>
-	<v-btn :icon="mdiTranslate" variant="text" :aria-label="t('app.toggleLanguage')" @click="open = true" />
+	<v-btn
+		:icon="mdiTranslate"
+		variant="text"
+		:aria-label="t('app.toggleLanguage')"
+		@click="open = true"
+	/>
 
 	<v-dialog v-model="open" max-width="360">
 		<v-card variant="elevated">
@@ -40,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { mdiCheck, mdiTranslate } from '@mdi/js';
 import { type AppLocale, LOCALE_FLAGS, LOCALE_NAMES, SUPPORTED_LOCALES } from '@/i18n';
@@ -53,7 +58,17 @@ const open = ref(false);
 
 function select(code: AppLocale): void {
 	settings.setLocale(code);
-	locale.value = code;
 	open.value = false;
 }
+
+// Reactive, not just from select(): this makes every write path -- setLocale,
+// replaceAll (backup import, sync accept) -- apply live, not only a click
+// through this menu's own list.
+watch(
+	() => settings.general.locale,
+	(code) => {
+		locale.value = code;
+	},
+	{ immediate: true },
+);
 </script>

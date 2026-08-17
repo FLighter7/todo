@@ -4,7 +4,7 @@
 
 **Goal:** Close the testing gaps identified in `docs/superpowers/specs/2026-08-07-testing-strategy-design.md`: add component tests (`@vue/test-utils` + `happy-dom`) for the priority interactive `.vue` files, add Playwright e2e coverage (local CRUD/matrix, PWA/offline, cross-context WebRTC sync), and wire up CI.
 
-**Architecture:** Every component and service touched here already ships and works — this is retrofitting tests onto finished code, not driving out a new feature. So the discipline is *characterization testing*, not literal red/green TDD on every assertion: write the test file, run it, confirm it passes. The one place this plan asks for a genuine red-then-green cycle is the very first test in Task 1, specifically to prove the new `happy-dom` + `@vue/test-utils` harness actually catches a wrong assertion rather than passing vacuously. After that, "run it, confirm pass" is enough. Selectors against Vuetify's rendered DOM are written from reading the component source, not from running a browser — if a locator is slightly off when a step's "run and verify" instruction is executed, fix the selector inline; that's a normal part of running this step, not a sign the plan is wrong.
+**Architecture:** Every component and service touched here already ships and works — this is retrofitting tests onto finished code, not driving out a new feature. So the discipline is _characterization testing_, not literal red/green TDD on every assertion: write the test file, run it, confirm it passes. The one place this plan asks for a genuine red-then-green cycle is the very first test in Task 1, specifically to prove the new `happy-dom` + `@vue/test-utils` harness actually catches a wrong assertion rather than passing vacuously. After that, "run it, confirm pass" is enough. Selectors against Vuetify's rendered DOM are written from reading the component source, not from running a browser — if a locator is slightly off when a step's "run and verify" instruction is executed, fix the selector inline; that's a normal part of running this step, not a sign the plan is wrong.
 
 **Tech Stack:** Vitest 4 (existing), `@vue/test-utils` + `happy-dom` (new, component tests), Playwright `@playwright/test` (new, e2e), GitHub Actions (new, CI).
 
@@ -773,10 +773,12 @@ const { start, destroy, scannerState } = vi.hoisted(() => ({
 vi.mock('qr-scanner', () => ({
 	default: vi
 		.fn()
-		.mockImplementation((_video: HTMLVideoElement, onDecode: (result: { data: string }) => void) => {
-			scannerState.onDecode = onDecode;
-			return { start, destroy };
-		}),
+		.mockImplementation(
+			(_video: HTMLVideoElement, onDecode: (result: { data: string }) => void) => {
+				scannerState.onDecode = onDecode;
+				return { start, destroy };
+			},
+		),
 }));
 
 beforeEach(() => {
@@ -1122,7 +1124,7 @@ test('the app shell loads and shows the list page', async ({ page }) => {
 });
 ```
 
-Note: `npm run preview` serves the *built* app, so build first. If `page.getByRole('heading', { name: 'Todo' })` doesn't match (the app-bar title may not render as an `h1`/`h2` in Vuetify's markup), replace it with `await expect(page.getByText('Todo').first()).toBeVisible();` — the important assertion for this smoke test is just that the page loaded and the add button is reachable.
+Note: `npm run preview` serves the _built_ app, so build first. If `page.getByRole('heading', { name: 'Todo' })` doesn't match (the app-bar title may not render as an `h1`/`h2` in Vuetify's markup), replace it with `await expect(page.getByText('Todo').first()).toBeVisible();` — the important assertion for this smoke test is just that the page loaded and the add button is reachable.
 
 - [ ] **Step 7: Build, then run the smoke test and confirm it passes**
 
@@ -1209,7 +1211,10 @@ test('toggling done crosses the task out', async ({ page }) => {
 	const row = page.getByRole('row', { name: /Finish the report/ });
 	await row.getByRole('checkbox').click();
 
-	await expect(row.getByText('Finish the report')).toHaveCSS('text-decoration-line', 'line-through');
+	await expect(row.getByText('Finish the report')).toHaveCSS(
+		'text-decoration-line',
+		'line-through',
+	);
 });
 
 test('deleting a task removes it from the list', async ({ page }) => {
@@ -1220,7 +1225,10 @@ test('deleting a task removes it from the list', async ({ page }) => {
 	await page.getByRole('button', { name: 'Save' }).click();
 	await expect(page.getByText('Throwaway task')).toBeVisible();
 
-	await page.getByRole('row', { name: /Throwaway task/ }).getByRole('button', { name: 'Actions' }).click();
+	await page
+		.getByRole('row', { name: /Throwaway task/ })
+		.getByRole('button', { name: 'Actions' })
+		.click();
 
 	await expect(page.getByText('No tasks yet. Add the first one.')).toBeVisible();
 });

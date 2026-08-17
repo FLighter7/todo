@@ -85,6 +85,7 @@
 		"language": "Język",
 		"cleanupDays": "Przechowuj zamknięte pozycje",
 		"cleanupDaysOption": "{days} dni",
+		"cleanupDaysHint": "Skrócenie tego okresu usunie starsze zamknięte pozycje i historię wykonania szybciej.",
 		"dreams": "Marzenia",
 		"goals": "Cele",
 		"tasks": "Zadania",

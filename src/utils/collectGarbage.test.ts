@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Status, type EntityBase, type Task } from '@/types';
-import { DEFAULT_CLEANUP_DAYS, collectGarbage, pruneCompletions } from './collectGarbage';
+import { collectGarbage, pruneCompletions } from './collectGarbage';
 
 const NOW = new Date('2026-08-16T12:00:00.000Z');
 
@@ -160,11 +160,5 @@ describe('pruneCompletions', () => {
 		pruneCompletions(task, 30, NOW);
 
 		expect(task).toEqual(copy);
-	});
-});
-
-describe('DEFAULT_CLEANUP_DAYS', () => {
-	it('is thirty days', () => {
-		expect(DEFAULT_CLEANUP_DAYS).toBe(30);
 	});
 });

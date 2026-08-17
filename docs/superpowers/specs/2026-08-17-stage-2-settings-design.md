@@ -50,7 +50,7 @@ export function parseSettings(value: unknown): AppSettings; // throws SettingsFo
 
 `AppTheme` moves here from `plugins/vuetify.ts`, which will import it from `@/types` instead of declaring it — it is a stored field now, so it belongs with the rest of the shape validation, matching how `parseDream`/`parseGoal`/`parseTask` already live next to their types rather than in the modules that consume them.
 
-`locale` and `startPage` stay plain `string`, not `AppLocale` (`src/i18n`) or `StartPage` (`src/router`). `types/` is the dependency chain's terminal node — nothing in it may import from `i18n` or `router` — so `parseSettings` only checks that these are non-empty strings. Validity against the *current* set of supported locales or registered routes is exactly what `i18n/index.ts` and `router/index.ts` already check today (`isSupported`, `getStartPageOptions().some(...)`), and they keep doing it, just against a different storage source.
+`locale` and `startPage` stay plain `string`, not `AppLocale` (`src/i18n`) or `StartPage` (`src/router`). `types/` is the dependency chain's terminal node — nothing in it may import from `i18n` or `router` — so `parseSettings` only checks that these are non-empty strings. Validity against the _current_ set of supported locales or registered routes is exactly what `i18n/index.ts` and `router/index.ts` already check today (`isSupported`, `getStartPageOptions().some(...)`), and they keep doing it, just against a different storage source.
 
 `DEFAULT_SETTINGS.general.startPage: 'list'` matches the current first `meta.startPage`-tagged route; it is a static fallback, not derived, because `types/settings.ts` cannot see the route table.
 
@@ -167,4 +167,4 @@ New keys needed under `settings.*` for: the cleanup-days section label and its t
 
 ## Out of scope
 
-Reading or migrating the old `todo.theme`/`todo.locale`/`todo.startPage` keys — a deliberate decision, not an oversight (see "No migration" above). Any UI for the dream/goal/task pages that will eventually *read* `rows`/`confirmDone`/`confirmReopen` — those pages do not exist yet and arrive in stages 3–5. Negotiating or merging settings between two devices — sync replaces wholesale or not at all, per device, per the source spec.
+Reading or migrating the old `todo.theme`/`todo.locale`/`todo.startPage` keys — a deliberate decision, not an oversight (see "No migration" above). Any UI for the dream/goal/task pages that will eventually _read_ `rows`/`confirmDone`/`confirmReopen` — those pages do not exist yet and arrive in stages 3–5. Negotiating or merging settings between two devices — sync replaces wholesale or not at all, per device, per the source spec.

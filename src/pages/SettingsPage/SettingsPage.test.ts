@@ -38,6 +38,19 @@ describe('SettingsPage cleanup window', () => {
 
 		expect(settings.general.cleanupDays).toBe(90);
 	});
+
+	it('warns that shortening the window deletes older items sooner', () => {
+		const wrapper = mountPage();
+
+		const [, cleanupSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+
+		expect(cleanupSelect.props('hint')).toBe(
+			'Shortening this deletes older closed items and completion history sooner.',
+		);
+		expect(wrapper.text()).toContain(
+			'Shortening this deletes older closed items and completion history sooner.',
+		);
+	});
 });
 
 describe('SettingsPage per-entity sections', () => {
@@ -58,6 +71,16 @@ describe('SettingsPage per-entity sections', () => {
 		expect(settings.dreams.rows).toBe(2);
 		expect(settings.goals.rows).toBe(1);
 		expect(settings.tasks.rows).toBe(1);
+	});
+
+	it('clamps an out-of-range rows value to 1 instead of storing it as-is', async () => {
+		const settings = useSettingsStore();
+		const wrapper = mountPage();
+
+		const [dreamsRows] = wrapper.findAllComponents({ name: 'VBtnToggle' });
+		await dreamsRows.vm.$emit('update:modelValue', undefined);
+
+		expect(settings.dreams.rows).toBe(1);
 	});
 
 	it('changes confirmDone for one entity without touching the others', async () => {

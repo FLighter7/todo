@@ -85,6 +85,7 @@
 		"language": "Language",
 		"cleanupDays": "Keep closed items for",
 		"cleanupDaysOption": "{days} days",
+		"cleanupDaysHint": "Shortening this deletes older closed items and completion history sooner.",
 		"dreams": "Dreams",
 		"goals": "Goals",
 		"tasks": "Tasks",

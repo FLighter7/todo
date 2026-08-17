@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SETTINGS, Status, type AppSettings, type Dream, type Goal, type Task } from '@/types';
+import {
+	DEFAULT_SETTINGS,
+	Status,
+	type AppSettings,
+	type Dream,
+	type Goal,
+	type Task,
+} from '@/types';
 import { BackupFormatError, BackupService } from './BackupService';
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {

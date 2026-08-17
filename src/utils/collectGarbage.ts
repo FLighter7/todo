@@ -1,7 +1,5 @@
 import { Status, type EntityBase, type Task } from '@/types';
 
-export const DEFAULT_CLEANUP_DAYS = 30;
-
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export interface CollectionResult<T> {

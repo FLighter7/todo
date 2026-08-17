@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useTheme } from 'vuetify';
 import { mdiCheck, mdiThemeLightDark, mdiWeatherNight, mdiWeatherSunny } from '@mdi/js';
@@ -45,14 +45,23 @@ const options: Array<{ value: AppTheme; labelKey: string; icon: string }> = [
 ];
 
 const themeIcon = computed(
-	() => options.find((option) => option.value === settings.general.theme)?.icon ?? mdiThemeLightDark,
+	() =>
+		options.find((option) => option.value === settings.general.theme)?.icon ?? mdiThemeLightDark,
 );
 
 function select(value: AppTheme): void {
 	settings.setTheme(value);
-	theme.change(resolveTheme(value));
 	open.value = false;
 }
+
+// Reactive, not just from select(): this makes every write path -- setTheme,
+// replaceAll (backup import, sync accept) -- apply live, not only a click
+// through this menu's own list.
+watch(
+	() => settings.general.theme,
+	(value) => theme.change(resolveTheme(value)),
+	{ immediate: true },
+);
 
 function syncWithSystem(event: MediaQueryListEvent): void {
 	if (settings.general.theme === 'system') {

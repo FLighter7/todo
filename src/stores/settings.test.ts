@@ -1,14 +1,24 @@
 // @vitest-environment happy-dom
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { computed, nextTick, watch } from 'vue';
 import { DEFAULT_SETTINGS } from '@/types';
 import { settingsService } from '@/services/settings/SettingsService';
+import { useStorageStore } from './storage';
 import { useSettingsStore } from './settings';
+
+const originalLanguages = window.navigator.languages;
 
 beforeEach(() => {
 	window.localStorage.clear();
 	setActivePinia(createPinia());
+});
+
+afterEach(() => {
+	Object.defineProperty(window.navigator, 'languages', {
+		value: originalLanguages,
+		configurable: true,
+	});
 });
 
 describe('useSettingsStore setters', () => {
@@ -67,11 +77,58 @@ describe('useSettingsStore setters', () => {
 	});
 });
 
+describe('useSettingsStore locale seeding', () => {
+	/**
+	 * `initialLocale` is resolved once, at module-eval time, from whatever
+	 * `navigator.languages` happens to be at that moment -- stubbing it from
+	 * inside a test has no effect on an already-imported binding. Resetting
+	 * the module registry and re-importing both `@/i18n` and `./settings`
+	 * dynamically, after the stub is in place, is what lets a single test
+	 * exercise a specific detected locale instead of whatever the default
+	 * test-environment language happens to be.
+	 */
+	it('seeds an unsaved store from the detected browser locale, not the "en" default', async () => {
+		Object.defineProperty(window.navigator, 'languages', {
+			value: ['ru-RU'],
+			configurable: true,
+		});
+
+		vi.resetModules();
+		const { createPinia: freshCreatePinia, setActivePinia: freshSetActivePinia } =
+			await import('pinia');
+		const { initialLocale } = await import('@/i18n');
+		const { useSettingsStore: useFreshSettingsStore } = await import('./settings');
+
+		expect(initialLocale).toBe('ru');
+
+		freshSetActivePinia(freshCreatePinia());
+		const store = useFreshSettingsStore();
+
+		expect(store.general.locale).toBe('ru');
+	});
+
+	it('leaves a previously saved locale untouched', () => {
+		settingsService.save({
+			...DEFAULT_SETTINGS,
+			general: { ...DEFAULT_SETTINGS.general, locale: 'pl' },
+		});
+
+		const store = useSettingsStore();
+
+		expect(store.general.locale).toBe('pl');
+	});
+});
+
 describe('useSettingsStore replaceAll', () => {
 	it('overwrites all four sections at once', () => {
 		const store = useSettingsStore();
 		const incoming = {
-			general: { theme: 'dark' as const, locale: 'pl', startPage: 'matrix', cleanupDays: 60 as const },
+			general: {
+				theme: 'dark' as const,
+				locale: 'pl',
+				startPage: 'matrix',
+				cleanupDays: 60 as const,
+			},
 			dreams: { rows: 2 as const, confirmDone: true, confirmReopen: true },
 			goals: { rows: 2 as const, confirmDone: true, confirmReopen: true },
 			tasks: { rows: 2 as const, confirmDone: true, confirmReopen: true },
@@ -92,6 +149,19 @@ describe('useSettingsStore replaceAll', () => {
 		store.replaceAll(DEFAULT_SETTINGS);
 
 		expect(save).toHaveBeenCalled();
+	});
+});
+
+describe('useSettingsStore persist error handling', () => {
+	it('does not throw when settingsService.save fails, and reports it through storage', () => {
+		vi.spyOn(settingsService, 'save').mockImplementation(() => {
+			throw new Error('quota exceeded');
+		});
+		const store = useSettingsStore();
+
+		expect(() => store.setTheme('dark')).not.toThrow();
+		expect(store.general.theme).toBe('dark');
+		expect(useStorageStore().lastError).toBe('storage.writeFailed');
 	});
 });
 

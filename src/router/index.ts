@@ -40,7 +40,11 @@ const routes: RouteRecordRaw[] = [
 		meta: { startPage: { icon: mdiViewGridOutline, labelKey: 'settings.startPageMatrix' } },
 	},
 	{ path: '/sync', name: 'sync', component: () => import('@/pages/SyncPage/SyncPage.vue') },
-	{ path: '/settings', name: 'settings', component: () => import('@/pages/SettingsPage/SettingsPage.vue') },
+	{
+		path: '/settings',
+		name: 'settings',
+		component: () => import('@/pages/SettingsPage/SettingsPage.vue'),
+	},
 ];
 
 export function getStartPageOptions(): StartPageOption[] {

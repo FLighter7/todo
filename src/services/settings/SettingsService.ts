@@ -27,14 +27,18 @@ export class SettingsService {
 	 * read this instead of `load()`.
 	 */
 	loadRaw(): AppSettings | null {
-		const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
-		if (raw === null) {
-			return null;
-		}
-
 		try {
+			const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+			if (raw === null) {
+				return null;
+			}
+
 			return parseSettings(JSON.parse(raw));
 		} catch {
+			// Covers both a corrupt/mismatched stored value (JSON.parse or
+			// parseSettings throwing) and localStorage itself being unusable
+			// (quota exceeded, a storage-restricted browsing context) -- either
+			// way, callers treat this the same as "nothing stored".
 			return null;
 		}
 	}
@@ -43,6 +47,14 @@ export class SettingsService {
 		return this.loadRaw() ?? cloneDefaults();
 	}
 
+	/**
+	 * Does not catch: a throwing `setItem` (quota exceeded, storage
+	 * restricted) is left to propagate as a plain error. `stores/settings.ts`
+	 * is the layer with somewhere useful to route that -- `useStorageStore()`
+	 * -- and it already wraps every call to this method in a generic
+	 * try/catch, so re-wrapping the error in a dedicated type here would add
+	 * a class with no caller that inspects it.
+	 */
 	save(settings: AppSettings): void {
 		localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
 	}

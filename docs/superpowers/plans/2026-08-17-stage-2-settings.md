@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - `src/types/` is the dependency chain's terminal node: `types/settings.ts` must not import from `i18n`, `router`, `stores`, or `utils` (the last would create a cycle, since `utils/collectGarbage.ts` already imports from `types`).
-- `AppSettings.general.locale` and `.startPage` stay plain, non-empty `string` — not `AppLocale` or `StartPage` — validity against the *current* supported-locale/registered-route set stays the job of `i18n/index.ts` and `router/index.ts`, unchanged.
+- `AppSettings.general.locale` and `.startPage` stay plain, non-empty `string` — not `AppLocale` or `StartPage` — validity against the _current_ supported-locale/registered-route set stays the job of `i18n/index.ts` and `router/index.ts`, unchanged.
 - No migration: `todo.theme`, `todo.locale`, `todo.startPage` are retired outright, not read or migrated. A device that has them starts over at `DEFAULT_SETTINGS`.
 - `cleanupDays` becomes a single value on the settings store — the three per-entity stores no longer each carry their own.
 - `BACKUP_VERSION` stays `3`; `Backup.settings` is an optional addition, not a breaking shape change.
@@ -27,6 +27,7 @@
 ## File Structure
 
 New files:
+
 - `src/types/settings.ts` — `AppTheme`, `PageSettings`, `AppSettings`, `DEFAULT_SETTINGS`, `SettingsFormatError`, `parseSettings`.
 - `src/types/settings.test.ts`
 - `src/services/settings/SettingsService.ts` — `loadRaw`/`load`/`save` over `localStorage['todo.settings']`, singleton `settingsService`. No `index.ts` barrel, matching `services/backup/` and `services/sync/`.
@@ -44,11 +45,13 @@ Modified files (grouped by task below): `src/types/index.ts`, `src/stores/index.
 ### Task 1: `types/settings.ts` — shape and validation
 
 **Files:**
+
 - Create: `src/types/settings.ts`
 - Create: `src/types/settings.test.ts`
 - Modify: `src/types/index.ts`
 
 **Interfaces:**
+
 - Produces: `AppTheme = 'light' | 'dark' | 'system'`; `interface PageSettings { rows: 1 | 2; confirmDone: boolean; confirmReopen: boolean }`; `interface AppSettings { general: { theme: AppTheme; locale: string; startPage: string; cleanupDays: 30 | 60 | 90 }; dreams: PageSettings; goals: PageSettings; tasks: PageSettings }`; `DEFAULT_SETTINGS: AppSettings`; `class SettingsFormatError extends Error`; `function parseSettings(value: unknown): AppSettings` (throws `SettingsFormatError`).
 
 - [ ] **Step 1: Write the failing test file**
@@ -92,7 +95,10 @@ describe('parseSettings', () => {
 	});
 
 	it('rejects an invalid theme', () => {
-		const raw = { ...validRaw(), general: { theme: 'blue', locale: 'en', startPage: 'list', cleanupDays: 30 } };
+		const raw = {
+			...validRaw(),
+			general: { theme: 'blue', locale: 'en', startPage: 'list', cleanupDays: 30 },
+		};
 		expect(() => parseSettings(raw)).toThrow(/theme/);
 	});
 
@@ -102,17 +108,26 @@ describe('parseSettings', () => {
 	});
 
 	it('rejects an empty-string locale', () => {
-		const raw = { ...validRaw(), general: { theme: 'system', locale: '', startPage: 'list', cleanupDays: 30 } };
+		const raw = {
+			...validRaw(),
+			general: { theme: 'system', locale: '', startPage: 'list', cleanupDays: 30 },
+		};
 		expect(() => parseSettings(raw)).toThrow(/locale/);
 	});
 
 	it('rejects a non-string startPage', () => {
-		const raw = { ...validRaw(), general: { theme: 'system', locale: 'en', startPage: 42, cleanupDays: 30 } };
+		const raw = {
+			...validRaw(),
+			general: { theme: 'system', locale: 'en', startPage: 42, cleanupDays: 30 },
+		};
 		expect(() => parseSettings(raw)).toThrow(/startPage/);
 	});
 
 	it('rejects a cleanupDays outside 30, 60, 90', () => {
-		const raw = { ...validRaw(), general: { theme: 'system', locale: 'en', startPage: 'list', cleanupDays: 45 } };
+		const raw = {
+			...validRaw(),
+			general: { theme: 'system', locale: 'en', startPage: 'list', cleanupDays: 45 },
+		};
 		expect(() => parseSettings(raw)).toThrow(/cleanupDays/);
 	});
 
@@ -298,10 +313,12 @@ git commit -m "feat: add AppSettings shape and parseSettings"
 ### Task 2: `services/settings/SettingsService.ts`
 
 **Files:**
+
 - Create: `src/services/settings/SettingsService.ts`
 - Create: `src/services/settings/SettingsService.test.ts`
 
 **Interfaces:**
+
 - Consumes: `DEFAULT_SETTINGS`, `parseSettings`, `type AppSettings` from `@/types` (Task 1).
 - Produces: `class SettingsService { loadRaw(): AppSettings | null; load(): AppSettings; save(settings: AppSettings): void }`, singleton `settingsService`.
 
@@ -359,7 +376,10 @@ describe('SettingsService.load', () => {
 
 	it('reads back a saved value', () => {
 		const service = new SettingsService();
-		const custom = { ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, theme: 'dark' as const } };
+		const custom = {
+			...DEFAULT_SETTINGS,
+			general: { ...DEFAULT_SETTINGS.general, theme: 'dark' as const },
+		};
 		service.save(custom);
 		expect(service.load()).toEqual(custom);
 	});
@@ -458,11 +478,13 @@ git commit -m "feat: add SettingsService over localStorage['todo.settings']"
 ### Task 3: `stores/settings.ts` — Pinia store
 
 **Files:**
+
 - Create: `src/stores/settings.ts`
 - Create: `src/stores/settings.test.ts`
 - Modify: `src/stores/index.ts`
 
 **Interfaces:**
+
 - Consumes: `settingsService` (Task 2); `type AppSettings`, `type AppTheme`, `type PageSettings` from `@/types` (Task 1).
 - Produces: `useSettingsStore(): { general; dreams; goals; tasks; setTheme(theme: AppTheme): void; setLocale(locale: string): void; setStartPage(startPage: string): void; setCleanupDays(days: 30|60|90): void; updatePageSettings(entity: SettingsEntity, patch: Partial<PageSettings>): void; replaceAll(settings: AppSettings): void }`, exported `type SettingsEntity = 'dreams' | 'goals' | 'tasks'`.
 
@@ -544,7 +566,12 @@ describe('useSettingsStore replaceAll', () => {
 	it('overwrites all four sections at once', () => {
 		const store = useSettingsStore();
 		const incoming = {
-			general: { theme: 'dark' as const, locale: 'pl', startPage: 'matrix', cleanupDays: 60 as const },
+			general: {
+				theme: 'dark' as const,
+				locale: 'pl',
+				startPage: 'matrix',
+				cleanupDays: 60 as const,
+			},
 			dreams: { rows: 2 as const, confirmDone: true, confirmReopen: true },
 			goals: { rows: 2 as const, confirmDone: true, confirmReopen: true },
 			tasks: { rows: 2 as const, confirmDone: true, confirmReopen: true },
@@ -708,6 +735,7 @@ git commit -m "feat: add the settings Pinia store"
 ### Task 4: `cleanupDays` becomes a single real setting
 
 **Files:**
+
 - Modify: `src/stores/createEntityStore.ts`
 - Modify: `src/stores/createEntityStore.test.ts` (environment directive only)
 - Modify: `src/stores/tasks.ts`
@@ -715,6 +743,7 @@ git commit -m "feat: add the settings Pinia store"
 - Modify: `src/pages/SyncPage/containers/SyncFlow.vue`
 
 **Interfaces:**
+
 - Consumes: `useSettingsStore()` (Task 3).
 - Produces: `defineEntityStore`'s returned object no longer has a `cleanupDays` field; neither does `useTasksStore()`'s.
 
@@ -723,18 +752,20 @@ git commit -m "feat: add the settings Pinia store"
 `useSettingsStore()` reads `localStorage` (via `SettingsService`) as soon as any `defineEntityStore`-built store is instantiated. Both files currently run under Vitest's default `environment: 'node'`, which has no `localStorage` global. As the very first line of each file, add:
 
 `src/stores/createEntityStore.test.ts`:
+
 ```ts
 // @vitest-environment happy-dom
 ```
 
 `src/stores/tasks.test.ts`:
+
 ```ts
 // @vitest-environment happy-dom
 ```
 
 Neither file references `cleanupDays` directly today (confirmed by inspection — every closed-record-window and completion-pruning test relies on the default 30-day window, which `useSettingsStore()` still supplies as long as `localStorage['todo.settings']` is never seeded in these files, which it isn't). No other change is needed in either file.
 
-- [ ] **Step 2: Run the two test files to confirm they still fail for the *expected* reason**
+- [ ] **Step 2: Run the two test files to confirm they still fail for the _expected_ reason**
 
 Run: `npm test -- src/stores/createEntityStore.test.ts src/stores/tasks.test.ts`
 Expected: still PASS at this point (nothing under test has changed yet) — this step is a baseline check before Step 3's edit, not a red step.
@@ -769,55 +800,55 @@ import { useStorageStore } from './storage';
 Inside `defineEntityStore`'s setup function, replace:
 
 ```ts
-		const records = ref<T[]>([]) as Ref<T[]>;
-		const loading = ref(false);
-		const cleanupDays = ref(DEFAULT_CLEANUP_DAYS);
+const records = ref<T[]>([]) as Ref<T[]>;
+const loading = ref(false);
+const cleanupDays = ref(DEFAULT_CLEANUP_DAYS);
 
-		const storageState = useStorageStore();
+const storageState = useStorageStore();
 ```
 
 with:
 
 ```ts
-		const records = ref<T[]>([]) as Ref<T[]>;
-		const loading = ref(false);
+const records = ref<T[]>([]) as Ref<T[]>;
+const loading = ref(false);
 
-		const storageState = useStorageStore();
-		const settingsState = useSettingsStore();
+const storageState = useStorageStore();
+const settingsState = useSettingsStore();
 ```
 
 Inside `load()`, replace:
 
 ```ts
-			const { keep, purge } = collectGarbage(loaded, cleanupDays.value, now);
-			const prune = options.prune;
-			const pruned = prune ? keep.map((record) => prune(record, cleanupDays.value, now)) : keep;
+const { keep, purge } = collectGarbage(loaded, cleanupDays.value, now);
+const prune = options.prune;
+const pruned = prune ? keep.map((record) => prune(record, cleanupDays.value, now)) : keep;
 ```
 
 with:
 
 ```ts
-			const cleanupDays = settingsState.general.cleanupDays;
-			const { keep, purge } = collectGarbage(loaded, cleanupDays, now);
-			const prune = options.prune;
-			const pruned = prune ? keep.map((record) => prune(record, cleanupDays, now)) : keep;
+const cleanupDays = settingsState.general.cleanupDays;
+const { keep, purge } = collectGarbage(loaded, cleanupDays, now);
+const prune = options.prune;
+const pruned = prune ? keep.map((record) => prune(record, cleanupDays, now)) : keep;
 ```
 
 And in the returned object, remove the `cleanupDays,` line:
 
 ```ts
-		return {
-			records,
-			active,
-			closed,
-			loading,
-			load,
-			add,
-			update,
-			close,
-			reopen,
-			replaceAll,
-		};
+return {
+	records,
+	active,
+	closed,
+	loading,
+	load,
+	add,
+	update,
+	close,
+	reopen,
+	replaceAll,
+};
 ```
 
 - [ ] **Step 4: Rewire `src/stores/tasks.ts`**
@@ -825,33 +856,33 @@ And in the returned object, remove the `cleanupDays,` line:
 In `useTasksStore`, replace:
 
 ```ts
-	const store = useBaseTasksStore();
-	const { records, active, closed, loading, cleanupDays } = storeToRefs(store);
+const store = useBaseTasksStore();
+const { records, active, closed, loading, cleanupDays } = storeToRefs(store);
 ```
 
 with:
 
 ```ts
-	const store = useBaseTasksStore();
-	const { records, active, closed, loading } = storeToRefs(store);
+const store = useBaseTasksStore();
+const { records, active, closed, loading } = storeToRefs(store);
 ```
 
 And in the returned object, remove the `cleanupDays,` line:
 
 ```ts
-	return {
-		records,
-		active,
-		closed,
-		loading,
-		quadrants,
-		load: store.load,
-		add: store.add,
-		update: store.update,
-		close: store.close,
-		reopen: store.reopen,
-		replaceAll: store.replaceAll,
-	};
+return {
+	records,
+	active,
+	closed,
+	loading,
+	quadrants,
+	load: store.load,
+	add: store.add,
+	update: store.update,
+	close: store.close,
+	reopen: store.reopen,
+	replaceAll: store.replaceAll,
+};
 ```
 
 - [ ] **Step 5: Rewire `src/pages/SyncPage/containers/SyncFlow.vue`**
@@ -875,17 +906,17 @@ const settings = useSettingsStore();
 In `runExchange()`, replace:
 
 ```ts
-			const mergedTasks = sweep(syncMerger.mergeTasks([...tasks.records], theirs.tasks), now).map(
-				(task) => pruneCompletions(task, tasks.cleanupDays, now),
-			);
+const mergedTasks = sweep(syncMerger.mergeTasks([...tasks.records], theirs.tasks), now).map(
+	(task) => pruneCompletions(task, tasks.cleanupDays, now),
+);
 ```
 
 with:
 
 ```ts
-			const mergedTasks = sweep(syncMerger.mergeTasks([...tasks.records], theirs.tasks), now).map(
-				(task) => pruneCompletions(task, settings.general.cleanupDays, now),
-			);
+const mergedTasks = sweep(syncMerger.mergeTasks([...tasks.records], theirs.tasks), now).map(
+	(task) => pruneCompletions(task, settings.general.cleanupDays, now),
+);
 ```
 
 Replace the `sweep` function and its doc comment:
@@ -933,12 +964,14 @@ git commit -m "refactor: read cleanupDays from the settings store, not a per-sto
 ### Task 5: Retire the three old `localStorage` keys
 
 **Files:**
+
 - Modify: `src/i18n/index.ts`
 - Modify: `src/i18n/detectLocale.test.ts`
 - Modify: `src/router/index.ts`
 - Modify: `src/plugins/vuetify.ts`
 
 **Interfaces:**
+
 - Consumes: `settingsService` (Task 2); `type AppTheme` from `@/types` (Task 1).
 - Produces: `detectLocale()` (unchanged signature, rewired internals); `readStoredStartPage()` (unchanged signature, rewired internals); `resolveTheme` unchanged and still exported from `@/plugins/vuetify`. Removes: `setLocale` (i18n), `persistStartPage`/`START_PAGE_STORAGE_KEY` (router), `readStoredTheme`/`persistTheme`/`THEME_STORAGE_KEY`/`AppTheme`-declared-here (vuetify).
 
@@ -975,7 +1008,10 @@ afterEach(() => {
 
 describe('detectLocale', () => {
 	it('returns the stored locale without consulting navigator.languages', () => {
-		settingsService.save({ ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, locale: 'pl' } });
+		settingsService.save({
+			...DEFAULT_SETTINGS,
+			general: { ...DEFAULT_SETTINGS.general, locale: 'pl' },
+		});
 		stubLanguages(['en-US']);
 
 		expect(detectLocale()).toBe('pl');
@@ -1246,10 +1282,12 @@ git commit -m "refactor: read theme, locale and start page through SettingsServi
 ### Task 6: Rewire `ThemeMenu.vue` onto the settings store
 
 **Files:**
+
 - Modify: `src/containers/ThemeMenu.vue`
 - Modify: `src/containers/ThemeMenu.test.ts`
 
 **Interfaces:**
+
 - Consumes: `useSettingsStore()` (Task 3); `resolveTheme` from `@/plugins/vuetify` (Task 5, unchanged); `type AppTheme` from `@/types` (Task 1).
 
 - [ ] **Step 1: Update the test file first**
@@ -1294,7 +1332,10 @@ describe('ThemeMenu', () => {
 	});
 
 	it('marks the currently stored preference with a checkmark', async () => {
-		settingsService.save({ ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, theme: 'dark' } });
+		settingsService.save({
+			...DEFAULT_SETTINGS,
+			general: { ...DEFAULT_SETTINGS.general, theme: 'dark' },
+		});
 		const wrapper = mount(ThemeMenu, { global: { plugins: [vuetify, i18n] } });
 
 		await openMenu(wrapper);
@@ -1346,7 +1387,10 @@ describe('ThemeMenu', () => {
 		});
 
 		it('follows OS theme changes while "system" is selected', () => {
-			settingsService.save({ ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, theme: 'system' } });
+			settingsService.save({
+				...DEFAULT_SETTINGS,
+				general: { ...DEFAULT_SETTINGS.general, theme: 'system' },
+			});
 			mount(ThemeMenu, { global: { plugins: [vuetify, i18n] } });
 
 			for (const listener of listeners) {
@@ -1357,7 +1401,10 @@ describe('ThemeMenu', () => {
 		});
 
 		it('ignores OS theme changes when a manual preference is selected', () => {
-			settingsService.save({ ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, theme: 'light' } });
+			settingsService.save({
+				...DEFAULT_SETTINGS,
+				general: { ...DEFAULT_SETTINGS.general, theme: 'light' },
+			});
 			mount(ThemeMenu, { global: { plugins: [vuetify, i18n] } });
 
 			for (const listener of listeners) {
@@ -1380,13 +1427,13 @@ Expected: FAIL — `ThemeMenu.vue` still imports `readStoredTheme`/`persistTheme
 Replace the template's `:active` binding:
 
 ```html
-					:active="preference === option.value"
+:active="preference === option.value"
 ```
 
 with:
 
 ```html
-					:active="settings.general.theme === option.value"
+:active="settings.general.theme === option.value"
 ```
 
 Replace the script block:
@@ -1509,10 +1556,12 @@ git commit -m "refactor: ThemeMenu reads and writes through the settings store"
 ### Task 7: Rewire `LocaleMenu.vue` onto the settings store
 
 **Files:**
+
 - Modify: `src/containers/LocaleMenu.vue`
 - Modify: `src/containers/LocaleMenu.test.ts`
 
 **Interfaces:**
+
 - Consumes: `useSettingsStore()` (Task 3).
 
 - [ ] **Step 1: Update the test file first**
@@ -1564,7 +1613,10 @@ describe('LocaleMenu', () => {
 
 		const items = wrapper.findAllComponents({ name: 'VListItem' });
 		const flagSrc = (label: string) =>
-			items.find((item) => item.text().includes(label))?.find('img').attributes('src');
+			items
+				.find((item) => item.text().includes(label))
+				?.find('img')
+				.attributes('src');
 
 		expect(flagSrc('English')).toContain('us');
 		expect(flagSrc('Русский')).toContain('ru');
@@ -1672,6 +1724,7 @@ git commit -m "refactor: LocaleMenu reads and writes through the settings store"
 ### Task 8: `SettingsPage.vue` — cleanup window and per-entity sections
 
 **Files:**
+
 - Modify: `src/pages/SettingsPage/SettingsPage.vue`
 - Create: `src/pages/SettingsPage/SettingsPage.test.ts`
 - Modify: `src/i18n/locales/en.json`
@@ -1679,6 +1732,7 @@ git commit -m "refactor: LocaleMenu reads and writes through the settings store"
 - Modify: `src/i18n/locales/pl.json`
 
 **Interfaces:**
+
 - Consumes: `useSettingsStore()` (Task 3); `getStartPageOptions`, `type StartPage` from `@/router` (Task 5, unchanged); `type PageSettings` from `@/types` (Task 1).
 
 - [ ] **Step 1: Add the new i18n keys**
@@ -1975,7 +2029,10 @@ const cleanupDays = computed({
 });
 
 const cleanupDaysItems = computed(() =>
-	([30, 60, 90] as const).map((days) => ({ title: t('settings.cleanupDaysOption', { days }), value: days })),
+	([30, 60, 90] as const).map((days) => ({
+		title: t('settings.cleanupDaysOption', { days }),
+		value: days,
+	})),
 );
 </script>
 ```
@@ -1997,10 +2054,12 @@ git commit -m "feat: cleanup window and per-entity list preferences on the setti
 ### Task 9: `BackupService` carries settings
 
 **Files:**
+
 - Modify: `src/services/backup/BackupService.ts`
 - Modify: `src/services/backup/BackupService.test.ts`
 
 **Interfaces:**
+
 - Consumes: `parseSettings`, `SettingsFormatError`, `type AppSettings` from `@/types` (Task 1).
 - Produces: `interface Backup { …; settings?: AppSettings }`; `create(dreams, goals, tasks, settings?: AppSettings): Backup`; `parse()` validates `settings` when present.
 
@@ -2009,7 +2068,14 @@ git commit -m "feat: cleanup window and per-entity list preferences on the setti
 In `src/services/backup/BackupService.test.ts`, add the import:
 
 ```ts
-import { DEFAULT_SETTINGS, Status, type AppSettings, type Dream, type Goal, type Task } from '@/types';
+import {
+	DEFAULT_SETTINGS,
+	Status,
+	type AppSettings,
+	type Dream,
+	type Goal,
+	type Task,
+} from '@/types';
 ```
 
 (replacing the existing `import { Status, type Dream, type Goal, type Task } from '@/types';`)
@@ -2201,26 +2267,26 @@ with:
 In `parse()`, replace the return statement:
 
 ```ts
-		return {
-			version: raw.version,
-			exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : '',
-			dreams: readAll(raw.dreams, 'dreams', parseDream),
-			goals: readAll(raw.goals, 'goals', parseGoal),
-			tasks: readAll(raw.tasks, 'tasks', parseTask),
-		};
+return {
+	version: raw.version,
+	exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : '',
+	dreams: readAll(raw.dreams, 'dreams', parseDream),
+	goals: readAll(raw.goals, 'goals', parseGoal),
+	tasks: readAll(raw.tasks, 'tasks', parseTask),
+};
 ```
 
 with:
 
 ```ts
-		return {
-			version: raw.version,
-			exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : '',
-			dreams: readAll(raw.dreams, 'dreams', parseDream),
-			goals: readAll(raw.goals, 'goals', parseGoal),
-			tasks: readAll(raw.tasks, 'tasks', parseTask),
-			settings: readSettings(raw.settings),
-		};
+return {
+	version: raw.version,
+	exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : '',
+	dreams: readAll(raw.dreams, 'dreams', parseDream),
+	goals: readAll(raw.goals, 'goals', parseGoal),
+	tasks: readAll(raw.tasks, 'tasks', parseTask),
+	settings: readSettings(raw.settings),
+};
 ```
 
 - [ ] **Step 4: Run the test to verify it passes**
@@ -2240,10 +2306,12 @@ git commit -m "feat: BackupService carries an optional settings document"
 ### Task 10: `BackupActions.vue` exports and restores settings
 
 **Files:**
+
 - Modify: `src/containers/BackupActions.vue`
 - Modify: `src/containers/BackupActions.test.ts`
 
 **Interfaces:**
+
 - Consumes: `useSettingsStore()` (Task 3); `BackupService.create`'s 4th argument, `Backup.settings` (Task 9).
 
 - [ ] **Step 1: Add the failing tests**
@@ -2326,58 +2394,58 @@ describe('BackupActions export', () => {
 Add two tests inside `describe('BackupActions import', ...)`, after the existing "shows a confirmation..." test:
 
 ```ts
-	it('replaces local settings when the backup includes them', async () => {
-		await loadEmptyStores();
-		const settings = useSettingsStore();
-		settings.setTheme('dark');
+it('replaces local settings when the backup includes them', async () => {
+	await loadEmptyStores();
+	const settings = useSettingsStore();
+	settings.setTheme('dark');
 
-		const incoming = backupService.create([], [], [], {
-			general: { theme: 'light', locale: 'ru', startPage: 'matrix', cleanupDays: 90 },
-			dreams: { rows: 2, confirmDone: true, confirmReopen: true },
-			goals: { rows: 2, confirmDone: true, confirmReopen: true },
-			tasks: { rows: 2, confirmDone: true, confirmReopen: true },
-		});
-		readText.mockResolvedValue(JSON.stringify(incoming));
-
-		const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
-		const fileInput = wrapper.get('input[type="file"]');
-		Object.defineProperty(fileInput.element, 'files', {
-			value: [new File(['irrelevant, readText is mocked'], 'backup.json')],
-			configurable: true,
-		});
-		await fileInput.trigger('change');
-		await wrapper.vm.$nextTick();
-
-		await clickButtonByText(wrapper, 'Replace');
-		await flushPromises();
-
-		expect(settings.general.theme).toBe('light');
-		expect(settings.general.locale).toBe('ru');
-		expect(settings.dreams.rows).toBe(2);
+	const incoming = backupService.create([], [], [], {
+		general: { theme: 'light', locale: 'ru', startPage: 'matrix', cleanupDays: 90 },
+		dreams: { rows: 2, confirmDone: true, confirmReopen: true },
+		goals: { rows: 2, confirmDone: true, confirmReopen: true },
+		tasks: { rows: 2, confirmDone: true, confirmReopen: true },
 	});
+	readText.mockResolvedValue(JSON.stringify(incoming));
 
-	it('leaves local settings untouched when the backup has none', async () => {
-		await loadEmptyStores();
-		const settings = useSettingsStore();
-		settings.setTheme('dark');
-
-		const incoming = backupService.create([], [], []);
-		readText.mockResolvedValue(JSON.stringify(incoming));
-
-		const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
-		const fileInput = wrapper.get('input[type="file"]');
-		Object.defineProperty(fileInput.element, 'files', {
-			value: [new File(['irrelevant, readText is mocked'], 'backup.json')],
-			configurable: true,
-		});
-		await fileInput.trigger('change');
-		await wrapper.vm.$nextTick();
-
-		await clickButtonByText(wrapper, 'Replace');
-		await flushPromises();
-
-		expect(settings.general.theme).toBe('dark');
+	const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
+	const fileInput = wrapper.get('input[type="file"]');
+	Object.defineProperty(fileInput.element, 'files', {
+		value: [new File(['irrelevant, readText is mocked'], 'backup.json')],
+		configurable: true,
 	});
+	await fileInput.trigger('change');
+	await wrapper.vm.$nextTick();
+
+	await clickButtonByText(wrapper, 'Replace');
+	await flushPromises();
+
+	expect(settings.general.theme).toBe('light');
+	expect(settings.general.locale).toBe('ru');
+	expect(settings.dreams.rows).toBe(2);
+});
+
+it('leaves local settings untouched when the backup has none', async () => {
+	await loadEmptyStores();
+	const settings = useSettingsStore();
+	settings.setTheme('dark');
+
+	const incoming = backupService.create([], [], []);
+	readText.mockResolvedValue(JSON.stringify(incoming));
+
+	const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
+	const fileInput = wrapper.get('input[type="file"]');
+	Object.defineProperty(fileInput.element, 'files', {
+		value: [new File(['irrelevant, readText is mocked'], 'backup.json')],
+		configurable: true,
+	});
+	await fileInput.trigger('change');
+	await wrapper.vm.$nextTick();
+
+	await clickButtonByText(wrapper, 'Replace');
+	await flushPromises();
+
+	expect(settings.general.theme).toBe('dark');
+});
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -2476,10 +2544,12 @@ git commit -m "feat: backup export and restore carry settings"
 ### Task 11: `SyncConnection` carries a settings payload
 
 **Files:**
+
 - Modify: `src/services/sync/SyncConnection.ts`
 - Modify: `src/services/sync/SyncConnection.test.ts`
 
 **Interfaces:**
+
 - Consumes: `parseSettings`, `type AppSettings` from `@/types` (Task 1).
 - Produces: `type SyncPayload = SyncDataPayload | SyncSettingsPayload`; `interface SyncSettingsPayload { schema: number; kind: 'settings'; settings: AppSettings }`; `exchange(payload: SyncPayload): Promise<SyncPayload>` (widened from `SyncDataPayload`); rejects with `SyncError` when the two sides' `kind` differ.
 
@@ -2801,6 +2871,7 @@ git commit -m "feat: SyncConnection carries a settings payload alongside data"
 ### Task 12: `SyncFlow.vue` — Data/Settings mode toggle and settings exchange
 
 **Files:**
+
 - Modify: `src/pages/SyncPage/containers/SyncFlow.vue`
 - Modify: `src/pages/SyncPage/containers/SyncFlow.test.ts`
 - Modify: `src/i18n/locales/en.json`
@@ -2808,6 +2879,7 @@ git commit -m "feat: SyncConnection carries a settings payload alongside data"
 - Modify: `src/i18n/locales/pl.json`
 
 **Interfaces:**
+
 - Consumes: `SyncConnection.exchange(payload: SyncPayload): Promise<SyncPayload>`, `type SyncSettingsPayload` (Task 11); `useSettingsStore()` (Task 3, already imported by Task 4).
 
 - [ ] **Step 1: Add the new i18n keys**
@@ -3055,63 +3127,56 @@ Expected: FAIL — there is no mode toggle, no `'settings'`-kind branch in `runE
 Replace the template's idle block:
 
 ```html
-		<div v-if="step === 'idle'" :class="$style.choices">
-			<v-btn color="primary" size="large" @click="startAsInitiator">
-				{{ t('sync.startHere') }}
-			</v-btn>
-			<v-btn variant="tonal" size="large" @click="startAsResponder">
-				{{ t('sync.joinHere') }}
-			</v-btn>
-		</div>
+<div v-if="step === 'idle'" :class="$style.choices">
+	<v-btn color="primary" size="large" @click="startAsInitiator"> {{ t('sync.startHere') }} </v-btn>
+	<v-btn variant="tonal" size="large" @click="startAsResponder"> {{ t('sync.joinHere') }} </v-btn>
+</div>
 ```
 
 with:
 
 ```html
-		<div v-if="step === 'idle'" :class="$style.choices">
-			<v-btn-toggle v-model="mode" mandatory color="primary" class="mb-2">
-				<v-btn value="data">{{ t('sync.modeData') }}</v-btn>
-				<v-btn value="settings">{{ t('sync.modeSettings') }}</v-btn>
-			</v-btn-toggle>
-			<v-btn color="primary" size="large" @click="startAsInitiator">
-				{{ t('sync.startHere') }}
-			</v-btn>
-			<v-btn variant="tonal" size="large" @click="startAsResponder">
-				{{ t('sync.joinHere') }}
-			</v-btn>
-		</div>
+<div v-if="step === 'idle'" :class="$style.choices">
+	<v-btn-toggle v-model="mode" mandatory color="primary" class="mb-2">
+		<v-btn value="data">{{ t('sync.modeData') }}</v-btn>
+		<v-btn value="settings">{{ t('sync.modeSettings') }}</v-btn>
+	</v-btn-toggle>
+	<v-btn color="primary" size="large" @click="startAsInitiator"> {{ t('sync.startHere') }} </v-btn>
+	<v-btn variant="tonal" size="large" @click="startAsResponder"> {{ t('sync.joinHere') }} </v-btn>
+</div>
 ```
 
 Add a new template branch right after the `'working'` branch and before the `'done'` alert:
 
 ```html
-		<template v-else-if="step === 'confirm-settings'">
-			<p class="mb-3">{{ t('sync.confirmSettingsBody') }}</p>
-			<div :class="$style.choices">
-				<v-btn color="primary" size="large" @click="acceptSettings">
-					{{ t('sync.confirmSettingsAccept') }}
-				</v-btn>
-				<v-btn variant="tonal" size="large" @click="declineSettings">
-					{{ t('sync.confirmSettingsDecline') }}
-				</v-btn>
-			</div>
-		</template>
+<template v-else-if="step === 'confirm-settings'">
+	<p class="mb-3">{{ t('sync.confirmSettingsBody') }}</p>
+	<div :class="$style.choices">
+		<v-btn color="primary" size="large" @click="acceptSettings">
+			{{ t('sync.confirmSettingsAccept') }}
+		</v-btn>
+		<v-btn variant="tonal" size="large" @click="declineSettings">
+			{{ t('sync.confirmSettingsDecline') }}
+		</v-btn>
+	</div>
+</template>
 ```
 
 Replace the `'done'` alert:
 
 ```html
-		<v-alert v-else-if="step === 'done'" type="success" variant="tonal" class="mb-4">
-			{{ t('sync.done', { added: result.added, updated: result.updated }) }}
-		</v-alert>
+<v-alert v-else-if="step === 'done'" type="success" variant="tonal" class="mb-4">
+	{{ t('sync.done', { added: result.added, updated: result.updated }) }}
+</v-alert>
 ```
 
 with:
 
 ```html
-		<v-alert v-else-if="step === 'done'" type="success" variant="tonal" class="mb-4">
-			{{ mode === 'settings' ? t('sync.settingsDone') : t('sync.done', { added: result.added, updated: result.updated }) }}
-		</v-alert>
+<v-alert v-else-if="step === 'done'" type="success" variant="tonal" class="mb-4">
+	{{ mode === 'settings' ? t('sync.settingsDone') : t('sync.done', { added: result.added, updated:
+	result.updated }) }}
+</v-alert>
 ```
 
 Replace the script block's type, imports, state and `runExchange`/`reset`:
@@ -3407,6 +3472,7 @@ Expected: PASS. If any existing e2e spec exercises theme, locale, start page, ba
 - [ ] **Step 5: Manual verification in Edge** (per CLAUDE.md — Chrome on this machine cannot verify PWA/storage behavior reliably; do this in Edge)
 
 Run `npm run build && npm run preview`, then in Edge:
+
 1. Change theme, language and start page in the app bar / Settings page; reload; confirm all three survived.
 2. Open Settings, change "Keep closed items for" and toggle a per-entity rows/confirm switch; reload; confirm they survived.
 3. Export a backup, clear site data (or open the browser's storage inspector and delete the `todo.settings` key), import the backup back; confirm settings returned with it.

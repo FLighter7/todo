@@ -33,7 +33,8 @@
 				v-model="cleanupDays"
 				:items="cleanupDaysItems"
 				variant="outlined"
-				hide-details
+				:hint="t('settings.cleanupDaysHint')"
+				persistent-hint
 				class="mx-4 mb-4"
 			/>
 
@@ -55,7 +56,7 @@
 					mandatory
 					color="primary"
 					class="mx-4 mb-2"
-					@update:model-value="settings.updatePageSettings(entity, { rows: $event })"
+					@update:model-value="settings.updatePageSettings(entity, { rows: $event === 2 ? 2 : 1 })"
 				>
 					<v-btn :value="1">{{ t('settings.rows1') }}</v-btn>
 					<v-btn :value="2">{{ t('settings.rows2') }}</v-btn>

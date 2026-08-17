@@ -34,7 +34,10 @@ describe('parseSettings', () => {
 	});
 
 	it('rejects an invalid theme', () => {
-		const raw = { ...validRaw(), general: { theme: 'blue', locale: 'en', startPage: 'list', cleanupDays: 30 } };
+		const raw = {
+			...validRaw(),
+			general: { theme: 'blue', locale: 'en', startPage: 'list', cleanupDays: 30 },
+		};
 		expect(() => parseSettings(raw)).toThrow(/theme/);
 	});
 
@@ -44,17 +47,26 @@ describe('parseSettings', () => {
 	});
 
 	it('rejects an empty-string locale', () => {
-		const raw = { ...validRaw(), general: { theme: 'system', locale: '', startPage: 'list', cleanupDays: 30 } };
+		const raw = {
+			...validRaw(),
+			general: { theme: 'system', locale: '', startPage: 'list', cleanupDays: 30 },
+		};
 		expect(() => parseSettings(raw)).toThrow(/locale/);
 	});
 
 	it('rejects a non-string startPage', () => {
-		const raw = { ...validRaw(), general: { theme: 'system', locale: 'en', startPage: 42, cleanupDays: 30 } };
+		const raw = {
+			...validRaw(),
+			general: { theme: 'system', locale: 'en', startPage: 42, cleanupDays: 30 },
+		};
 		expect(() => parseSettings(raw)).toThrow(/startPage/);
 	});
 
 	it('rejects a cleanupDays outside 30, 60, 90', () => {
-		const raw = { ...validRaw(), general: { theme: 'system', locale: 'en', startPage: 'list', cleanupDays: 45 } };
+		const raw = {
+			...validRaw(),
+			general: { theme: 'system', locale: 'en', startPage: 'list', cleanupDays: 45 },
+		};
 		expect(() => parseSettings(raw)).toThrow(/cleanupDays/);
 	});
 

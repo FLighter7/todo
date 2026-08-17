@@ -26,7 +26,10 @@ afterEach(() => {
 
 describe('detectLocale', () => {
 	it('returns the stored locale without consulting navigator.languages', () => {
-		settingsService.save({ ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, locale: 'pl' } });
+		settingsService.save({
+			...DEFAULT_SETTINGS,
+			general: { ...DEFAULT_SETTINGS.general, locale: 'pl' },
+		});
 		stubLanguages(['en-US']);
 
 		expect(detectLocale()).toBe('pl');

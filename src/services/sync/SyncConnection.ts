@@ -207,7 +207,11 @@ export class SyncConnection {
 						return;
 					}
 
-					resolve({ schema: parsed.schema, kind: 'settings', settings: parseSettings(parsed.settings) });
+					resolve({
+						schema: parsed.schema,
+						kind: 'settings',
+						settings: parseSettings(parsed.settings),
+					});
 				} catch {
 					reject(new SyncError('The other device sent something unexpected'));
 				}

@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_SETTINGS } from '@/types';
 import { SettingsService } from './SettingsService';
 
@@ -27,6 +27,21 @@ describe('SettingsService.loadRaw', () => {
 		service.save(DEFAULT_SETTINGS);
 		expect(service.loadRaw()).toEqual(DEFAULT_SETTINGS);
 	});
+
+	describe('when localStorage itself throws', () => {
+		afterEach(() => {
+			vi.restoreAllMocks();
+		});
+
+		it('returns null instead of throwing', () => {
+			vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+				throw new Error('blocked');
+			});
+
+			expect(() => new SettingsService().loadRaw()).not.toThrow();
+			expect(new SettingsService().loadRaw()).toBeNull();
+		});
+	});
 });
 
 describe('SettingsService.load', () => {
@@ -47,7 +62,10 @@ describe('SettingsService.load', () => {
 
 	it('reads back a saved value', () => {
 		const service = new SettingsService();
-		const custom = { ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, theme: 'dark' as const } };
+		const custom = {
+			...DEFAULT_SETTINGS,
+			general: { ...DEFAULT_SETTINGS.general, theme: 'dark' as const },
+		};
 		service.save(custom);
 		expect(service.load()).toEqual(custom);
 	});

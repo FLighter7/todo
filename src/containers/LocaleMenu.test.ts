@@ -2,9 +2,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
+import { nextTick } from 'vue';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
+import { DEFAULT_SETTINGS } from '@/types';
+import { settingsService } from '@/services/settings/SettingsService';
 import { useSettingsStore } from '@/stores/settings';
 import LocaleMenu from './LocaleMenu.vue';
 
@@ -42,7 +45,10 @@ describe('LocaleMenu', () => {
 
 		const items = wrapper.findAllComponents({ name: 'VListItem' });
 		const flagSrc = (label: string) =>
-			items.find((item) => item.text().includes(label))?.find('img').attributes('src');
+			items
+				.find((item) => item.text().includes(label))
+				?.find('img')
+				.attributes('src');
 
 		expect(flagSrc('English')).toContain('us');
 		expect(flagSrc('Русский')).toContain('ru');
@@ -50,7 +56,10 @@ describe('LocaleMenu', () => {
 	});
 
 	it('marks the currently active locale with a checkmark', async () => {
-		i18n.global.locale.value = 'ru';
+		settingsService.save({
+			...DEFAULT_SETTINGS,
+			general: { ...DEFAULT_SETTINGS.general, locale: 'ru' },
+		});
 		const wrapper = mount(LocaleMenu, { global: { plugins: [vuetify, i18n] } });
 
 		await openMenu(wrapper);
@@ -72,5 +81,14 @@ describe('LocaleMenu', () => {
 		expect(i18n.global.locale.value).toBe('pl');
 		expect(useSettingsStore().general.locale).toBe('pl');
 		expect(wrapper.find('.v-overlay--active').exists()).toBe(false);
+	});
+
+	it('applies a locale change made through the store directly, without going through select()', async () => {
+		mount(LocaleMenu, { global: { plugins: [vuetify, i18n] } });
+
+		useSettingsStore().setLocale('pl');
+		await nextTick();
+
+		expect(i18n.global.locale.value).toBe('pl');
 	});
 });

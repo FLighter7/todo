@@ -4,9 +4,9 @@
 
 **Goal:** Move every page, container, service and test off the `Todo` stack onto the dream/goal/task stores built in stage 1a, then delete the old stack entirely.
 
-**Architecture:** Stage 1a built the new data layer beside the old one and wired it to nothing. This stage reverses that: the UI, the backup format and the sync envelope all move to the new stores, and `types/todo.ts`, `stores/todos.ts`, `repositories/TodoStorage.ts`, `repositories/IndexedDbRepository.ts` and `repositories/InMemoryRepository.ts` are removed. The visible app does not change shape — two pages, a list and a matrix, at the same routes. Dream and goal *pages* arrive in stages 3 and 4; here the two new stores exist, load, back up and sync, but nothing renders them.
+**Architecture:** Stage 1a built the new data layer beside the old one and wired it to nothing. This stage reverses that: the UI, the backup format and the sync envelope all move to the new stores, and `types/todo.ts`, `stores/todos.ts`, `repositories/TodoStorage.ts`, `repositories/IndexedDbRepository.ts` and `repositories/InMemoryRepository.ts` are removed. The visible app does not change shape — two pages, a list and a matrix, at the same routes. Dream and goal _pages_ arrive in stages 3 and 4; here the two new stores exist, load, back up and sync, but nothing renders them.
 
-**Interim breakage, known and accepted.** Task 2 moves everything that *writes* onto the task store while `BackupActions` and `SyncFlow` still read the old `todos` store. From that moment the old store is loaded but never written, so `e2e/sync.spec.ts` — which adds a task through the UI on one device and expects it on the other after a pairing — cannot pass until task 4 rewires the exchange. It fails between task 2 and task 4 and is expected to.
+**Interim breakage, known and accepted.** Task 2 moves everything that _writes_ onto the task store while `BackupActions` and `SyncFlow` still read the old `todos` store. From that moment the old store is loaded but never written, so `e2e/sync.spec.ts` — which adds a task through the UI on one device and expects it on the other after a pairing — cannot pass until task 4 rewires the exchange. It fails between task 2 and task 4 and is expected to.
 
 The first draft of this plan claimed the opposite, and the temporary `void todos.load()` line in `DefaultLayout` was justified by it. That line no longer preserves anything: loading a store nothing writes to yields an empty list either way. It stays only because removing it early would mean editing `DefaultLayout` twice, and task 5 removes it with the store it feeds.
 
@@ -202,13 +202,13 @@ No code in this step — these are the decisions the rest of the task implements
 
 The checkbox and the delete button map onto the lifecycle like this, everywhere they appear:
 
-| Old | New |
-| --- | --- |
-| `store.toggleDone(id)`, checked | `store.close(id, Status.Done)` |
-| `store.toggleDone(id)`, unchecked | `store.reopen(id)` |
-| `store.remove(id)` | `store.close(id, Status.Cancelled)` |
-| `todo.done` | `task.status === Status.Done` |
-| `!todo.deleted` | `task.status !== Status.Cancelled` |
+| Old                               | New                                 |
+| --------------------------------- | ----------------------------------- |
+| `store.toggleDone(id)`, checked   | `store.close(id, Status.Done)`      |
+| `store.toggleDone(id)`, unchecked | `store.reopen(id)`                  |
+| `store.remove(id)`                | `store.close(id, Status.Cancelled)` |
+| `todo.done`                       | `task.status === Status.Done`       |
+| `!todo.deleted`                   | `task.status !== Status.Cancelled`  |
 
 - [ ] **Step 2: Update the e2e suite to the new labels**
 
@@ -289,20 +289,20 @@ function submit(): void {
 In the template, rename the field bindings and drop the period select entirely:
 
 ```html
-				<v-text-field
-					v-model="name"
-					:label="t('task.name')"
-					:error-messages="nameError"
-					autofocus
-					@keyup.enter="submit"
-				/>
+<v-text-field
+	v-model="name"
+	:label="t('task.name')"
+	:error-messages="nameError"
+	autofocus
+	@keyup.enter="submit"
+/>
 
-				<v-textarea v-model="note" :label="t('task.note')" rows="3" />
+<v-textarea v-model="note" :label="t('task.note')" rows="3" />
 
-				<div :class="$style.flags">
-					<v-switch v-model="important" :label="t('task.important')" color="primary" hide-details />
-					<v-switch v-model="urgent" :label="t('task.urgent')" color="primary" hide-details />
-				</div>
+<div :class="$style.flags">
+	<v-switch v-model="important" :label="t('task.important')" color="primary" hide-details />
+	<v-switch v-model="urgent" :label="t('task.urgent')" color="primary" hide-details />
+</div>
 ```
 
 - [ ] **Step 5: Rewrite the table as `TasksTable.vue`**
@@ -381,32 +381,30 @@ function formatDate(value: string): string {
 Template — `:items="visible"`, the period column removed, and the two lifecycle actions rewired:
 
 ```html
-			<template #[`item.done`]="{ item }">
-				<v-checkbox-btn
-					:model-value="item.status === Status.Done"
-					:aria-label="t('task.done')"
-					@click.stop
-					@update:model-value="onDoneChanged(item)"
-				/>
-			</template>
+<template #[`item.done`]="{ item }">
+	<v-checkbox-btn
+		:model-value="item.status === Status.Done"
+		:aria-label="t('task.done')"
+		@click.stop
+		@update:model-value="onDoneChanged(item)"
+	/>
+</template>
 
-			<template #[`item.name`]="{ item }">
-				<span :class="item.status === Status.Done ? $style.doneRow : undefined">
-					{{ item.name }}
-				</span>
-			</template>
+<template #[`item.name`]="{ item }">
+	<span :class="item.status === Status.Done ? $style.doneRow : undefined"> {{ item.name }} </span>
+</template>
 ```
 
 ```html
-			<template #[`item.actions`]="{ item }">
-				<v-btn
-					:icon="mdiDeleteOutline"
-					variant="text"
-					density="comfortable"
-					:aria-label="t('task.cancel')"
-					@click.stop="store.close(item.id, Status.Cancelled)"
-				/>
-			</template>
+<template #[`item.actions`]="{ item }">
+	<v-btn
+		:icon="mdiDeleteOutline"
+		variant="text"
+		density="comfortable"
+		:aria-label="t('task.cancel')"
+		@click.stop="store.close(item.id, Status.Cancelled)"
+	/>
+</template>
 ```
 
 and the form at the bottom becomes `<task-form v-model="dialogOpen" :initial="initialDraft" mode="edit" @submit="handleSubmit" />`.
@@ -423,7 +421,7 @@ and the form at the bottom becomes `<task-form v-model="dialogOpen" :initial="in
 </template>
 
 <script setup lang="ts">
-import TasksTable from './containers/TasksTable.vue';
+	import TasksTable from './containers/TasksTable.vue';
 </script>
 ```
 
@@ -457,17 +455,17 @@ const { t } = useI18n();
 Template list section:
 
 ```html
-			<v-list-item v-for="task in items" :key="task.id">
-				<template #prepend>
-					<v-checkbox-btn
-						:model-value="false"
-						:aria-label="t('task.done')"
-						@update:model-value="emit('done', task.id)"
-					/>
-				</template>
+<v-list-item v-for="task in items" :key="task.id">
+	<template #prepend>
+		<v-checkbox-btn
+			:model-value="false"
+			:aria-label="t('task.done')"
+			@update:model-value="emit('done', task.id)"
+		/>
+	</template>
 
-				<v-list-item-title>{{ task.name }}</v-list-item-title>
-			</v-list-item>
+	<v-list-item-title>{{ task.name }}</v-list-item-title>
+</v-list-item>
 ```
 
 Drop the now-unused `.done` class from the style block.
@@ -1020,10 +1018,9 @@ async function runExchange(): Promise<void> {
 		const now = new Date();
 		const mergedDreams = sweep(syncMerger.merge([...dreams.records], theirs.dreams), now);
 		const mergedGoals = sweep(syncMerger.merge([...goals.records], theirs.goals), now);
-		const mergedTasks = sweep(
-			syncMerger.mergeTasks([...tasks.records], theirs.tasks),
-			now,
-		).map((task) => pruneCompletions(task, tasks.cleanupDays, now));
+		const mergedTasks = sweep(syncMerger.mergeTasks([...tasks.records], theirs.tasks), now).map(
+			(task) => pruneCompletions(task, tasks.cleanupDays, now),
+		);
 
 		const merged = [...mergedDreams, ...mergedGoals, ...mergedTasks];
 
@@ -1135,7 +1132,7 @@ Remove the whole `todo` block and the whole `period` block from all three locale
 
 Run: `git grep -n "Todo\b\|todos\|TodoStorage\|IndexedDbRepository\|InMemoryRepository" -- src e2e`
 
-Expected: matches only in file *names* that keep the word for now (`TodoListPage/`, `e2e/todo-crud.spec.ts`) and in nothing else. Any remaining import is a miss — fix it before continuing.
+Expected: matches only in file _names_ that keep the word for now (`TodoListPage/`, `e2e/todo-crud.spec.ts`) and in nothing else. Any remaining import is a miss — fix it before continuing.
 
 - [ ] **Step 6: Run everything**
 
