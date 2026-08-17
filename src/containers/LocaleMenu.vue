@@ -43,14 +43,17 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { mdiCheck, mdiTranslate } from '@mdi/js';
-import { type AppLocale, LOCALE_FLAGS, LOCALE_NAMES, SUPPORTED_LOCALES, setLocale } from '@/i18n';
+import { type AppLocale, LOCALE_FLAGS, LOCALE_NAMES, SUPPORTED_LOCALES } from '@/i18n';
+import { useSettingsStore } from '@/stores/settings';
 
 const { t, locale } = useI18n();
+const settings = useSettingsStore();
 
 const open = ref(false);
 
 function select(code: AppLocale): void {
-	setLocale(code);
+	settings.setLocale(code);
+	locale.value = code;
 	open.value = false;
 }
 </script>

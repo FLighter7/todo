@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
+import { useSettingsStore } from '@/stores/settings';
 import LocaleMenu from './LocaleMenu.vue';
 
 function openMenu(wrapper: VueWrapper): Promise<void> {
@@ -15,6 +17,7 @@ function openMenu(wrapper: VueWrapper): Promise<void> {
 
 beforeEach(() => {
 	window.localStorage.clear();
+	setActivePinia(createPinia());
 	i18n.global.locale.value = 'en';
 });
 
@@ -67,7 +70,7 @@ describe('LocaleMenu', () => {
 		await clickButtonByText(wrapper, 'Polski');
 
 		expect(i18n.global.locale.value).toBe('pl');
-		expect(window.localStorage.getItem('todo.locale')).toBe('pl');
+		expect(useSettingsStore().general.locale).toBe('pl');
 		expect(wrapper.find('.v-overlay--active').exists()).toBe(false);
 	});
 });
