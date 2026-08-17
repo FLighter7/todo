@@ -175,6 +175,10 @@ async function runExchange(): Promise<void> {
 			tasks: [...tasks.records],
 		});
 
+		if (theirs.kind !== 'data') {
+			throw new Error('Expected data payload but received settings');
+		}
+
 		const now = new Date();
 		const mergedDreams = sweep(syncMerger.merge([...dreams.records], theirs.dreams), now);
 		const mergedGoals = sweep(syncMerger.merge([...goals.records], theirs.goals), now);

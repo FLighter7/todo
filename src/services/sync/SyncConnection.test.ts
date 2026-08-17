@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Status, type Dream, type Goal, type Task } from '@/types';
-import { SYNC_SCHEMA, SyncConnection, SyncError, type SyncDataPayload } from './SyncConnection';
+import { DEFAULT_SETTINGS, Status, type Dream, type Goal, type Task } from '@/types';
+import {
+	SYNC_SCHEMA,
+	SyncConnection,
+	SyncError,
+	type SyncDataPayload,
+	type SyncSettingsPayload,
+} from './SyncConnection';
 
 /**
  * Stand-ins for the WebRTC objects the vitest `node` environment does not
@@ -121,6 +127,15 @@ function makePayload(overrides: Partial<SyncDataPayload> = {}): SyncDataPayload 
 	};
 }
 
+function makeSettingsPayload(overrides: Partial<SyncSettingsPayload> = {}): SyncSettingsPayload {
+	return {
+		schema: SYNC_SCHEMA,
+		kind: 'settings',
+		settings: DEFAULT_SETTINGS,
+		...overrides,
+	};
+}
+
 describe('SyncConnection.exchange', () => {
 	beforeEach(() => {
 		vi.stubGlobal('RTCPeerConnection', FakePeerConnection);
@@ -181,5 +196,50 @@ describe('SyncConnection.exchange', () => {
 		channel.receive(JSON.stringify(makePayload({ schema: SYNC_SCHEMA + 1 })));
 
 		await expect(exchangePromise).rejects.toThrow(/different version/);
+	});
+});
+
+describe('SyncConnection.exchange settings payloads', () => {
+	beforeEach(() => {
+		vi.stubGlobal('RTCPeerConnection', FakePeerConnection);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('resolves with a fully-formed incoming settings payload', async () => {
+		const { connection, channel } = await makeConnection();
+		const incoming = makeSettingsPayload({
+			settings: { ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, theme: 'dark' } },
+		});
+
+		const exchangePromise = connection.exchange(makeSettingsPayload());
+		await flushMicrotasks();
+		channel.receive(JSON.stringify(incoming));
+
+		await expect(exchangePromise).resolves.toEqual(incoming);
+	});
+
+	it('rejects when the incoming settings are invalid', async () => {
+		const { connection, channel } = await makeConnection();
+		const malformed = { ...makeSettingsPayload(), settings: { general: { theme: 'blue' } } };
+
+		const exchangePromise = connection.exchange(makeSettingsPayload());
+		await flushMicrotasks();
+		channel.receive(JSON.stringify(malformed));
+
+		await expect(exchangePromise).rejects.toThrow(SyncError);
+	});
+
+	it('rejects when the other device picked a different sync mode', async () => {
+		const { connection, channel } = await makeConnection();
+
+		const exchangePromise = connection.exchange(makePayload());
+		await flushMicrotasks();
+		channel.receive(JSON.stringify(makeSettingsPayload()));
+
+		await expect(exchangePromise).rejects.toThrow(SyncError);
+		await expect(exchangePromise).rejects.toThrow(/different/);
 	});
 });

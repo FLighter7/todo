@@ -1,4 +1,13 @@
-import { parseDream, parseGoal, parseTask, type Dream, type Goal, type Task } from '@/types';
+import {
+	parseDream,
+	parseGoal,
+	parseSettings,
+	parseTask,
+	type AppSettings,
+	type Dream,
+	type Goal,
+	type Task,
+} from '@/types';
 import { syncSignal } from './SyncSignal';
 
 /** Data channel messages cap at 256 KB; stay well clear and fail loudly. */
@@ -8,12 +17,6 @@ const CHANNEL_LABEL = 'todo-sync';
 const GATHER_TIMEOUT_MS = 5000;
 const CONNECT_TIMEOUT_MS = 30_000;
 
-/**
- * `kind` discriminates what the envelope carries. Only `'data'` exists so
- * far; a later stage adds a `'settings'` variant alongside it, which is why
- * the discriminator goes in now rather than when that variant lands — so it
- * arrives as a new case rather than a breaking change to this shape.
- */
 export const SYNC_SCHEMA = 3;
 
 export interface SyncDataPayload {
@@ -23,6 +26,14 @@ export interface SyncDataPayload {
 	goals: Goal[];
 	tasks: Task[];
 }
+
+export interface SyncSettingsPayload {
+	schema: number;
+	kind: 'settings';
+	settings: AppSettings;
+}
+
+export type SyncPayload = SyncDataPayload | SyncSettingsPayload;
 
 export class SyncError extends Error {
 	constructor(message: string) {
@@ -129,8 +140,8 @@ export class SyncConnection {
 		await this.peer.setRemoteDescription({ type: 'answer', sdp: signal.sdp });
 	}
 
-	/** Sends our records and resolves with theirs. */
-	async exchange(payload: SyncDataPayload): Promise<SyncDataPayload> {
+	/** Sends our payload and resolves with theirs. */
+	async exchange(payload: SyncPayload): Promise<SyncPayload> {
 		const open = await this.channelReady;
 		const body = JSON.stringify(payload);
 
@@ -138,7 +149,7 @@ export class SyncConnection {
 			throw new SyncError('The list is too large to send in one go');
 		}
 
-		const incoming = new Promise<SyncDataPayload>((resolve, reject) => {
+		const incoming = new Promise<SyncPayload>((resolve, reject) => {
 			const timer = setTimeout(
 				() => reject(new SyncError('The other device sent nothing')),
 				CONNECT_TIMEOUT_MS,
@@ -147,7 +158,8 @@ export class SyncConnection {
 			open.addEventListener('message', (event: MessageEvent<string>) => {
 				clearTimeout(timer);
 				try {
-					const parsed = JSON.parse(event.data) as Partial<SyncDataPayload>;
+					const parsed = JSON.parse(event.data) as Partial<SyncDataPayload> &
+						Partial<SyncSettingsPayload>;
 
 					// The schema check comes before anything is read. Without it a
 					// device on an older build would merge a shape it does not
@@ -159,26 +171,43 @@ export class SyncConnection {
 						return;
 					}
 
-					if (
-						!Array.isArray(parsed.dreams) ||
-						!Array.isArray(parsed.goals) ||
-						!Array.isArray(parsed.tasks)
-					) {
-						reject(new SyncError('The other device sent something unexpected'));
+					// Both sides pick a mode (Data or Settings) before pairing; a
+					// mismatch means the two devices are trying to exchange different
+					// things over the same connection.
+					if (parsed.kind !== payload.kind) {
+						reject(
+							new SyncError(
+								'The other device is set to sync something different. Pick the same mode on both sides and retry.',
+							),
+						);
 						return;
 					}
 
-					// Shape-checking the arrays is not enough: each element still has
-					// to be a valid record. This is data from another device, not the
-					// user's own file, so a bad record must not reach the merge and
-					// garbage-collection steps — parseDream/parseGoal/parseTask throw
-					// on the first invalid one, and the catch below turns that into
-					// the same full-reject as every other malformed-payload case here.
-					parsed.dreams.forEach(parseDream);
-					parsed.goals.forEach(parseGoal);
-					parsed.tasks.forEach(parseTask);
+					if (parsed.kind === 'data') {
+						if (
+							!Array.isArray(parsed.dreams) ||
+							!Array.isArray(parsed.goals) ||
+							!Array.isArray(parsed.tasks)
+						) {
+							reject(new SyncError('The other device sent something unexpected'));
+							return;
+						}
 
-					resolve(parsed as SyncDataPayload);
+						// Shape-checking the arrays is not enough: each element still has
+						// to be a valid record. This is data from another device, not the
+						// user's own file, so a bad record must not reach the merge and
+						// garbage-collection steps — parseDream/parseGoal/parseTask throw
+						// on the first invalid one, and the catch below turns that into
+						// the same full-reject as every other malformed-payload case here.
+						parsed.dreams.forEach(parseDream);
+						parsed.goals.forEach(parseGoal);
+						parsed.tasks.forEach(parseTask);
+
+						resolve(parsed as SyncDataPayload);
+						return;
+					}
+
+					resolve({ schema: parsed.schema, kind: 'settings', settings: parseSettings(parsed.settings) });
 				} catch {
 					reject(new SyncError('The other device sent something unexpected'));
 				}
