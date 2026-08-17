@@ -4,6 +4,8 @@
 		"toggleLanguage": "Выбрать язык"
 	},
 	"nav": {
+		"dreams": "Мечты",
+		"goals": "Цели",
 		"list": "Список",
 		"matrix": "Матрица",
 		"settings": "Настройки"
@@ -76,6 +78,8 @@
 	},
 	"settings": {
 		"startPage": "Стартовая страница",
+		"startPageDreams": "Мечты",
+		"startPageGoals": "Цели",
 		"startPageList": "Список",
 		"startPageMatrix": "Матрица",
 		"theme": "Тема",

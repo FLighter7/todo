@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
-import { mdiViewGridOutline, mdiViewListOutline } from '@mdi/js';
+import { mdiFlagOutline, mdiTelescope, mdiViewGridOutline, mdiViewListOutline } from '@mdi/js';
 import TodoListPage from '@/pages/TodoListPage/TodoListPage.vue';
 import { settingsService } from '@/services/settings/SettingsService';
 
@@ -38,6 +38,18 @@ const routes: RouteRecordRaw[] = [
 		name: 'matrix',
 		component: () => import('@/pages/MatrixPage/MatrixPage.vue'),
 		meta: { startPage: { icon: mdiViewGridOutline, labelKey: 'settings.startPageMatrix' } },
+	},
+	{
+		path: '/dreams',
+		name: 'dreams',
+		component: () => import('@/pages/DreamsPage/DreamsPage.vue'),
+		meta: { startPage: { icon: mdiTelescope, labelKey: 'settings.startPageDreams' } },
+	},
+	{
+		path: '/goals',
+		name: 'goals',
+		component: () => import('@/pages/GoalsPage/GoalsPage.vue'),
+		meta: { startPage: { icon: mdiFlagOutline, labelKey: 'settings.startPageGoals' } },
 	},
 	{ path: '/sync', name: 'sync', component: () => import('@/pages/SyncPage/SyncPage.vue') },
 	{

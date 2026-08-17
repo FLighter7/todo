@@ -4,6 +4,8 @@
 		"toggleLanguage": "Choose language"
 	},
 	"nav": {
+		"dreams": "Dreams",
+		"goals": "Goals",
 		"list": "List",
 		"matrix": "Matrix",
 		"settings": "Settings"
@@ -76,6 +78,8 @@
 	},
 	"settings": {
 		"startPage": "Start page",
+		"startPageDreams": "Dreams",
+		"startPageGoals": "Goals",
 		"startPageList": "List",
 		"startPageMatrix": "Matrix",
 		"theme": "Theme",

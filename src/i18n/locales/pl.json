@@ -4,6 +4,8 @@
 		"toggleLanguage": "Wybierz język"
 	},
 	"nav": {
+		"dreams": "Marzenia",
+		"goals": "Cele",
 		"list": "Lista",
 		"matrix": "Macierz",
 		"settings": "Ustawienia"
@@ -76,6 +78,8 @@
 	},
 	"settings": {
 		"startPage": "Strona początkowa",
+		"startPageDreams": "Marzenia",
+		"startPageGoals": "Cele",
 		"startPageList": "Lista",
 		"startPageMatrix": "Macierz",
 		"theme": "Motyw",
