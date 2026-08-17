@@ -44,14 +44,16 @@ Three entities — `Dream`, `Goal`, `Task` — share an `EntityBase`: `id`, `nam
 
 `Status` is a real enum shared by all three: `Opened | Done | Cancelled`.
 
+A fourth document, `AppSettings`, lives beside the three entities but is not itself an entity: `general: {theme, locale, startPage, cleanupDays}` plus per-page `dreams/goals/tasks: {rows, confirmDone, confirmReopen}`. It persists to `localStorage['todo.settings']` via `SettingsService` (see Traps), not IndexedDB, and is wrapped in `useSettingsStore()`. It rides along in backup/restore (`Backup.settings?`, optional so pre-existing backups still validate) and in sync, but — unlike dreams/goals/tasks — sync does not merge it: each side sends its whole document and the receiving side chooses Accept (replace) or Decline (keep), because two devices' preferences have no natural merge.
+
 Several things are easy to break without knowing them:
 
 - **`updated` moves on every user change** — sync merges on it, and the later version wins — and **never** on garbage collection. A device that moved it on startup would win the next merge for free, just for having started.
-- **There is no `deleted` flag.** A closed record (`Done` or `Cancelled`) is its own tombstone. Physical deletion happens only in `collectGarbage`, only once the record is older than the cleanup window, and never from the interface — closing is the only kind of deletion the app offers.
+- **There is no `deleted` flag.** A closed record (`Done` or `Cancelled`) is its own tombstone. Physical deletion happens only in `collectGarbage`, only once the record is older than the cleanup window — closing a record is the only deletion action the interface offers directly. `cleanupDays` (30/60/90, set in Settings) is user-editable, and shortening it does make more records eligible for the next `collectGarbage` sweep — but that sweep only removes records that are already closed and already past the (new, shorter) window, never an open one, never on the spot. That's why shortening it ships with a hint under the selector and deliberately no confirmation dialog: nothing disappears at the moment of the click, only later, and only what closing had already marked for eventual removal.
 - **`completions` merge per `occurrence`, not as a value.** Whole-record last-write-wins would silently drop a mark made on the other device: two devices out of contact, one marking the 7th and the other the 14th, would otherwise produce two records neither of which holds both.
 - **The effective cleanup window is the larger of the two devices'.** Each device purges past its own `cleanupDays` independently; a closed record keeps surviving somewhere in the system until the more generous device also purges it. That needs no negotiation and no code — it falls out of both sides doing the same local thing.
 
-The IndexedDB schema is at version 3: three stores (`dreams`, `goals`, `tasks`) defined by one shared schema. Each `EntityDbRepository` opens its own connection against that schema — nothing pools or caches the connection itself. Changing a record's shape means raising `APP_DB_VERSION` in [src/repositories/AppDatabase.ts](../src/repositories/AppDatabase.ts) and writing a migration that backfills old records without granting them an undeservedly fresh `updated`.
+The IndexedDB schema is at version 3: three stores (`dreams`, `goals`, `tasks`) defined by one shared schema. Each `EntityDbRepository` opens its own connection against that schema — nothing pools or caches the connection itself. Changing a record's shape means raising `APP_DB_VERSION` in [src/repositories/AppDatabase.ts](../src/repositories/AppDatabase.ts) and writing a migration that backfills old records without granting them an undeservedly fresh `updated`. `AppSettings` sits outside this schema entirely — it has its own format guard, `parseSettings()`, instead of a version-numbered migration.
 
 ## Traps already paid for
 
@@ -75,10 +77,14 @@ The IndexedDB schema is at version 3: three stores (`dreams`, `goals`, `tasks`) 
 
 **Backup files of versions 1 and 2 are refused, not migrated.** They carry a single `todos` list against a model that no longer exists, and a migration would have to invent the dreams and goals that were never written.
 
+**Settings persist to `localStorage`, not IndexedDB.** `SettingsService.load()` never returns the shared `DEFAULT_SETTINGS` object directly — it clones it first, so nothing accidentally mutates the default. `loadRaw()` returns `null` for both a missing key and corrupt JSON alike, and that ambiguity is load-bearing: `detectLocale()` calls `loadRaw()`, never `load()`, because first-run OS-locale detection has to see a real `null` to know it's a first run — `load()`'s fallback would mask that behind `DEFAULT_SETTINGS`'s hardcoded `'en'`.
+
+**Settings sync is accept/decline, not merge.** `SyncFlow.vue` closes the WebRTC connection immediately once the settings exchange resolves — before the user has chosen Accept or Decline — because there's nothing left to negotiate over that connection: both sides already hold full copies, and the choice of which one wins is purely local.
+
 ## Process
 
 Intent and decisions live in `docs/superpowers/specs/`, step-by-step plans in `docs/superpowers/plans/`. Before changing behaviour, read the matching spec: it records why something was built the way it was.
 
-Stages 1–5 are done and merged into `main`: core, list, matrix, PWA/offline, export-import, sync. Stage 6 — reworking the data model into dreams, goals and tasks — is under way: the data layer and the UI cutover onto it are done (see `docs/superpowers/specs/2026-08-16-dreams-goals-tasks-design.md`). Dedicated dream and goal pages, deadline and recurrence UI, and completion history are not built yet; today the list and matrix pages just read and write the new `Task` store where they used to read and write `Todo`.
+Stages 1–5 are done and merged into `main`: core, list, matrix, PWA/offline, export-import, sync. Stage 6 — reworking the data model into dreams, goals and tasks — is under way on `stage-6-dreams-goals-tasks` (not yet merged to `main`): the data layer and the UI cutover onto it are done (see `docs/superpowers/specs/2026-08-16-dreams-goals-tasks-design.md`), and so is the settings sub-project — theme, locale, start page, cleanup window, and per-page list preferences, wired into backup and sync (see `docs/superpowers/specs/2026-08-17-stage-2-settings-design.md`). Dedicated dream and goal pages, deadline and recurrence UI, and completion history are not built yet; today the list and matrix pages just read and write the new `Task` store where they used to read and write `Todo`.
 
 Remote and deployment are deliberately postponed; the user reviews the architecture themselves. Do not add a git remote or deploy without being asked.
