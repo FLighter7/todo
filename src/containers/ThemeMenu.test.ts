@@ -1,9 +1,13 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
-import vuetify, { readStoredTheme } from '@/plugins/vuetify';
+import { createPinia, setActivePinia } from 'pinia';
+import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
+import { DEFAULT_SETTINGS } from '@/types';
+import { settingsService } from '@/services/settings/SettingsService';
+import { useSettingsStore } from '@/stores/settings';
 import ThemeMenu from './ThemeMenu.vue';
 
 function openMenu(wrapper: VueWrapper): Promise<void> {
@@ -12,6 +16,7 @@ function openMenu(wrapper: VueWrapper): Promise<void> {
 
 beforeEach(() => {
 	window.localStorage.clear();
+	setActivePinia(createPinia());
 	vuetify.theme.change('light');
 });
 
@@ -30,7 +35,7 @@ describe('ThemeMenu', () => {
 	});
 
 	it('marks the currently stored preference with a checkmark', async () => {
-		window.localStorage.setItem('todo.theme', 'dark');
+		settingsService.save({ ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, theme: 'dark' } });
 		const wrapper = mount(ThemeMenu, { global: { plugins: [vuetify, i18n] } });
 
 		await openMenu(wrapper);
@@ -49,7 +54,7 @@ describe('ThemeMenu', () => {
 		await openMenu(wrapper);
 		await clickButtonByText(wrapper, 'Dark');
 
-		expect(readStoredTheme()).toBe('dark');
+		expect(useSettingsStore().general.theme).toBe('dark');
 		expect(vuetify.theme.global.name.value).toBe('dark');
 	});
 
@@ -82,7 +87,7 @@ describe('ThemeMenu', () => {
 		});
 
 		it('follows OS theme changes while "system" is selected', () => {
-			window.localStorage.setItem('todo.theme', 'system');
+			settingsService.save({ ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, theme: 'system' } });
 			mount(ThemeMenu, { global: { plugins: [vuetify, i18n] } });
 
 			for (const listener of listeners) {
@@ -93,7 +98,7 @@ describe('ThemeMenu', () => {
 		});
 
 		it('ignores OS theme changes when a manual preference is selected', () => {
-			window.localStorage.setItem('todo.theme', 'light');
+			settingsService.save({ ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, theme: 'light' } });
 			mount(ThemeMenu, { global: { plugins: [vuetify, i18n] } });
 
 			for (const listener of listeners) {

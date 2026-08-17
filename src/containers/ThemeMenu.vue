@@ -11,11 +11,11 @@
 				<v-list-item
 					v-for="option in options"
 					:key="option.value"
-					:active="preference === option.value"
+					:active="settings.general.theme === option.value"
 					color="primary"
 					:prepend-icon="option.icon"
 					:title="t(option.labelKey)"
-					:append-icon="preference === option.value ? mdiCheck : undefined"
+					:append-icon="settings.general.theme === option.value ? mdiCheck : undefined"
 					@click="select(option.value)"
 				/>
 			</v-list>
@@ -28,13 +28,15 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useTheme } from 'vuetify';
 import { mdiCheck, mdiThemeLightDark, mdiWeatherNight, mdiWeatherSunny } from '@mdi/js';
-import { type AppTheme, persistTheme, readStoredTheme, resolveTheme } from '@/plugins/vuetify';
+import type { AppTheme } from '@/types';
+import { resolveTheme } from '@/plugins/vuetify';
+import { useSettingsStore } from '@/stores/settings';
 
 const { t } = useI18n();
 const theme = useTheme();
+const settings = useSettingsStore();
 
 const open = ref(false);
-const preference = ref<AppTheme>(readStoredTheme());
 
 const options: Array<{ value: AppTheme; labelKey: string; icon: string }> = [
 	{ value: 'system', labelKey: 'settings.themeSystem', icon: mdiThemeLightDark },
@@ -43,18 +45,17 @@ const options: Array<{ value: AppTheme; labelKey: string; icon: string }> = [
 ];
 
 const themeIcon = computed(
-	() => options.find((option) => option.value === preference.value)?.icon ?? mdiThemeLightDark,
+	() => options.find((option) => option.value === settings.general.theme)?.icon ?? mdiThemeLightDark,
 );
 
 function select(value: AppTheme): void {
-	preference.value = value;
-	persistTheme(value);
+	settings.setTheme(value);
 	theme.change(resolveTheme(value));
 	open.value = false;
 }
 
 function syncWithSystem(event: MediaQueryListEvent): void {
-	if (preference.value === 'system') {
+	if (settings.general.theme === 'system') {
 		theme.change(event.matches ? 'dark' : 'light');
 	}
 }
