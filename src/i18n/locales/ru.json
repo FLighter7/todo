@@ -105,10 +105,22 @@
 		"edit": "Изменить",
 		"cancelRecord": "Отменить запись",
 		"name": "Название",
-		"note": "Описание"
+		"note": "Описание",
+		"active": "Активные",
+		"history": "История",
+		"confirmDoneTitle": "Отметить как выполненное?",
+		"confirmDoneBody": "Отметить «{name}» как выполненное?",
+		"confirmReopenTitle": "Вернуть в активные?",
+		"confirmReopenBody": "«{name}» — вернуть в активные?",
+		"confirm": "Подтвердить",
+		"cascadeTitle": "Отменить всю ветку?",
+		"cascadeDreamBody": "Активных целей в этой мечте: {goals}. Активных задач в них: {tasks}.",
+		"cascadeOnly": "Отменить только это",
+		"cascadeBranch": "Отменить всю ветку"
 	},
 	"dream": {
-		"title": "Мечта"
+		"title": "Мечта",
+		"empty": "Пока нет мечт."
 	},
 	"goal": {
 		"title": "Цель",

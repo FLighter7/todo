@@ -105,10 +105,22 @@
 		"edit": "Edytuj",
 		"cancelRecord": "Anuluj wpis",
 		"name": "Nazwa",
-		"note": "Opis"
+		"note": "Opis",
+		"active": "Aktywne",
+		"history": "Historia",
+		"confirmDoneTitle": "Oznaczyć jako zrobione?",
+		"confirmDoneBody": "Oznaczyć „{name}” jako zrobione?",
+		"confirmReopenTitle": "Wznowić?",
+		"confirmReopenBody": "Wznowić „{name}”?",
+		"confirm": "Potwierdź",
+		"cascadeTitle": "Anulować całą gałąź?",
+		"cascadeDreamBody": "Aktywnych celów w tym marzeniu: {goals}. Aktywnych zadań w nich: {tasks}.",
+		"cascadeOnly": "Anuluj tylko to",
+		"cascadeBranch": "Anuluj całą gałąź"
 	},
 	"dream": {
-		"title": "Marzenie"
+		"title": "Marzenie",
+		"empty": "Brak marzeń."
 	},
 	"goal": {
 		"title": "Cel",

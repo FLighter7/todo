@@ -105,10 +105,22 @@
 		"edit": "Edit",
 		"cancelRecord": "Cancel this record",
 		"name": "Name",
-		"note": "Note"
+		"note": "Note",
+		"active": "Active",
+		"history": "History",
+		"confirmDoneTitle": "Mark as done?",
+		"confirmDoneBody": "Mark \"{name}\" as done?",
+		"confirmReopenTitle": "Reopen?",
+		"confirmReopenBody": "Reopen \"{name}\"?",
+		"confirm": "Confirm",
+		"cascadeTitle": "Cancel this branch?",
+		"cascadeDreamBody": "Active goals under this dream: {goals}. Active tasks under them: {tasks}.",
+		"cascadeOnly": "Cancel only this",
+		"cascadeBranch": "Cancel the whole branch"
 	},
 	"dream": {
-		"title": "Dream"
+		"title": "Dream",
+		"empty": "No dreams yet."
 	},
 	"goal": {
 		"title": "Goal",
