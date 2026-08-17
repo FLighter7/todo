@@ -70,7 +70,6 @@ import { useStorageStore } from '@/stores/storage';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
-import { useTodosStore } from '@/stores/todos';
 
 const { t, locale } = useI18n();
 const vuetifyLocale = useLocale();
@@ -78,10 +77,6 @@ const store = useStorageStore();
 const dreams = useDreamsStore();
 const goals = useGoalsStore();
 const tasks = useTasksStore();
-// Temporary: BackupActions and SyncFlow still read the old store, and an
-// unloaded store would silently export and sync an empty list. Both move in
-// tasks 3 and 4; this line and the store behind it go in task 5.
-const todos = useTodosStore();
 const route = useRoute();
 const router = useRouter();
 
@@ -104,7 +99,6 @@ onMounted(() => {
 	void dreams.load();
 	void goals.load();
 	void tasks.load();
-	void todos.load();
 	void storagePersistence.request();
 });
 

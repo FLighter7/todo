@@ -13,20 +13,6 @@
 		"writeFailed": "Could not save the change.",
 		"recordsSkipped": "Some records could not be read and were skipped. They are still in the file you can export."
 	},
-	"todo": {
-		"title": "Title",
-		"note": "Note",
-		"period": "Period",
-		"created": "Created",
-		"important": "Important",
-		"urgent": "Urgent",
-		"done": "Done",
-		"actions": "Actions"
-	},
-	"period": {
-		"one-time": "One-time",
-		"periodic": "Periodic"
-	},
 	"task": {
 		"name": "Name",
 		"note": "Note",
@@ -42,7 +28,6 @@
 		"edit": "Edit task",
 		"save": "Save",
 		"cancel": "Cancel",
-		"titleRequired": "Title is required",
 		"nameRequired": "Name is required"
 	},
 	"list": {

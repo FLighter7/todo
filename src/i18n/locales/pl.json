@@ -13,20 +13,6 @@
 		"writeFailed": "Nie udało się zapisać zmiany.",
 		"recordsSkipped": "Części rekordów nie udało się odczytać i zostały pominięte. W pliku eksportu nadal są."
 	},
-	"todo": {
-		"title": "Nazwa",
-		"note": "Opis",
-		"period": "Częstotliwość",
-		"created": "Utworzono",
-		"important": "Ważne",
-		"urgent": "Pilne",
-		"done": "Zrobione",
-		"actions": "Czynności"
-	},
-	"period": {
-		"one-time": "Jednorazowe",
-		"periodic": "Cykliczne"
-	},
 	"task": {
 		"name": "Nazwa",
 		"note": "Opis",
@@ -42,7 +28,6 @@
 		"edit": "Edytuj zadanie",
 		"save": "Zapisz",
 		"cancel": "Anuluj",
-		"titleRequired": "Nazwa jest wymagana",
 		"nameRequired": "Nazwa jest wymagana"
 	},
 	"list": {
