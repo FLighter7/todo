@@ -51,7 +51,7 @@ Several things are easy to break without knowing them:
 - **`completions` merge per `occurrence`, not as a value.** Whole-record last-write-wins would silently drop a mark made on the other device: two devices out of contact, one marking the 7th and the other the 14th, would otherwise produce two records neither of which holds both.
 - **The effective cleanup window is the larger of the two devices'.** Each device purges past its own `cleanupDays` independently; a closed record keeps surviving somewhere in the system until the more generous device also purges it. That needs no negotiation and no code — it falls out of both sides doing the same local thing.
 
-The IndexedDB schema is at version 3: three stores (`dreams`, `goals`, `tasks`) behind one shared connection. Changing a record's shape means raising `APP_DB_VERSION` in [src/repositories/AppDatabase.ts](../src/repositories/AppDatabase.ts) and writing a migration that backfills old records without granting them an undeservedly fresh `updated`.
+The IndexedDB schema is at version 3: three stores (`dreams`, `goals`, `tasks`) defined by one shared schema. Each `EntityDbRepository` opens its own connection against that schema — nothing pools or caches the connection itself. Changing a record's shape means raising `APP_DB_VERSION` in [src/repositories/AppDatabase.ts](../src/repositories/AppDatabase.ts) and writing a migration that backfills old records without granting them an undeservedly fresh `updated`.
 
 ## Traps already paid for
 

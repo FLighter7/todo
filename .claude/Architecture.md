@@ -49,8 +49,9 @@ src/
 
 	services/                — business logic; one class per file, exported as a singleton
 	repositories/            — data access only. Each backend implements EntityStorage:
-	                            EntityDbRepository.ts (IndexedDB, through AppDatabase.ts's one
-	                            shared connection) and EntityMemoryRepository.ts (in-memory)
+	                            EntityDbRepository.ts (IndexedDB, a fresh connection per instance
+	                            opened against AppDatabase.ts's one shared schema) and
+	                            EntityMemoryRepository.ts (in-memory)
 
 	types/                   — the entity shapes (EntityBase, Dream, Goal, Task) and the runtime
 	                            code that validates them at a boundary — the Status enum and every
@@ -93,7 +94,7 @@ pages → containers / components → stores → services / repositories → typ
 
 ## Services vs. repositories
 
-- **`repositories/`** — data access only. Each backend implements the `EntityStorage` interface (`getAll/put/remove/clear`), so a store can swap `EntityDbRepository` for `EntityMemoryRepository` without knowing the difference — this is what keeps store tests free of a real browser. Both are generic over the entity type (`EntityDbRepository<Dream>`, `EntityMemoryRepository<Task>`, …); `AppDatabase.ts` owns the one shared IndexedDB connection every `EntityDbRepository` instance opens against, so a schema change happens in one place regardless of which entity is being read.
+- **`repositories/`** — data access only. Each backend implements the `EntityStorage` interface (`getAll/put/remove/clear`), so a store can swap `EntityDbRepository` for `EntityMemoryRepository` without knowing the difference — this is what keeps store tests free of a real browser. Both are generic over the entity type (`EntityDbRepository<Dream>`, `EntityMemoryRepository<Task>`, …); `AppDatabase.ts` defines the one shared schema (`AppDbSchema`, one `upgrade()` callback) that every `EntityDbRepository` instance opens its own IndexedDB connection against — three entities mean three separate connections, not one shared connection object — so a schema change happens in one place regardless of which entity is being read.
 - **`services/`** — business logic: rules that span or interpret data, not just store it (backup envelope validation, sync merge/pairing). Each concern is one class.
 - Neither layer knows about Vue or Pinia — that's what keeps them unit-testable without a browser environment.
 
