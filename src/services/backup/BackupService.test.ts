@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Status, type Dream, type Goal, type Task } from '@/types';
+import { DEFAULT_SETTINGS, Status, type AppSettings, type Dream, type Goal, type Task } from '@/types';
 import { BackupFormatError, BackupService } from './BackupService';
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
@@ -61,6 +61,22 @@ describe('BackupService.create', () => {
 	it('includes closed records', () => {
 		const closed = { ...task, status: Status.Cancelled };
 		expect(backupService.create([], [], [closed]).tasks).toEqual([closed]);
+	});
+});
+
+describe('BackupService.create settings', () => {
+	it('leaves settings undefined when none are given', () => {
+		const backup = backupService.create([], [], []);
+		expect(backup.settings).toBeUndefined();
+	});
+
+	it('includes a defensive copy of the given settings', () => {
+		const settings: AppSettings = DEFAULT_SETTINGS;
+		const backup = backupService.create([], [], [], settings);
+
+		expect(backup.settings).toEqual(settings);
+		expect(backup.settings).not.toBe(settings);
+		expect(backup.settings?.general).not.toBe(settings.general);
 	});
 });
 
@@ -143,5 +159,32 @@ describe('BackupService.parse', () => {
 
 	it('rejects a top-level null', () => {
 		expect(() => backupService.parse('null')).toThrow(BackupFormatError);
+	});
+});
+
+describe('BackupService.parse settings', () => {
+	it('round-trips settings through create, JSON.stringify and parse', () => {
+		const text = serialize(backupService.create([], [], [], DEFAULT_SETTINGS));
+		const parsed = backupService.parse(text);
+		expect(parsed.settings).toEqual(DEFAULT_SETTINGS);
+	});
+
+	it('leaves settings undefined when the file has none', () => {
+		const text = serialize(backupService.create([], [], []));
+		const parsed = backupService.parse(text);
+		expect(parsed.settings).toBeUndefined();
+	});
+
+	it('rejects a corrupt settings block with an addressed error', () => {
+		const text = serialize({
+			version: 3,
+			exportedAt: '',
+			dreams: [],
+			goals: [],
+			tasks: [],
+			settings: { general: { theme: 'blue' } },
+		});
+
+		expect(() => backupService.parse(text)).toThrow(/settings/);
 	});
 });

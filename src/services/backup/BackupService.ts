@@ -1,8 +1,11 @@
 import {
 	EntityFormatError,
+	SettingsFormatError,
 	parseDream,
 	parseGoal,
+	parseSettings,
 	parseTask,
+	type AppSettings,
 	type Dream,
 	type Goal,
 	type Task,
@@ -17,6 +20,7 @@ export interface Backup {
 	dreams: Dream[];
 	goals: Goal[];
 	tasks: Task[];
+	settings?: AppSettings;
 }
 
 export class BackupFormatError extends Error {
@@ -52,8 +56,29 @@ function readAll<T>(raw: unknown, collection: string, parse: (value: unknown) =>
 	});
 }
 
+/**
+ * Wraps `parseSettings` the same way `readAll` wraps the per-record parsers:
+ * the settings document is not a collection, so it gets one address
+ * ("settings") instead of an index.
+ */
+function readSettings(raw: unknown): AppSettings | undefined {
+	if (raw === undefined) {
+		return undefined;
+	}
+
+	try {
+		return parseSettings(raw);
+	} catch (error) {
+		if (error instanceof SettingsFormatError) {
+			throw new BackupFormatError(`settings is invalid: ${error.message}`);
+		}
+
+		throw error;
+	}
+}
+
 export class BackupService {
-	create(dreams: Dream[], goals: Goal[], tasks: Task[]): Backup {
+	create(dreams: Dream[], goals: Goal[], tasks: Task[], settings?: AppSettings): Backup {
 		return {
 			version: BACKUP_VERSION,
 			exportedAt: new Date().toISOString(),
@@ -63,6 +88,15 @@ export class BackupService {
 			dreams: dreams.map((dream) => ({ ...dream })),
 			goals: goals.map((goal) => ({ ...goal })),
 			tasks: tasks.map((task) => ({ ...task })),
+			settings:
+				settings === undefined
+					? undefined
+					: {
+							general: { ...settings.general },
+							dreams: { ...settings.dreams },
+							goals: { ...settings.goals },
+							tasks: { ...settings.tasks },
+						},
 		};
 	}
 
@@ -101,6 +135,7 @@ export class BackupService {
 			dreams: readAll(raw.dreams, 'dreams', parseDream),
 			goals: readAll(raw.goals, 'goals', parseGoal),
 			tasks: readAll(raw.tasks, 'tasks', parseTask),
+			settings: readSettings(raw.settings),
 		};
 	}
 }
