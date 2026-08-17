@@ -100,5 +100,9 @@
 		"delegate": "Delegate",
 		"eliminate": "Eliminate",
 		"empty": "Empty"
+	},
+	"entity": {
+		"edit": "Edit",
+		"cancelRecord": "Cancel this record"
 	}
 }

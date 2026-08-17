@@ -100,5 +100,9 @@
 		"delegate": "Deleguj",
 		"eliminate": "Usuń",
 		"empty": "Pusto"
+	},
+	"entity": {
+		"edit": "Edytuj",
+		"cancelRecord": "Anuluj wpis"
 	}
 }
