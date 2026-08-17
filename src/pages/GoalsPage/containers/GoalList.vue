@@ -149,19 +149,20 @@ async function applyToggle(goal: Goal, done: boolean): Promise<void> {
 	}
 }
 
-function onToggle(id: string, done: boolean): void {
+function onToggle(id: string): void {
 	const goal = goals.records.find((record) => record.id === id);
 	if (!goal) {
 		return;
 	}
 
-	const needsConfirm = done ? settings.goals.confirmDone : settings.goals.confirmReopen;
+	const markingDone = tab.value === 'active';
+	const needsConfirm = markingDone ? settings.goals.confirmDone : settings.goals.confirmReopen;
 	if (!needsConfirm) {
-		void applyToggle(goal, done);
+		void applyToggle(goal, markingDone);
 		return;
 	}
 
-	pendingToggle.value = { goal, done };
+	pendingToggle.value = { goal, done: markingDone };
 	toggleConfirmOpen.value = true;
 }
 

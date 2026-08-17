@@ -64,7 +64,7 @@ import { mdiCogOutline } from '@mdi/js';
 import BottomNav from './BottomNav.vue';
 import LocaleMenu from '@/containers/LocaleMenu.vue';
 import ThemeMenu from '@/containers/ThemeMenu.vue';
-import { readStoredStartPage } from '@/router';
+import { getStartPageOptions, readStoredStartPage, type StartPage } from '@/router';
 import { storagePersistence } from '@/repositories/StoragePersistence';
 import { useStorageStore } from '@/stores/storage';
 import { useDreamsStore } from '@/stores/dreams';
@@ -82,15 +82,13 @@ const router = useRouter();
 
 const notice = ref('');
 
-const lastMainRoute = ref<'list' | 'matrix'>(
-	readStoredStartPage() === 'matrix' ? 'matrix' : 'list',
-);
+const lastMainRoute = ref<StartPage>(readStoredStartPage());
 
 watch(
 	() => route.name,
 	(name) => {
-		if (name === 'list' || name === 'matrix') {
-			lastMainRoute.value = name;
+		if (getStartPageOptions().some((option) => option.value === name)) {
+			lastMainRoute.value = name as StartPage;
 		}
 	},
 );

@@ -108,6 +108,18 @@ describe('DreamList done / reopen', () => {
 
 		expect(dreamsStore.records[0].status).toBe(Status.Opened);
 	});
+
+	it('reopens a cancelled dream from the History tab when its checkbox is checked, not marks it done', async () => {
+		const { wrapper, dreamsStore } = await mountWithDreams([
+			makeDream({ status: Status.Cancelled }),
+		]);
+		useSettingsStore().updatePageSettings('dreams', { confirmReopen: false });
+
+		await clickButtonByText(wrapper, 'History');
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+
+		expect(dreamsStore.records[0].status).toBe(Status.Opened);
+	});
 });
 
 describe('DreamList cancel', () => {

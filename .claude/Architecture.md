@@ -61,14 +61,13 @@ src/
 	plugins/                 — Vuetify setup
 	router/                  — vue-router setup, one route per page
 
-	composables/             — Vue-tied reusable logic (currently empty — nothing qualifies yet)
+	composables/             — Vue-tied reusable logic, e.g. useCascadeCancel.ts (cascading-cancel
+	                            counting/execution, shared by the Dreams and Goals page containers)
 	utils/                   — pure, Vue-independent utility functions, one per file, e.g.
 	                            collectGarbage.ts (closed-record and stale-completion pruning)
 	assets/                  — assets imported into the build, e.g. the self-hosted webfonts under
 	                            fonts/
 ```
-
-`composables/` is still empty and kept in git with a `.gitkeep` placeholder. Don't populate it just to have something in it — wait until code actually fits the definition.
 
 Test files (`*.test.ts`) are co-located next to the file they test — every layer has some today, `.vue` files included (e.g. `TaskForm.test.ts` next to `TaskForm.vue`).
 

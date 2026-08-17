@@ -114,19 +114,20 @@ async function applyToggle(dream: Dream, done: boolean): Promise<void> {
 	}
 }
 
-function onToggle(id: string, done: boolean): void {
+function onToggle(id: string): void {
 	const dream = dreams.records.find((record) => record.id === id);
 	if (!dream) {
 		return;
 	}
 
-	const needsConfirm = done ? settings.dreams.confirmDone : settings.dreams.confirmReopen;
+	const markingDone = tab.value === 'active';
+	const needsConfirm = markingDone ? settings.dreams.confirmDone : settings.dreams.confirmReopen;
 	if (!needsConfirm) {
-		void applyToggle(dream, done);
+		void applyToggle(dream, markingDone);
 		return;
 	}
 
-	pendingToggle.value = { dream, done };
+	pendingToggle.value = { dream, done: markingDone };
 	toggleConfirmOpen.value = true;
 }
 

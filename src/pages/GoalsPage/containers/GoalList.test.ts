@@ -10,6 +10,7 @@ import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
+import { useSettingsStore } from '@/stores/settings';
 import GoalList from './GoalList.vue';
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
@@ -128,6 +129,21 @@ describe('GoalList dream picker options', () => {
 		expect(select.props('modelValue')).toBe('closed-dream');
 		const items = select.props('items') as Array<{ title: string }>;
 		expect(items.map((item) => item.title)).toContain('Closed dream');
+	});
+});
+
+describe('GoalList done / reopen', () => {
+	it('reopens a cancelled goal from the History tab when its checkbox is checked, not marks it done', async () => {
+		const { wrapper, goalsStore } = await mountWithData(
+			[],
+			[makeGoal({ status: Status.Cancelled })],
+		);
+		useSettingsStore().updatePageSettings('goals', { confirmReopen: false });
+
+		await clickButtonByText(wrapper, 'History');
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+
+		expect(goalsStore.records[0].status).toBe(Status.Opened);
 	});
 });
 
