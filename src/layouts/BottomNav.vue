@@ -6,10 +6,10 @@
 	z-index: 1005;
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	gap: 2rem;
+	justify-content: space-between;
+	gap: 0.25rem;
 	height: 4rem;
-	padding-inline: 1rem;
+	padding-inline: 0.5rem;
 	padding-bottom: env(safe-area-inset-bottom);
 	background-color: rgb(var(--v-theme-surface));
 	border-top: 1px solid rgb(var(--v-theme-outline));
@@ -24,6 +24,32 @@
 <template>
 	<nav :class="$style.bar">
 		<v-btn
+			:to="{ name: 'dreams' }"
+			variant="text"
+			stacked
+			size="small"
+			:prepend-icon="mdiTelescope"
+			:color="route.name === 'dreams' ? 'primary' : undefined"
+		>
+			{{ t('nav.dreams') }}
+		</v-btn>
+
+		<v-btn
+			:to="{ name: 'goals' }"
+			variant="text"
+			stacked
+			size="small"
+			:prepend-icon="mdiFlagOutline"
+			:color="route.name === 'goals' ? 'primary' : undefined"
+		>
+			{{ t('nav.goals') }}
+		</v-btn>
+
+		<div :class="$style.fabWrap">
+			<quick-add-fab />
+		</div>
+
+		<v-btn
 			:to="{ name: 'list' }"
 			variant="text"
 			stacked
@@ -33,10 +59,6 @@
 		>
 			{{ t('nav.list') }}
 		</v-btn>
-
-		<div :class="$style.fabWrap">
-			<quick-add-fab />
-		</div>
 
 		<v-btn
 			:to="{ name: 'matrix' }"
@@ -54,7 +76,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import { mdiViewGridOutline, mdiViewListOutline } from '@mdi/js';
+import { mdiFlagOutline, mdiTelescope, mdiViewGridOutline, mdiViewListOutline } from '@mdi/js';
 import QuickAddFab from '@/containers/QuickAddFab.vue';
 
 const { t } = useI18n();
