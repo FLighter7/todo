@@ -47,6 +47,7 @@ import { Status, type Dream } from '@/types';
 import { useDreamsStore, type DreamDraft } from '@/stores/dreams';
 import { useSettingsStore } from '@/stores/settings';
 import { useCascadeCancel } from '@/composables/useCascadeCancel';
+import { useToggleConfirm } from '@/composables/useToggleConfirm';
 import EntityList from '@/components/EntityList.vue';
 import DreamDialog from '@/components/DreamDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -85,61 +86,14 @@ async function handleSave(draft: DreamDraft): Promise<void> {
 	editing.value = null;
 }
 
-const pendingToggle = ref<{ dream: Dream; done: boolean } | null>(null);
-const toggleConfirmOpen = ref(false);
-
-const toggleConfirmTitle = computed(() =>
-	pendingToggle.value?.done ? t('entity.confirmDoneTitle') : t('entity.confirmReopenTitle'),
-);
-const toggleConfirmBody = computed(() => {
-	const pending = pendingToggle.value;
-	if (!pending) {
-		return '';
-	}
-
-	return pending.done
-		? t('entity.confirmDoneBody', { name: pending.dream.name })
-		: t('entity.confirmReopenBody', { name: pending.dream.name });
-});
-const toggleConfirmActions = computed(() => [
-	{ key: 'no', label: t('form.cancel') },
-	{ key: 'yes', label: t('entity.confirm'), color: 'primary' },
-]);
-
-async function applyToggle(dream: Dream, done: boolean): Promise<void> {
-	if (done) {
-		await dreams.close(dream.id, Status.Done);
-	} else {
-		await dreams.reopen(dream.id);
-	}
-}
-
-function onToggle(id: string): void {
-	const dream = dreams.records.find((record) => record.id === id);
-	if (!dream) {
-		return;
-	}
-
-	const markingDone = tab.value === 'active';
-	const needsConfirm = markingDone ? settings.dreams.confirmDone : settings.dreams.confirmReopen;
-	if (!needsConfirm) {
-		void applyToggle(dream, markingDone);
-		return;
-	}
-
-	pendingToggle.value = { dream, done: markingDone };
-	toggleConfirmOpen.value = true;
-}
-
-async function onToggleChoice(key: string): Promise<void> {
-	const pending = pendingToggle.value;
-	pendingToggle.value = null;
-	if (key !== 'yes' || !pending) {
-		return;
-	}
-
-	await applyToggle(pending.dream, pending.done);
-}
+const {
+	toggleConfirmOpen,
+	toggleConfirmTitle,
+	toggleConfirmBody,
+	toggleConfirmActions,
+	onToggle,
+	onToggleChoice,
+} = useToggleConfirm(dreams, 'dreams', tab);
 
 const pendingCancel = ref<Dream | null>(null);
 const cascadeCounts = ref({ goals: 0, tasks: 0 });

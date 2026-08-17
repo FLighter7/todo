@@ -49,6 +49,7 @@ import { useGoalsStore, type GoalDraft } from '@/stores/goals';
 import { useDreamsStore } from '@/stores/dreams';
 import { useSettingsStore } from '@/stores/settings';
 import { useCascadeCancel } from '@/composables/useCascadeCancel';
+import { useToggleConfirm } from '@/composables/useToggleConfirm';
 import EntityList from '@/components/EntityList.vue';
 import GoalDialog from '@/components/GoalDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -120,61 +121,14 @@ async function handleSave(draft: GoalDraft): Promise<void> {
 	editing.value = null;
 }
 
-const pendingToggle = ref<{ goal: Goal; done: boolean } | null>(null);
-const toggleConfirmOpen = ref(false);
-
-const toggleConfirmTitle = computed(() =>
-	pendingToggle.value?.done ? t('entity.confirmDoneTitle') : t('entity.confirmReopenTitle'),
-);
-const toggleConfirmBody = computed(() => {
-	const pending = pendingToggle.value;
-	if (!pending) {
-		return '';
-	}
-
-	return pending.done
-		? t('entity.confirmDoneBody', { name: pending.goal.name })
-		: t('entity.confirmReopenBody', { name: pending.goal.name });
-});
-const toggleConfirmActions = computed(() => [
-	{ key: 'no', label: t('form.cancel') },
-	{ key: 'yes', label: t('entity.confirm'), color: 'primary' },
-]);
-
-async function applyToggle(goal: Goal, done: boolean): Promise<void> {
-	if (done) {
-		await goals.close(goal.id, Status.Done);
-	} else {
-		await goals.reopen(goal.id);
-	}
-}
-
-function onToggle(id: string): void {
-	const goal = goals.records.find((record) => record.id === id);
-	if (!goal) {
-		return;
-	}
-
-	const markingDone = tab.value === 'active';
-	const needsConfirm = markingDone ? settings.goals.confirmDone : settings.goals.confirmReopen;
-	if (!needsConfirm) {
-		void applyToggle(goal, markingDone);
-		return;
-	}
-
-	pendingToggle.value = { goal, done: markingDone };
-	toggleConfirmOpen.value = true;
-}
-
-async function onToggleChoice(key: string): Promise<void> {
-	const pending = pendingToggle.value;
-	pendingToggle.value = null;
-	if (key !== 'yes' || !pending) {
-		return;
-	}
-
-	await applyToggle(pending.goal, pending.done);
-}
+const {
+	toggleConfirmOpen,
+	toggleConfirmTitle,
+	toggleConfirmBody,
+	toggleConfirmActions,
+	onToggle,
+	onToggleChoice,
+} = useToggleConfirm(goals, 'goals', tab);
 
 const pendingCancel = ref<Goal | null>(null);
 const cascadeCount = ref(0);
