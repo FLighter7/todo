@@ -249,3 +249,55 @@ describe('useTasksStore load pruning', () => {
 		expect(putIds).toEqual([]);
 	});
 });
+
+describe('useTasksStore groupedByGoal', () => {
+	it('puts a goalless task in the ungrouped tail', async () => {
+		const store = useTasksStore();
+		await store.load(async () => new EntityMemoryRepository([makeTask({ id: 'a' })]));
+
+		expect(store.groupedByGoal.active.groups).toEqual([]);
+		expect(store.groupedByGoal.active.ungrouped.map((t) => t.id)).toEqual(['a']);
+	});
+
+	it('groups multiple tasks under the same goal together', async () => {
+		const store = useTasksStore();
+		await store.load(
+			async () =>
+				new EntityMemoryRepository([
+					makeTask({ id: 'a', goalId: 'goal-1' }),
+					makeTask({ id: 'b', goalId: 'goal-1' }),
+					makeTask({ id: 'c', goalId: 'goal-2' }),
+				]),
+		);
+
+		const groups = store.groupedByGoal.active.groups;
+		expect(groups).toHaveLength(2);
+		expect(groups.find((g) => g.goalId === 'goal-1')?.items.map((t) => t.id)).toEqual(['a', 'b']);
+		expect(groups.find((g) => g.goalId === 'goal-2')?.items.map((t) => t.id)).toEqual(['c']);
+	});
+
+	it('groups a task by goalId regardless of the goal record itself -- the getter never reads Goal data', async () => {
+		const store = useTasksStore();
+		await store.load(
+			async () => new EntityMemoryRepository([makeTask({ id: 'a', goalId: 'closed-goal' })]),
+		);
+
+		expect(store.groupedByGoal.active.groups).toEqual([
+			{ goalId: 'closed-goal', items: [store.records[0]] },
+		]);
+	});
+
+	it('groups active and closed tasks separately, for the Active and History tabs', async () => {
+		const store = useTasksStore();
+		await store.load(
+			async () =>
+				new EntityMemoryRepository([
+					makeTask({ id: 'a', goalId: 'goal-1', status: Status.Opened }),
+					makeTask({ id: 'b', goalId: 'goal-1', status: Status.Done }),
+				]),
+		);
+
+		expect(store.groupedByGoal.active.groups[0].items.map((t) => t.id)).toEqual(['a']);
+		expect(store.groupedByGoal.closed.groups[0].items.map((t) => t.id)).toEqual(['b']);
+	});
+});

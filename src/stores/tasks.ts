@@ -33,6 +33,16 @@ export function quadrantFlags(key: QuadrantKey): { important: boolean; urgent: b
 	};
 }
 
+export interface GoalGroup {
+	goalId: string;
+	items: Task[];
+}
+
+export interface GroupedTasks {
+	groups: GoalGroup[];
+	ungrouped: Task[];
+}
+
 const useBaseTasksStore = defineEntityStore<Task, TaskDraft>({
 	id: 'tasks',
 	createRepository: () => EntityDbRepository.create('tasks', parseTask),
@@ -59,6 +69,27 @@ const useBaseTasksStore = defineEntityStore<Task, TaskDraft>({
 	},
 });
 
+function groupByGoal(records: Task[]): GroupedTasks {
+	const byGoal = new Map<string, Task[]>();
+	const ungrouped: Task[] = [];
+
+	for (const task of records) {
+		if (task.goalId === undefined) {
+			ungrouped.push(task);
+			continue;
+		}
+
+		const items = byGoal.get(task.goalId) ?? [];
+		items.push(task);
+		byGoal.set(task.goalId, items);
+	}
+
+	return {
+		groups: [...byGoal.entries()].map(([goalId, items]) => ({ goalId, items })),
+		ungrouped,
+	};
+}
+
 /**
  * The matrix is a view of the same data, not a separate entity: this getter
  * splits the open tasks by important × urgent. Closed tasks stay out — the
@@ -78,6 +109,12 @@ const useBaseTasksStore = defineEntityStore<Task, TaskDraft>({
  * source, so every state and getter here keeps updating after the source
  * store changes. Actions are passed through directly — Pinia already binds
  * them to their own store.
+ *
+ * `groupedByGoal` keys groups by `goalId` only, the same way `groupedByDream`
+ * on the goals store keys by `dreamId` only — it never resolves the Goal's
+ * name, since that would mean the tasks store importing the goals store,
+ * breaking the mutual independence dreams/goals/tasks keep. A caller with
+ * access to both stores — a container — resolves `goalId` to a name itself.
  */
 export const useTasksStore = defineStore('tasksMatrix', () => {
 	const store = useBaseTasksStore();
@@ -98,12 +135,18 @@ export const useTasksStore = defineStore('tasksMatrix', () => {
 		return groups;
 	});
 
+	const groupedByGoal = computed<{ active: GroupedTasks; closed: GroupedTasks }>(() => ({
+		active: groupByGoal(active.value),
+		closed: groupByGoal(closed.value),
+	}));
+
 	return {
 		records,
 		active,
 		closed,
 		loading,
 		quadrants,
+		groupedByGoal,
 		load: store.load,
 		add: store.add,
 		update: store.update,
