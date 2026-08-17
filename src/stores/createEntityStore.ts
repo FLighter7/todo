@@ -3,7 +3,8 @@ import { defineStore } from 'pinia';
 import { Status, type EntityBase } from '@/types';
 import type { EntityStorage } from '@/repositories/EntityStorage';
 import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
-import { DEFAULT_CLEANUP_DAYS, collectGarbage } from '@/utils';
+import { collectGarbage } from '@/utils';
+import { useSettingsStore } from './settings';
 import { useStorageStore } from './storage';
 
 export interface EntityStoreOptions<T extends EntityBase, D> {
@@ -63,9 +64,9 @@ export function defineEntityStore<T extends EntityBase, D>(options: EntityStoreO
 		/** Everything in storage, closed records included. Sync needs those. */
 		const records = ref<T[]>([]) as Ref<T[]>;
 		const loading = ref(false);
-		const cleanupDays = ref(DEFAULT_CLEANUP_DAYS);
 
 		const storageState = useStorageStore();
+		const settingsState = useSettingsStore();
 
 		const active = computed(() =>
 			records.value.filter((record) => record.status === Status.Opened),
@@ -101,9 +102,10 @@ export function defineEntityStore<T extends EntityBase, D>(options: EntityStoreO
 			const loaded = await storage.getAll();
 			storageState.noteLoadSkipped(storage.skipped ?? 0);
 
-			const { keep, purge } = collectGarbage(loaded, cleanupDays.value, now);
+			const cleanupDays = settingsState.general.cleanupDays;
+			const { keep, purge } = collectGarbage(loaded, cleanupDays, now);
 			const prune = options.prune;
-			const pruned = prune ? keep.map((record) => prune(record, cleanupDays.value, now)) : keep;
+			const pruned = prune ? keep.map((record) => prune(record, cleanupDays, now)) : keep;
 			records.value = pruned;
 
 			await persist(async () => {
@@ -189,7 +191,6 @@ export function defineEntityStore<T extends EntityBase, D>(options: EntityStoreO
 			active,
 			closed,
 			loading,
-			cleanupDays,
 			load,
 			add,
 			update,

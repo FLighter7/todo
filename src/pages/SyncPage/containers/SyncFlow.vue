@@ -75,6 +75,7 @@ import { collectGarbage, pruneCompletions } from '@/utils';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
+import { useSettingsStore } from '@/stores/settings';
 
 type Step = 'idle' | 'show-offer' | 'scan-offer' | 'show-answer' | 'working' | 'done' | 'failed';
 
@@ -84,6 +85,7 @@ const { t } = useI18n();
 const dreams = useDreamsStore();
 const goals = useGoalsStore();
 const tasks = useTasksStore();
+const settings = useSettingsStore();
 
 const step = ref<Step>('idle');
 const ourCode = ref('');
@@ -177,7 +179,7 @@ async function runExchange(): Promise<void> {
 		const mergedDreams = sweep(syncMerger.merge([...dreams.records], theirs.dreams), now);
 		const mergedGoals = sweep(syncMerger.merge([...goals.records], theirs.goals), now);
 		const mergedTasks = sweep(syncMerger.mergeTasks([...tasks.records], theirs.tasks), now).map(
-			(task) => pruneCompletions(task, tasks.cleanupDays, now),
+			(task) => pruneCompletions(task, settings.general.cleanupDays, now),
 		);
 
 		const merged = [...mergedDreams, ...mergedGoals, ...mergedTasks];
@@ -206,10 +208,8 @@ async function runExchange(): Promise<void> {
  * Collection runs on the merged result rather than after it is written: a
  * record the other device still holds past our window would otherwise land on
  * disk and be swept only on the next load, one write too late.
- *
- * The three stores share one `cleanupDays`, so any of them can supply it.
  */
 function sweep<T extends EntityBase>(records: T[], now: Date): T[] {
-	return collectGarbage(records, tasks.cleanupDays, now).keep;
+	return collectGarbage(records, settings.general.cleanupDays, now).keep;
 }
 </script>

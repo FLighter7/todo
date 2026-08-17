@@ -81,7 +81,7 @@ const useBaseTasksStore = defineEntityStore<Task, TaskDraft>({
  */
 export const useTasksStore = defineStore('tasksMatrix', () => {
 	const store = useBaseTasksStore();
-	const { records, active, closed, loading, cleanupDays } = storeToRefs(store);
+	const { records, active, closed, loading } = storeToRefs(store);
 
 	const quadrants = computed<Record<QuadrantKey, Task[]>>(() => {
 		const groups: Record<QuadrantKey, Task[]> = {
@@ -103,7 +103,6 @@ export const useTasksStore = defineStore('tasksMatrix', () => {
 		active,
 		closed,
 		loading,
-		cleanupDays,
 		quadrants,
 		load: store.load,
 		add: store.add,
