@@ -111,3 +111,140 @@ describe('ScheduleField existing value', () => {
 		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([undefined]);
 	});
 });
+
+describe('ScheduleField repeat presets', () => {
+	it('defaults the weekday to the day of the chosen start date', async () => {
+		const wrapper = mountField(undefined);
+
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+		await wrapper.get('input[type="datetime-local"]').setValue('2026-08-21T09:00'); // a Friday
+		const [repeatSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		await repeatSelect.vm.$emit('update:modelValue', 'weekly');
+		await wrapper.vm.$nextTick();
+
+		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([
+			{
+				start: '2026-08-21T09:00',
+				tzid: undefined,
+				duration: undefined,
+				rrule: 'FREQ=WEEKLY;INTERVAL=1;BYDAY=FR',
+			},
+		]);
+	});
+
+	it('never emits a weekly rule with every day unchecked', async () => {
+		const wrapper = mountField(undefined);
+
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+		await wrapper.get('input[type="datetime-local"]').setValue('2026-08-21T09:00');
+		const [repeatSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		await repeatSelect.vm.$emit('update:modelValue', 'weekly');
+		await wrapper.vm.$nextTick();
+
+		const fridayCheckbox = wrapper
+			.findAllComponents({ name: 'VCheckbox' })
+			.find((c) => c.props('modelValue') === true);
+		await fridayCheckbox?.vm.$emit('update:modelValue', false);
+		await wrapper.vm.$nextTick();
+
+		expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({
+			rrule: 'FREQ=WEEKLY;INTERVAL=1;BYDAY=FR',
+		});
+	});
+
+	it('builds a monthly rule with a non-default interval', async () => {
+		const wrapper = mountField(undefined);
+
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+		await wrapper.get('input[type="datetime-local"]').setValue('2026-08-21T09:00');
+		const [repeatSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		await repeatSelect.vm.$emit('update:modelValue', 'monthly');
+		await wrapper.vm.$nextTick();
+		await wrapper.get('input[type="number"]').setValue('3');
+
+		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([
+			{
+				start: '2026-08-21T09:00',
+				tzid: undefined,
+				duration: undefined,
+				rrule: 'FREQ=MONTHLY;INTERVAL=3',
+			},
+		]);
+	});
+});
+
+describe('ScheduleField end condition', () => {
+	async function mountWeekly() {
+		const wrapper = mountField(undefined);
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+		await wrapper.get('input[type="datetime-local"]').setValue('2026-08-21T09:00');
+		const [repeatSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		await repeatSelect.vm.$emit('update:modelValue', 'weekly');
+		await wrapper.vm.$nextTick();
+		return wrapper;
+	}
+
+	it('rejects an occurrence count below 2', async () => {
+		const wrapper = await mountWeekly();
+		const selects = wrapper.findAllComponents({ name: 'VSelect' });
+		const endTypeSelect = selects[selects.length - 1];
+		await endTypeSelect.vm.$emit('update:modelValue', 'count');
+		await wrapper.vm.$nextTick();
+
+		await wrapper.get('input[type="number"][min="2"]').setValue('1');
+
+		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([undefined]);
+	});
+
+	it('emits COUNT once a valid occurrence count is set', async () => {
+		const wrapper = await mountWeekly();
+		const selects = wrapper.findAllComponents({ name: 'VSelect' });
+		const endTypeSelect = selects[selects.length - 1];
+		await endTypeSelect.vm.$emit('update:modelValue', 'count');
+		await wrapper.vm.$nextTick();
+
+		await wrapper.get('input[type="number"][min="2"]').setValue('5');
+
+		expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({
+			rrule: 'FREQ=WEEKLY;INTERVAL=1;BYDAY=FR;COUNT=5',
+		});
+	});
+
+	it('emits UNTIL once an end date is set', async () => {
+		const wrapper = await mountWeekly();
+		const selects = wrapper.findAllComponents({ name: 'VSelect' });
+		const endTypeSelect = selects[selects.length - 1];
+		await endTypeSelect.vm.$emit('update:modelValue', 'until');
+		await wrapper.vm.$nextTick();
+
+		await wrapper.get('input[type="date"]').setValue('2027-01-01');
+
+		expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({
+			rrule: 'FREQ=WEEKLY;INTERVAL=1;BYDAY=FR;UNTIL=20270101T235900Z',
+		});
+	});
+});
+
+describe('ScheduleField custom-rule fallback', () => {
+	it('shows an unparseable existing rrule as a read-only custom rule', () => {
+		const wrapper = mountField({
+			start: '2026-08-21T09:00',
+			rrule: 'FREQ=MONTHLY;BYMONTHDAY=15,20',
+		});
+
+		expect(wrapper.text()).toContain('FREQ=MONTHLY;BYMONTHDAY=15,20');
+	});
+
+	it('leaves a custom rule untouched when an unrelated field changes', async () => {
+		const wrapper = mountField({
+			start: '2026-08-21T09:00',
+			rrule: 'FREQ=MONTHLY;BYMONTHDAY=15,20',
+		});
+
+		await wrapper.get('input[type="datetime-local"]').setValue('2026-08-22T10:00');
+
+		expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({
+			rrule: 'FREQ=MONTHLY;BYMONTHDAY=15,20',
+		});
+	});
+});
