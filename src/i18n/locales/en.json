@@ -60,6 +60,14 @@
 				"endAfterCount": "{n} time | {n} times",
 				"endUntil": "until {date}"
 			}
+		},
+		"completions": {
+			"label": "Completions",
+			"markDone": "Mark done",
+			"markPending": "Mark not done",
+			"skip": "Skip",
+			"unskip": "Un-skip",
+			"doneCount": "{n} time done | {n} times done"
 		}
 	},
 	"form": {

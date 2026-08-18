@@ -60,6 +60,14 @@
 				"endAfterCount": "{n} raz | {n} razy | {n} razy",
 				"endUntil": "do {date}"
 			}
+		},
+		"completions": {
+			"label": "Wykonania",
+			"markDone": "Oznacz jako wykonane",
+			"markPending": "Cofnij wykonanie",
+			"skip": "Pomiń",
+			"unskip": "Cofnij pominięcie",
+			"doneCount": "Wykonano {n} raz | Wykonano {n} razy | Wykonano {n} razy"
 		}
 	},
 	"form": {
