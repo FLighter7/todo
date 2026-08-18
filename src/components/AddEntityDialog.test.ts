@@ -87,6 +87,33 @@ describe('AddEntityDialog saving a task', () => {
 			[{ name: 'Do Duolingo', note: undefined, important: true, urgent: false, goalId: 'goal-1' }],
 		]);
 	});
+
+	it('emits save-task with a schedule when one is set', async () => {
+		const wrapper = mountDialog('task');
+
+		await wrapper.get('input').setValue('Water plants');
+		await wrapper.findAll('input[type="checkbox"]')[2].setValue(true); // has a schedule
+		await wrapper.get('input[type="datetime-local"]').setValue('2026-08-21T09:00');
+		await clickButtonByText(wrapper, 'Save');
+
+		expect(wrapper.emitted('save-task')).toEqual([
+			[
+				{
+					name: 'Water plants',
+					note: undefined,
+					important: false,
+					urgent: false,
+					goalId: undefined,
+					schedule: {
+						start: '2026-08-21T09:00',
+						tzid: undefined,
+						duration: undefined,
+						rrule: undefined,
+					},
+				},
+			],
+		]);
+	});
 });
 
 describe('AddEntityDialog tab switching', () => {

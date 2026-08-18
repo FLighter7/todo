@@ -70,6 +70,7 @@
 						item-value="value"
 						:label="t('task.goalLabel')"
 					/>
+					<schedule-field v-model="taskSchedule" />
 				</template>
 			</v-card-text>
 
@@ -88,7 +89,8 @@ import type { DreamDraft } from '@/stores/dreams';
 import type { GoalDraft } from '@/stores/goals';
 import type { TaskDraft } from '@/stores/tasks';
 import DeadlineField from './DeadlineField.vue';
-import type { Deadline } from '@/types';
+import ScheduleField from './ScheduleField.vue';
+import type { Deadline, Schedule } from '@/types';
 
 const props = defineProps<{
 	defaultTab: 'dream' | 'goal' | 'task';
@@ -122,6 +124,7 @@ const taskNote = ref('');
 const taskImportant = ref(false);
 const taskUrgent = ref(false);
 const taskGoalId = ref('');
+const taskSchedule = ref<Schedule | undefined>(undefined);
 
 const goalDreamSelectItems = computed(() => [
 	{ value: '', title: t('goal.noDream') },
@@ -160,6 +163,7 @@ watch(open, (isOpen) => {
 	taskImportant.value = false;
 	taskUrgent.value = false;
 	taskGoalId.value = '';
+	taskSchedule.value = undefined;
 });
 
 function onSave(): void {
@@ -207,6 +211,7 @@ function onSave(): void {
 		important: taskImportant.value,
 		urgent: taskUrgent.value,
 		goalId: taskGoalId.value === '' ? undefined : taskGoalId.value,
+		schedule: taskSchedule.value,
 	});
 	open.value = false;
 }
