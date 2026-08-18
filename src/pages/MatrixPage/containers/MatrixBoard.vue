@@ -30,7 +30,7 @@
 		<task-dialog
 			v-model="dialogOpen"
 			mode="add"
-			:initial="initialDraft"
+			:initial-flags="initialFlags"
 			:goal-options="goalOptions"
 			@save="store.add($event)"
 		/>
@@ -49,19 +49,13 @@ import TaskDialog from '@/components/TaskDialog.vue';
 import { useGoalsStore } from '@/stores/goals';
 import TaskQuadrant from '../TaskQuadrant.vue';
 import { Status } from '@/types';
-import {
-	QUADRANT_KEYS,
-	quadrantFlags,
-	useTasksStore,
-	type QuadrantKey,
-	type TaskDraft,
-} from '@/stores/tasks';
+import { QUADRANT_KEYS, quadrantFlags, useTasksStore, type QuadrantKey } from '@/stores/tasks';
 
 const store = useTasksStore();
 const goals = useGoalsStore();
 
 const dialogOpen = ref(false);
-const initialDraft = ref<Partial<TaskDraft>>({});
+const initialFlags = ref<{ important: boolean; urgent: boolean } | undefined>(undefined);
 
 const goalOptions = computed(() =>
 	goals.active.map((goal) => ({ value: goal.id, title: goal.name })),
@@ -75,7 +69,7 @@ const quadrantMeta: Record<QuadrantKey, { icon: string; accent?: boolean }> = {
 };
 
 function openFor(quadrant: QuadrantKey): void {
-	initialDraft.value = quadrantFlags(quadrant);
+	initialFlags.value = quadrantFlags(quadrant);
 	dialogOpen.value = true;
 }
 </script>

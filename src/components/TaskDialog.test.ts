@@ -68,6 +68,22 @@ describe('TaskDialog add mode', () => {
 			[{ name: 'Buy milk', note: undefined, important: false, urgent: false, goalId: undefined }],
 		]);
 	});
+
+	it('pre-flags the important switch from initialFlags when there is no record', () => {
+		const wrapper = mount(TaskDialog, {
+			props: {
+				modelValue: true,
+				mode: 'add',
+				initialFlags: { important: true, urgent: false },
+				goalOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		const checkboxes = wrapper.findAll('input[type="checkbox"]');
+		expect((checkboxes[0].element as HTMLInputElement).checked).toBe(true);
+		expect((checkboxes[1].element as HTMLInputElement).checked).toBe(false);
+	});
 });
 
 describe('TaskDialog goal picker', () => {

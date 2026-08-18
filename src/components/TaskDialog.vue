@@ -83,10 +83,11 @@ const FUTURE_WINDOW = 5;
 const props = withDefaults(
 	defineProps<{
 		record?: Task | null;
+		initialFlags?: { important: boolean; urgent: boolean };
 		mode?: 'add' | 'edit';
 		goalOptions: Array<{ value: string; title: string }>;
 	}>(),
-	{ record: null, mode: 'edit' },
+	{ record: null, initialFlags: undefined, mode: 'edit' },
 );
 
 const emit = defineEmits<{
@@ -177,8 +178,8 @@ watch(
 
 		name.value = props.record?.name ?? '';
 		note.value = props.record?.note ?? '';
-		important.value = props.record?.important ?? false;
-		urgent.value = props.record?.urgent ?? false;
+		important.value = props.record?.important ?? props.initialFlags?.important ?? false;
+		urgent.value = props.record?.urgent ?? props.initialFlags?.urgent ?? false;
 		goalId.value = props.record?.goalId ?? '';
 		schedule.value = props.record?.schedule;
 		showErrors.value = false;
