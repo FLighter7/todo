@@ -27,7 +27,18 @@
 		"title": "Zadanie",
 		"goalLabel": "Cel",
 		"noGoal": "Bez celu",
-		"empty": "Brak zadań. Dodaj pierwsze."
+		"empty": "Brak zadań. Dodaj pierwsze.",
+		"schedule": {
+			"recurrence": {
+				"daily": "Codziennie | Co {n} dni | Co {n} dni",
+				"weekly": "Co tydzień | Co {n} tygodnie | Co {n} tygodni",
+				"monthly": "Co miesiąc | Co {n} miesiące | Co {n} miesięcy",
+				"yearly": "Co rok | Co {n} lata | Co {n} lat",
+				"onDays": "w {days}",
+				"endAfterCount": "{n} raz | {n} razy | {n} razy",
+				"endUntil": "do {date}"
+			}
+		}
 	},
 	"form": {
 		"add": "Nowe zadanie",

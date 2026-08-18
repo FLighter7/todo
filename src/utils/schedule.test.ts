@@ -1,11 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import {
 	buildRRule,
 	durationBetween,
 	endTimeFromDuration,
 	formatWallClock,
 	parseRRule,
+	describeRecurrence,
+	weekdayName,
 } from './schedule';
+import { i18n } from '@/i18n';
+
+const t = i18n.global.t;
+const originalLocale = i18n.global.locale.value;
 
 describe('buildRRule / parseRRule round-trip', () => {
 	it('round-trips daily, never-ending, interval 1', () => {
@@ -124,5 +130,111 @@ describe('formatWallClock', () => {
 
 	it('formats in a different locale', () => {
 		expect(formatWallClock('2026-08-21T09:00', 'ru')).toBe('21 авг. 2026 г., 09:00');
+	});
+});
+
+describe('describeRecurrence', () => {
+	beforeEach(() => {
+		i18n.global.locale.value = 'en';
+	});
+
+	afterEach(() => {
+		i18n.global.locale.value = originalLocale;
+	});
+
+	it('describes a plain daily rule', () => {
+		expect(
+			describeRecurrence({ freq: 'daily', interval: 1, end: { type: 'never' } }, t, 'en'),
+		).toBe('Every day');
+	});
+
+	it('pluralizes the interval in English', () => {
+		expect(
+			describeRecurrence({ freq: 'daily', interval: 3, end: { type: 'never' } }, t, 'en'),
+		).toBe('Every 3 days');
+	});
+
+	it('pluralizes the interval in Russian across all three forms', () => {
+		i18n.global.locale.value = 'ru';
+		expect(
+			describeRecurrence(
+				{ freq: 'weekly', interval: 1, byweekday: [5], end: { type: 'never' } },
+				t,
+				'ru',
+			),
+		).toBe('Каждую неделю, по пт');
+		expect(
+			describeRecurrence(
+				{ freq: 'weekly', interval: 2, byweekday: [5], end: { type: 'never' } },
+				t,
+				'ru',
+			),
+		).toBe('Каждые 2 недели, по пт');
+		expect(
+			describeRecurrence(
+				{ freq: 'weekly', interval: 5, byweekday: [5], end: { type: 'never' } },
+				t,
+				'ru',
+			),
+		).toBe('Каждые 5 недель, по пт');
+	});
+
+	it('lists multiple weekdays in ISO order', () => {
+		expect(
+			describeRecurrence(
+				{ freq: 'weekly', interval: 1, byweekday: [5, 1, 3], end: { type: 'never' } },
+				t,
+				'en',
+			),
+		).toBe('Every week, on Mon, Wed, Fri');
+	});
+
+	it('appends an occurrence count, pluralized', () => {
+		expect(
+			describeRecurrence(
+				{ freq: 'monthly', interval: 1, end: { type: 'count', count: 1 } },
+				t,
+				'en',
+			),
+		).toBe('Every month, 1 time');
+		expect(
+			describeRecurrence(
+				{ freq: 'monthly', interval: 1, end: { type: 'count', count: 6 } },
+				t,
+				'en',
+			),
+		).toBe('Every month, 6 times');
+	});
+
+	it('appends an until date', () => {
+		expect(
+			describeRecurrence(
+				{ freq: 'yearly', interval: 1, end: { type: 'until', until: '2030-06-15' } },
+				t,
+				'en',
+			),
+		).toBe('Every year, until Jun 15, 2030');
+	});
+});
+
+describe('weekdayName', () => {
+	beforeEach(() => {
+		i18n.global.locale.value = 'en';
+	});
+
+	afterEach(() => {
+		i18n.global.locale.value = originalLocale;
+	});
+
+	it('reads back short weekday names in order, regardless of the current date', () => {
+		expect([1, 2, 3, 4, 5, 6, 7].map((iso) => weekdayName(iso, 'en'))).toEqual([
+			'Mon',
+			'Tue',
+			'Wed',
+			'Thu',
+			'Fri',
+			'Sat',
+			'Sun',
+		]);
 	});
 });

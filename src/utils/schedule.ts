@@ -180,3 +180,59 @@ export function formatWallClock(wallClock: string, locale: string): string {
 		timeZone: 'UTC',
 	}).format(date);
 }
+
+type Translate = (
+	key: string,
+	named?: Record<string, unknown>,
+	options?: { plural?: number },
+) => string;
+
+const FREQ_KEYS: Record<RecurrenceRule['freq'], string> = {
+	daily: 'task.schedule.recurrence.daily',
+	weekly: 'task.schedule.recurrence.weekly',
+	monthly: 'task.schedule.recurrence.monthly',
+	yearly: 'task.schedule.recurrence.yearly',
+};
+
+/** ISO weekday numbers, 1=Mon..7=Sun. 2000-01-03 is a Monday -- a stable
+ *  anchor for reading weekday names back out regardless of today's date. */
+export function weekdayName(iso: number, locale: string): string {
+	const date = new Date(Date.UTC(2000, 0, 3 + (iso - 1)));
+	return new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' }).format(date);
+}
+
+function formatUntilDate(until: string, locale: string): string {
+	const [year, month, day] = until.split('-').map(Number);
+	return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' }).format(
+		new Date(Date.UTC(year, month - 1, day)),
+	);
+}
+
+export function describeRecurrence(rule: RecurrenceRule, t: Translate, locale: string): string {
+	const parts = [t(FREQ_KEYS[rule.freq], { n: rule.interval }, { plural: rule.interval })];
+
+	if (rule.freq === 'weekly' && rule.byweekday !== undefined && rule.byweekday.length > 0) {
+		const days = rule.byweekday
+			.slice()
+			.sort((a, b) => a - b)
+			.map((iso) => weekdayName(iso, locale))
+			.join(', ');
+		parts.push(t('task.schedule.recurrence.onDays', { days }));
+	}
+
+	if (rule.end.type === 'count') {
+		parts.push(
+			t(
+				'task.schedule.recurrence.endAfterCount',
+				{ n: rule.end.count },
+				{ plural: rule.end.count },
+			),
+		);
+	} else if (rule.end.type === 'until') {
+		parts.push(
+			t('task.schedule.recurrence.endUntil', { date: formatUntilDate(rule.end.until, locale) }),
+		);
+	}
+
+	return parts.join(', ');
+}

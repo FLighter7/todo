@@ -27,7 +27,18 @@
 		"title": "Task",
 		"goalLabel": "Goal",
 		"noGoal": "No goal",
-		"empty": "No tasks yet. Add the first one."
+		"empty": "No tasks yet. Add the first one.",
+		"schedule": {
+			"recurrence": {
+				"daily": "Every day | Every {n} days",
+				"weekly": "Every week | Every {n} weeks",
+				"monthly": "Every month | Every {n} months",
+				"yearly": "Every year | Every {n} years",
+				"onDays": "on {days}",
+				"endAfterCount": "{n} time | {n} times",
+				"endUntil": "until {date}"
+			}
+		}
 	},
 	"form": {
 		"add": "Add task",
