@@ -125,15 +125,18 @@ export function parseRRule(rrule: string): RecurrenceRule | undefined {
 		byweekday = days.map((day) => (day as Weekday).weekday + 1);
 	}
 
-	if (opts.count !== undefined && opts.until !== undefined) {
+	const count = opts.count ?? undefined;
+	const until = opts.until ?? undefined;
+
+	if (count !== undefined && until !== undefined) {
 		return undefined;
 	}
 
 	const end: RecurrenceRule['end'] =
-		opts.count !== undefined
-			? { type: 'count', count: opts.count }
-			: opts.until !== undefined
-				? { type: 'until', until: rruleDateToUntil(opts.until) }
+		count !== undefined
+			? { type: 'count', count }
+			: until !== undefined
+				? { type: 'until', until: rruleDateToUntil(until) }
 				: { type: 'never' };
 
 	return { freq, interval: opts.interval ?? 1, byweekday, end };
