@@ -5,7 +5,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
-import { Status, type Goal, type Task } from '@/types';
+import { Status, type Goal, type Schedule, type Task } from '@/types';
 import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
@@ -170,5 +170,19 @@ describe('TaskList tabs', () => {
 
 		expect(wrapper.text()).not.toContain('Open task');
 		expect(wrapper.text()).toContain('Done task');
+	});
+});
+
+describe('TaskList schedule', () => {
+	it('preserves an existing schedule when an unrelated field is edited', async () => {
+		const schedule: Schedule = { start: '2026-08-21T09:00' };
+		const { wrapper, tasksStore } = await mountWithData([], [makeTask({ schedule })]);
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		await wrapper.get('input').setValue('Do Duolingo (updated)');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(tasksStore.records[0].schedule).toEqual(schedule);
 	});
 });

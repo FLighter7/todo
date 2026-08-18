@@ -88,8 +88,8 @@ const initialDraft = computed<Partial<TaskDraft>>(() => {
 		return {};
 	}
 
-	const { name, note, important, urgent, goalId } = editing.value;
-	return { name, note, important, urgent, goalId };
+	const { name, note, important, urgent, goalId, schedule } = editing.value;
+	return { name, note, important, urgent, goalId, schedule };
 });
 
 const goalOptions = computed(() => {
