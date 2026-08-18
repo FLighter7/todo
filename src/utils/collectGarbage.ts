@@ -70,3 +70,24 @@ export function pruneCompletions(task: Task, windowDays: number, now: Date): Tas
 
 	return { ...task, completions };
 }
+
+/**
+ * `schedule.exdate` grows the same way `completions` used to before
+ * `pruneCompletions` existed -- skipping an occurrence writes to it, and a
+ * long-running daily/weekly task with active skipping would otherwise grow
+ * it without bound. Pruned by the excluded date itself, the same `cleanupDays`
+ * window `pruneCompletions` already uses.
+ */
+export function pruneExdate(task: Task, windowDays: number, now: Date): Task {
+	if (task.schedule?.exdate === undefined) {
+		return { ...task };
+	}
+
+	const cutoff = now.getTime() - windowDays * MS_PER_DAY;
+	const exdate = task.schedule.exdate.filter((entry) => Date.parse(entry) >= cutoff);
+
+	return {
+		...task,
+		schedule: { ...task.schedule, exdate: exdate.length > 0 ? exdate : undefined },
+	};
+}

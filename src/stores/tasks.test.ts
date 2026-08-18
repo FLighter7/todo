@@ -248,6 +248,38 @@ describe('useTasksStore load pruning', () => {
 
 		expect(putIds).toEqual([]);
 	});
+
+	it('drops a stale exdate entry on load, alongside completions pruning', async () => {
+		const task = makeTask({
+			schedule: {
+				start: '2026-08-07T09:00',
+				rrule: 'FREQ=WEEKLY;BYDAY=FR',
+				exdate: [daysAgo(400), daysAgo(1)],
+			},
+		});
+		const { storage } = spyingRepository([task]);
+		const store = useTasksStore();
+
+		await store.load(async () => storage);
+
+		expect(store.records[0].schedule?.exdate).toEqual([task.schedule!.exdate![1]]);
+	});
+
+	it('does not rewrite a task to storage when neither completions nor exdate were pruned', async () => {
+		const task = makeTask({
+			schedule: {
+				start: '2026-08-07T09:00',
+				rrule: 'FREQ=WEEKLY;BYDAY=FR',
+				exdate: [daysAgo(1)],
+			},
+		});
+		const { storage, putIds } = spyingRepository([task]);
+		const store = useTasksStore();
+
+		await store.load(async () => storage);
+
+		expect(putIds).toEqual([]);
+	});
 });
 
 describe('useTasksStore groupedByGoal', () => {

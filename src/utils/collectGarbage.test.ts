@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Status, type EntityBase, type Task } from '@/types';
-import { collectGarbage, pruneCompletions } from './collectGarbage';
+import { collectGarbage, pruneCompletions, pruneExdate } from './collectGarbage';
 
 const NOW = new Date('2026-08-16T12:00:00.000Z');
 
@@ -158,6 +158,86 @@ describe('pruneCompletions', () => {
 		const copy = structuredClone(task);
 
 		pruneCompletions(task, 30, NOW);
+
+		expect(task).toEqual(copy);
+	});
+});
+
+describe('pruneExdate', () => {
+	it('returns the task untouched when it has no schedule', () => {
+		const task = makeTask();
+
+		expect(pruneExdate(task, 30, NOW)).toEqual(task);
+	});
+
+	it('returns the task untouched when the schedule has no exdate', () => {
+		const task = makeTask({
+			schedule: { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' },
+		});
+
+		expect(pruneExdate(task, 30, NOW)).toEqual(task);
+	});
+
+	it('keeps exdate entries inside the window and drops entries past it', () => {
+		const task = makeTask({
+			schedule: {
+				start: '2026-08-07T09:00',
+				rrule: 'FREQ=WEEKLY;BYDAY=FR',
+				exdate: ['2026-01-01T09:00', '2026-08-10T09:00'],
+			},
+		});
+
+		expect(pruneExdate(task, 30, NOW).schedule?.exdate).toEqual(['2026-08-10T09:00']);
+	});
+
+	it('treats an exdate entry exactly on the cutoff as inside the window', () => {
+		const task = makeTask({
+			schedule: {
+				start: '2026-08-07T09:00',
+				rrule: 'FREQ=WEEKLY;BYDAY=FR',
+				exdate: [daysBefore(30)],
+			},
+		});
+
+		expect(pruneExdate(task, 30, NOW).schedule?.exdate).toHaveLength(1);
+	});
+
+	it('clears exdate to undefined once every entry is pruned', () => {
+		const task = makeTask({
+			schedule: {
+				start: '2026-08-07T09:00',
+				rrule: 'FREQ=WEEKLY;BYDAY=FR',
+				exdate: ['2026-01-01T09:00'],
+			},
+		});
+
+		expect(pruneExdate(task, 30, NOW).schedule?.exdate).toBeUndefined();
+	});
+
+	it('never moves updated', () => {
+		const task = makeTask({
+			updated: daysBefore(200),
+			schedule: {
+				start: '2026-08-07T09:00',
+				rrule: 'FREQ=WEEKLY;BYDAY=FR',
+				exdate: ['2026-01-01T09:00'],
+			},
+		});
+
+		expect(pruneExdate(task, 30, NOW).updated).toBe(task.updated);
+	});
+
+	it('does not mutate its input', () => {
+		const task = makeTask({
+			schedule: {
+				start: '2026-08-07T09:00',
+				rrule: 'FREQ=WEEKLY;BYDAY=FR',
+				exdate: ['2026-01-01T09:00'],
+			},
+		});
+		const copy = structuredClone(task);
+
+		pruneExdate(task, 30, NOW);
 
 		expect(task).toEqual(copy);
 	});

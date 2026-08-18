@@ -2,7 +2,7 @@ import { computed } from 'vue';
 import { defineStore, storeToRefs } from 'pinia';
 import { Status, parseTask, type Schedule, type Task } from '@/types';
 import { EntityDbRepository } from '@/repositories/EntityDbRepository';
-import { pruneCompletions } from '@/utils';
+import { pruneCompletions, pruneExdate } from '@/utils';
 import { defineEntityStore } from './createEntityStore';
 
 export interface TaskDraft {
@@ -58,14 +58,19 @@ const useBaseTasksStore = defineEntityStore<Task, TaskDraft>({
 		urgent: draft.urgent,
 		schedule: draft.schedule,
 	}),
-	// pruneCompletions always returns a fresh object, by contract — it must never
-	// alias its input. The store, though, uses reference identity to tell "nothing
-	// to prune" from "rewrite this record", so hand the original back when the
-	// marks came through untouched.
+	// Both prune functions always return a fresh object, by contract — neither
+	// may alias its input. The store, though, uses reference identity to tell
+	// "nothing to prune" from "rewrite this record", so hand the original back
+	// when neither completions nor exdate actually changed.
 	prune: (task, windowDays, now) => {
-		const pruned = pruneCompletions(task, windowDays, now);
+		const afterCompletions = pruneCompletions(task, windowDays, now);
+		const fullyPruned = pruneExdate(afterCompletions, windowDays, now);
 
-		return pruned.completions?.length === task.completions?.length ? task : pruned;
+		const unchanged =
+			fullyPruned.completions?.length === task.completions?.length &&
+			fullyPruned.schedule?.exdate?.length === task.schedule?.exdate?.length;
+
+		return unchanged ? task : fullyPruned;
 	},
 });
 
