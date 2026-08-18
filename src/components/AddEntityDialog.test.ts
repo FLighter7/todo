@@ -29,7 +29,7 @@ describe('AddEntityDialog saving a dream', () => {
 		const wrapper = mountDialog('dream');
 
 		await wrapper.get('input').setValue('  Visit Japan  ');
-		await wrapper.get('button[aria-label="Save"]').trigger('click');
+		await clickButtonByText(wrapper, 'Save');
 
 		expect(wrapper.emitted('save-dream')).toEqual([[{ name: 'Visit Japan', note: undefined }]]);
 		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([false]);
@@ -38,7 +38,7 @@ describe('AddEntityDialog saving a dream', () => {
 	it('blocks save and shows an error when the dream name is empty', async () => {
 		const wrapper = mountDialog('dream');
 
-		await wrapper.get('button[aria-label="Save"]').trigger('click');
+		await clickButtonByText(wrapper, 'Save');
 
 		expect(wrapper.emitted('save-dream')).toBeUndefined();
 		expect(wrapper.text()).toContain('Name is required');
@@ -52,7 +52,7 @@ describe('AddEntityDialog saving a goal', () => {
 		await wrapper.get('input').setValue('Learn Japanese');
 		const [select] = wrapper.findAllComponents({ name: 'VSelect' });
 		await select.vm.$emit('update:modelValue', 'dream-1');
-		await wrapper.get('button[aria-label="Save"]').trigger('click');
+		await clickButtonByText(wrapper, 'Save');
 
 		expect(wrapper.emitted('save-goal')).toEqual([
 			[{ name: 'Learn Japanese', note: undefined, dreamId: 'dream-1' }],
@@ -68,7 +68,7 @@ describe('AddEntityDialog saving a task', () => {
 		await wrapper.findAll('input[type="checkbox"]')[0].setValue(true); // important
 		const [select] = wrapper.findAllComponents({ name: 'VSelect' });
 		await select.vm.$emit('update:modelValue', 'goal-1');
-		await wrapper.get('button[aria-label="Save"]').trigger('click');
+		await clickButtonByText(wrapper, 'Save');
 
 		expect(wrapper.emitted('save-task')).toEqual([
 			[{ name: 'Do Duolingo', note: undefined, important: true, urgent: false, goalId: 'goal-1' }],
@@ -93,7 +93,7 @@ describe('AddEntityDialog tab switching', () => {
 
 		await wrapper.get('input').setValue('Visit Japan');
 		await clickButtonByText(wrapper, 'Task');
-		await wrapper.get('button[aria-label="Save"]').trigger('click');
+		await clickButtonByText(wrapper, 'Save');
 
 		expect(wrapper.text()).toContain('Name is required');
 		expect(wrapper.emitted('save-task')).toBeUndefined();

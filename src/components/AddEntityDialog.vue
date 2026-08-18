@@ -74,9 +74,7 @@
 
 			<v-card-actions>
 				<v-spacer />
-				<v-btn color="primary" variant="flat" aria-label="Save" @click="onSave">{{
-					t('form.save')
-				}}</v-btn>
+				<v-btn color="primary" variant="flat" @click="onSave">{{ t('form.save') }}</v-btn>
 			</v-card-actions>
 		</v-card>
 	</v-dialog>

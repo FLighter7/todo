@@ -16,7 +16,7 @@ export interface AppSettings {
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
-	general: { theme: 'system', locale: 'en', startPage: 'list', cleanupDays: 30 },
+	general: { theme: 'system', locale: 'en', startPage: 'tasks', cleanupDays: 30 },
 	dreams: { rows: 1, confirmDone: false, confirmReopen: false },
 	goals: { rows: 1, confirmDone: false, confirmReopen: false },
 	tasks: { rows: 1, confirmDone: false, confirmReopen: false },

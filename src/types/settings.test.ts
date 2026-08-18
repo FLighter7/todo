@@ -3,7 +3,7 @@ import { DEFAULT_SETTINGS, SettingsFormatError, parseSettings } from './settings
 
 function validRaw(): Record<string, unknown> {
 	return {
-		general: { theme: 'system', locale: 'en', startPage: 'list', cleanupDays: 30 },
+		general: { theme: 'system', locale: 'en', startPage: 'tasks', cleanupDays: 30 },
 		dreams: { rows: 1, confirmDone: false, confirmReopen: false },
 		goals: { rows: 1, confirmDone: false, confirmReopen: false },
 		tasks: { rows: 1, confirmDone: false, confirmReopen: false },
@@ -36,20 +36,23 @@ describe('parseSettings', () => {
 	it('rejects an invalid theme', () => {
 		const raw = {
 			...validRaw(),
-			general: { theme: 'blue', locale: 'en', startPage: 'list', cleanupDays: 30 },
+			general: { theme: 'blue', locale: 'en', startPage: 'tasks', cleanupDays: 30 },
 		};
 		expect(() => parseSettings(raw)).toThrow(/theme/);
 	});
 
 	it('rejects a missing locale', () => {
-		const raw = { ...validRaw(), general: { theme: 'system', startPage: 'list', cleanupDays: 30 } };
+		const raw = {
+			...validRaw(),
+			general: { theme: 'system', startPage: 'tasks', cleanupDays: 30 },
+		};
 		expect(() => parseSettings(raw)).toThrow(/locale/);
 	});
 
 	it('rejects an empty-string locale', () => {
 		const raw = {
 			...validRaw(),
-			general: { theme: 'system', locale: '', startPage: 'list', cleanupDays: 30 },
+			general: { theme: 'system', locale: '', startPage: 'tasks', cleanupDays: 30 },
 		};
 		expect(() => parseSettings(raw)).toThrow(/locale/);
 	});
@@ -65,7 +68,7 @@ describe('parseSettings', () => {
 	it('rejects a cleanupDays outside 30, 60, 90', () => {
 		const raw = {
 			...validRaw(),
-			general: { theme: 'system', locale: 'en', startPage: 'list', cleanupDays: 45 },
+			general: { theme: 'system', locale: 'en', startPage: 'tasks', cleanupDays: 45 },
 		};
 		expect(() => parseSettings(raw)).toThrow(/cleanupDays/);
 	});
