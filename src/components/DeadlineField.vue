@@ -18,6 +18,8 @@
 		<v-text-field
 			:model-value="yearInput"
 			type="number"
+			min="1"
+			max="9999"
 			:label="t('goal.deadline.year')"
 			@update:model-value="onYearInput"
 		/>
@@ -69,8 +71,31 @@ const month = ref<number>();
 const day = ref<number>();
 const season = ref<Season>();
 
+/**
+ * The last value this component itself wrote via `build()`. `syncFromValue`
+ * uses it to tell "the parent genuinely cleared the deadline" apart from
+ * "this is just an echo of what we ourselves just emitted" -- `build()`
+ * legitimately returns `undefined` while the toggle is on but the current
+ * precision's fields aren't complete yet (e.g. switching precision, or
+ * clearing the year to retype it), and that echo must not collapse the form.
+ */
+const lastEmitted = ref<Deadline | undefined>(undefined);
+
+function deadlinesEqual(a: Deadline | undefined, b: Deadline | undefined): boolean {
+	if (a === undefined || b === undefined) {
+		return a === b;
+	}
+
+	return a.year === b.year && a.month === b.month && a.day === b.day && a.season === b.season;
+}
+
 function syncFromValue(value: Deadline | undefined): void {
 	if (value === undefined) {
+		if (deadlinesEqual(value, lastEmitted.value)) {
+			// Our own incomplete-state echo, not a real external clear.
+			return;
+		}
+
 		hasDeadline.value = false;
 		return;
 	}
@@ -135,7 +160,9 @@ function build(): Deadline | undefined {
 }
 
 watch([hasDeadline, precision, year, month, day, season], () => {
-	deadline.value = build();
+	const next = build();
+	lastEmitted.value = next;
+	deadline.value = next;
 });
 
 const yearInput = computed(() => (year.value === undefined ? '' : String(year.value)));
@@ -148,7 +175,7 @@ function onYearInput(value: string): void {
 	}
 
 	const parsed = Number(trimmed);
-	year.value = Number.isNaN(parsed) ? undefined : parsed;
+	year.value = Number.isInteger(parsed) && parsed >= 1 && parsed <= 9999 ? parsed : undefined;
 }
 
 const precisionItems = computed(() => [

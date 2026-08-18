@@ -21,12 +21,24 @@ export function formatDeadline(
 	}
 
 	if (deadline.month !== undefined) {
-		const date = new Date(deadline.year ?? PLACEHOLDER_YEAR, deadline.month - 1, deadline.day ?? 1);
-		return new Intl.DateTimeFormat(locale, {
+		// Always build the Date with day 1: JS's Date constructor silently
+		// rolls an out-of-range day into the next month (e.g. 29 February on
+		// a non-leap year becomes 1 March), which would corrupt the month
+		// this formats. Day 1 always exists, so the month/year parts stay
+		// correct; the real day number is substituted in afterwards.
+		const date = new Date(deadline.year ?? PLACEHOLDER_YEAR, deadline.month - 1, 1);
+		const formatter = new Intl.DateTimeFormat(locale, {
 			day: deadline.day === undefined ? undefined : 'numeric',
 			month: 'long',
 			year: deadline.year === undefined ? undefined : 'numeric',
-		}).format(date);
+		});
+
+		return formatter
+			.formatToParts(date)
+			.map((part) =>
+				part.type === 'day' && deadline.day !== undefined ? String(deadline.day) : part.value,
+			)
+			.join('');
 	}
 
 	return String(deadline.year);

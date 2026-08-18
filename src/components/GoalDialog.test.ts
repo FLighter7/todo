@@ -1,11 +1,15 @@
 // @vitest-environment happy-dom
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { mount } from '@vue/test-utils';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import GoalDialog from './GoalDialog.vue';
 
 const dreamOptions = [{ value: 'dream-1', title: 'Visit Japan' }];
+
+beforeEach(() => {
+	i18n.global.locale.value = 'en';
+});
 
 describe('GoalDialog add mode', () => {
 	it('emits a draft including the picked dream', async () => {
@@ -140,5 +144,64 @@ describe('GoalDialog deadline', () => {
 		});
 
 		expect(wrapper.text()).toContain('March 2027');
+	});
+
+	it('keeps the deadline switch on when switching precision away from year', async () => {
+		const wrapper = mount(GoalDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				initial: { name: 'Learn Japanese', deadline: { year: 2027 } },
+				dreamOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		// Select order: the dream picker, then DeadlineField's precision select.
+		const [, precisionSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		await precisionSelect.vm.$emit('update:modelValue', 'day');
+		await wrapper.vm.$nextTick();
+
+		expect(wrapper.get('input[type="checkbox"]').element).toHaveProperty('checked', true);
+
+		const selects = wrapper.findAllComponents({ name: 'VSelect' });
+		const [, , monthSelect, daySelect] = selects;
+		await monthSelect.vm.$emit('update:modelValue', 3);
+		await daySelect.vm.$emit('update:modelValue', 15);
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(wrapper.emitted('save')).toEqual([
+			[
+				{
+					name: 'Learn Japanese',
+					note: undefined,
+					dreamId: undefined,
+					deadline: { year: 2027, month: 3, day: 15 },
+				},
+			],
+		]);
+	});
+
+	it('resets the deadline switch off when reopening on a goal with no deadline', async () => {
+		const wrapper = mount(GoalDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				initial: { name: 'Learn Japanese', deadline: { year: 2027 } },
+				dreamOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		expect(wrapper.get('input[type="checkbox"]').element).toHaveProperty('checked', true);
+
+		// Close without saving, then reopen on a different goal with no deadline.
+		await wrapper.setProps({ modelValue: false });
+		await wrapper.setProps({ initial: { name: 'Different goal' }, modelValue: true });
+
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		expect(wrapper.get('input[type="checkbox"]').element).toHaveProperty('checked', false);
 	});
 });
