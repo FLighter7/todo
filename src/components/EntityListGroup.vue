@@ -3,7 +3,7 @@
 	border: 1px solid rgb(var(--v-theme-outline));
 	border-radius: 4px;
 	padding: 0;
-	margin: 0 0 1rem;
+	margin: 0;
 }
 
 .legend {
