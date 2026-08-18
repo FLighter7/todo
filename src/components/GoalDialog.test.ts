@@ -87,3 +87,58 @@ describe('GoalDialog edit mode', () => {
 		expect(select.props('modelValue')).toBe('closed-dream');
 	});
 });
+
+describe('GoalDialog deadline', () => {
+	it('round-trips an existing deadline back out unchanged', async () => {
+		const wrapper = mount(GoalDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				initial: { name: 'Learn Japanese', deadline: { year: 2027 } },
+				dreamOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(wrapper.emitted('save')).toEqual([
+			[{ name: 'Learn Japanese', note: undefined, dreamId: undefined, deadline: { year: 2027 } }],
+		]);
+	});
+
+	it('emits deadline undefined after the deadline switch is turned off', async () => {
+		const wrapper = mount(GoalDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				initial: { name: 'Learn Japanese', deadline: { year: 2027 } },
+				dreamOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		await wrapper.get('input[type="checkbox"]').setValue(false);
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(wrapper.emitted('save')).toEqual([
+			[{ name: 'Learn Japanese', note: undefined, dreamId: undefined, deadline: undefined }],
+		]);
+	});
+
+	it('shows the formatted deadline in the read-only view', () => {
+		const wrapper = mount(GoalDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				initial: { name: 'Learn Japanese', deadline: { year: 2027, month: 3 } },
+				dreamOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		expect(wrapper.text()).toContain('March 2027');
+	});
+});

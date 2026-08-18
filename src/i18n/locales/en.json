@@ -134,6 +134,7 @@
 		"noDream": "No dream",
 		"empty": "No goals yet.",
 		"deadline": {
+			"label": "Deadline",
 			"enabled": "Has a deadline",
 			"precision": "Precision",
 			"precisionDay": "Exact day",

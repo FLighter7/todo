@@ -134,6 +134,7 @@
 		"noDream": "Bez marzenia",
 		"empty": "Brak celów.",
 		"deadline": {
+			"label": "Termin",
 			"enabled": "Ma termin",
 			"precision": "Dokładność",
 			"precisionDay": "Dokładny dzień",

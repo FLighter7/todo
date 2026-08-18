@@ -134,6 +134,7 @@
 		"noDream": "Без мечты",
 		"empty": "Пока нет целей.",
 		"deadline": {
+			"label": "Дедлайн",
 			"enabled": "Есть дедлайн",
 			"precision": "Точность",
 			"precisionDay": "Точный день",
