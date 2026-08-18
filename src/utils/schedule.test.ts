@@ -255,7 +255,7 @@ describe('nextOccurrence, floating (no tzid)', () => {
 
 	it('is inclusive: "from" landing exactly on an occurrence returns that occurrence', () => {
 		const schedule: Schedule = { start: '2026-08-21T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
-		const from = new Date(Date.UTC(2026, 7, 21, 9, 0) + new Date().getTimezoneOffset() * 60_000);
+		const from = new Date(2026, 7, 21, 9, 0);
 
 		expect(nextOccurrence(schedule, from)?.start).toBe('2026-08-21T09:00');
 	});
@@ -295,6 +295,36 @@ describe('nextOccurrence, anchored to a tzid', () => {
 			start: '2026-02-27T09:00',
 			tzid: 'America/New_York',
 			rrule: 'FREQ=WEEKLY;BYDAY=FR;COUNT=4',
+		};
+
+		const results = [
+			new Date('2026-02-20T00:00:00Z'),
+			new Date('2026-03-01T00:00:00Z'),
+			new Date('2026-03-08T00:00:00Z'),
+			new Date('2026-03-15T00:00:00Z'),
+		].map((from) => nextOccurrence(schedule, from)?.start);
+
+		expect(results).toEqual([
+			'2026-02-27T09:00',
+			'2026-03-06T09:00',
+			'2026-03-13T09:00',
+			'2026-03-20T09:00',
+		]);
+	});
+
+	it('ignores a DTSTART;TZID line embedded in the rrule string, using schedule.tzid/schedule.start instead', () => {
+		// A hand-edited or imported record could carry a DTSTART;TZID line
+		// inside schedule.rrule even though this app's own writers never
+		// produce one (Schedule.rrule is "RRULE without the prefix", and
+		// dtstart lives in Schedule.start). If RRule.parseString's leaked
+		// tzid/dtstart reached RRule's own constructor unfiltered, every
+		// occurrence below would be corrupted by the Asia/Tokyo-vs-host-zone
+		// shift nextOccurrence's own comment documents -- the results must
+		// come out identical to the plain-rrule-string case above.
+		const schedule: Schedule = {
+			start: '2026-02-27T09:00',
+			tzid: 'America/New_York',
+			rrule: 'DTSTART;TZID=Asia/Tokyo:20260227T090000\nFREQ=WEEKLY;BYDAY=FR;COUNT=4',
 		};
 
 		const results = [

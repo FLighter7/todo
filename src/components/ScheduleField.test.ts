@@ -110,6 +110,23 @@ describe('ScheduleField existing value', () => {
 
 		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([undefined]);
 	});
+
+	it('preserves an existing exdate/rdate through an unrelated field change', async () => {
+		const wrapper = mountField({
+			start: '2026-08-21T09:00',
+			exdate: ['2026-08-28T09:00'],
+			rdate: ['2026-08-30T09:00'],
+		});
+
+		await wrapper.findAll('input[type="checkbox"]')[1].setValue(true); // hasEndTime
+		await wrapper.get('input[type="time"]').setValue('11:30');
+
+		const emitted = wrapper.emitted('update:modelValue')?.at(-1)?.[0];
+		expect(emitted).toMatchObject({
+			exdate: ['2026-08-28T09:00'],
+			rdate: ['2026-08-30T09:00'],
+		});
+	});
 });
 
 describe('ScheduleField repeat presets', () => {
@@ -152,6 +169,26 @@ describe('ScheduleField repeat presets', () => {
 		});
 	});
 
+	it('marks the last remaining checked weekday readonly so the DOM cannot desync from the guard', async () => {
+		const wrapper = mountField(undefined);
+
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+		await wrapper.get('input[type="datetime-local"]').setValue('2026-08-21T09:00');
+		const [repeatSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		await repeatSelect.vm.$emit('update:modelValue', 'weekly');
+		await wrapper.vm.$nextTick();
+
+		const dayCheckboxes = wrapper.findAllComponents({ name: 'VCheckbox' });
+		const checked = dayCheckboxes.filter((c) => c.props('modelValue') === true);
+		const unchecked = dayCheckboxes.filter((c) => c.props('modelValue') !== true);
+
+		expect(checked).toHaveLength(1);
+		expect(checked[0]?.props('readonly')).toBe(true);
+		for (const c of unchecked) {
+			expect(c.props('readonly')).toBeFalsy();
+		}
+	});
+
 	it('builds a monthly rule with a non-default interval', async () => {
 		const wrapper = mountField(undefined);
 
@@ -168,6 +205,54 @@ describe('ScheduleField repeat presets', () => {
 				tzid: undefined,
 				duration: undefined,
 				rrule: 'FREQ=MONTHLY;INTERVAL=3',
+			},
+		]);
+	});
+
+	it('rejects a negative interval instead of building an rrule that would hang', async () => {
+		const wrapper = mountField(undefined);
+
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+		await wrapper.get('input[type="datetime-local"]').setValue('2026-08-21T09:00');
+		const [repeatSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		await repeatSelect.vm.$emit('update:modelValue', 'daily');
+		await wrapper.vm.$nextTick();
+
+		await wrapper.get('input[type="number"]').setValue('-1');
+
+		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([undefined]);
+	});
+
+	it('rejects an emptied interval field instead of building an rrule that would hang', async () => {
+		const wrapper = mountField(undefined);
+
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+		await wrapper.get('input[type="datetime-local"]').setValue('2026-08-21T09:00');
+		const [repeatSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		await repeatSelect.vm.$emit('update:modelValue', 'daily');
+		await wrapper.vm.$nextTick();
+
+		await wrapper.get('input[type="number"]').setValue('');
+
+		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([undefined]);
+	});
+
+	it('defaults the weekday even when "Weekly" is picked before a start date is set', async () => {
+		const wrapper = mountField(undefined);
+
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+		const [repeatSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		await repeatSelect.vm.$emit('update:modelValue', 'weekly');
+		await wrapper.vm.$nextTick();
+
+		await wrapper.get('input[type="datetime-local"]').setValue('2026-08-21T09:00'); // a Friday
+
+		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([
+			{
+				start: '2026-08-21T09:00',
+				tzid: undefined,
+				duration: undefined,
+				rrule: 'FREQ=WEEKLY;INTERVAL=1;BYDAY=FR',
 			},
 		]);
 	});

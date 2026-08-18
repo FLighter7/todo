@@ -318,8 +318,19 @@ export function nextOccurrence(schedule: Schedule, from: Date): OccurrenceWindow
 		return undefined;
 	}
 
+	// `RRule.parseString` can surface `tzid`/`dtstart` from a `DTSTART;TZID=`
+	// line if one is present in `schedule.rrule` -- this app's own writers
+	// never produce that (`Schedule.rrule` is "RRULE without the prefix",
+	// dtstart lives in `Schedule.start`), but a hand-edited or imported
+	// record could. Never let either reach `RRule`'s constructor: `dtstart`
+	// is always derived from `schedule.start` below, and `tzid` is the exact
+	// trap `instantAsWallClockInZone`'s note above documents.
+	const parsedRRule: Partial<Options> = { ...RRule.parseString(schedule.rrule) };
+	delete parsedRRule.tzid;
+	delete parsedRRule.dtstart;
+
 	const rule = new RRule({
-		...RRule.parseString(schedule.rrule),
+		...parsedRRule,
 		dtstart: wallClockStringToDate(schedule.start),
 	});
 

@@ -60,6 +60,7 @@
 					:key="day.value"
 					:model-value="byweekday.includes(day.value)"
 					:label="day.title"
+					:readonly="byweekday.length === 1 && byweekday.includes(day.value)"
 					density="compact"
 					hide-details
 					@update:model-value="toggleWeekday(day.value)"
@@ -135,6 +136,8 @@ const endType = ref<EndType>('never');
 const count = ref(2);
 const until = ref('');
 const customRRule = ref<string>();
+const exdate = ref<string[]>();
+const rdate = ref<string[]>();
 
 /**
  * The last value this component itself wrote via `build()`. `syncFromValue`
@@ -158,6 +161,8 @@ function syncFromValue(value: Schedule | undefined): void {
 
 	hasSchedule.value = true;
 	start.value = value.start;
+	exdate.value = value.exdate;
+	rdate.value = value.rdate;
 
 	hasTzid.value = value.tzid !== undefined;
 	tzid.value = value.tzid;
@@ -223,6 +228,8 @@ function build(): Schedule | undefined {
 		tzid: hasTzid.value ? tzid.value : undefined,
 		duration,
 		rrule,
+		exdate: exdate.value,
+		rdate: rdate.value,
 	};
 }
 
@@ -233,6 +240,10 @@ function buildRRuleFromForm(): string | undefined | 'invalid' {
 
 	if (repeat.value === 'custom') {
 		return customRRule.value;
+	}
+
+	if (!Number.isInteger(Number(interval.value)) || Number(interval.value) < 1) {
+		return 'invalid';
 	}
 
 	if (repeat.value === 'weekly' && byweekday.value.length === 0) {
@@ -357,8 +368,8 @@ const preview = computed(() => {
 	return `${description} — ${t('task.schedule.nextOccurrence', { date: formatWallClock(next.start, locale.value) })}`;
 });
 
-watch(repeat, (value) => {
-	if (value === 'weekly' && byweekday.value.length === 0 && start.value !== '') {
+watch([repeat, start], () => {
+	if (repeat.value === 'weekly' && byweekday.value.length === 0 && start.value !== '') {
 		const startDate = new Date(`${start.value}:00Z`);
 		const isoWeekday = ((startDate.getUTCDay() + 6) % 7) + 1;
 		byweekday.value = [isoWeekday];
