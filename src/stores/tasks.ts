@@ -3,6 +3,7 @@ import { defineStore, storeToRefs } from 'pinia';
 import { Status, parseTask, type Schedule, type Task } from '@/types';
 import { EntityDbRepository } from '@/repositories/EntityDbRepository';
 import { pruneCompletions, pruneExdate } from '@/utils';
+import { isLastOccurrence } from '@/utils/schedule';
 import { defineEntityStore } from './createEntityStore';
 
 export interface TaskDraft {
@@ -145,6 +146,83 @@ export const useTasksStore = defineStore('tasksMatrix', () => {
 		closed: groupByGoal(closed.value),
 	}));
 
+	function findTask(id: string): Task | undefined {
+		return records.value.find((task) => task.id === id);
+	}
+
+	function applyLastOccurrenceStatus(
+		task: Task,
+		schedule: Task['schedule'],
+		occurrence: string,
+		resolved: boolean,
+	): Task['status'] {
+		if (schedule === undefined || !isLastOccurrence(schedule, occurrence)) {
+			return task.status;
+		}
+
+		if (resolved && task.status === Status.Opened) {
+			return Status.Done;
+		}
+		if (!resolved && task.status === Status.Done) {
+			return Status.Opened;
+		}
+
+		return task.status;
+	}
+
+	async function setOccurrenceDone(
+		taskId: string,
+		occurrence: string,
+		done: boolean,
+	): Promise<void> {
+		const task = findTask(taskId);
+		if (task === undefined || task.schedule === undefined) {
+			return;
+		}
+
+		const completions = (task.completions ?? []).filter((entry) => entry.occurrence !== occurrence);
+		completions.push({ occurrence, done, at: new Date().toISOString() });
+
+		const exdate = task.schedule.exdate?.filter((entry) => entry !== occurrence);
+		const schedule = {
+			...task.schedule,
+			exdate: exdate !== undefined && exdate.length > 0 ? exdate : undefined,
+		};
+
+		await store.update(taskId, {
+			completions,
+			schedule,
+			status: applyLastOccurrenceStatus(task, schedule, occurrence, done),
+		});
+	}
+
+	async function setOccurrenceSkipped(
+		taskId: string,
+		occurrence: string,
+		skipped: boolean,
+	): Promise<void> {
+		const task = findTask(taskId);
+		if (task === undefined || task.schedule === undefined) {
+			return;
+		}
+
+		const existing = task.schedule.exdate ?? [];
+		const exdate = skipped
+			? existing.includes(occurrence)
+				? existing
+				: [...existing, occurrence]
+			: existing.filter((entry) => entry !== occurrence);
+		const schedule = { ...task.schedule, exdate: exdate.length > 0 ? exdate : undefined };
+
+		const completions = (task.completions ?? []).filter((entry) => entry.occurrence !== occurrence);
+
+		await store.update(taskId, {
+			schedule,
+			completions,
+			status: applyLastOccurrenceStatus(task, schedule, occurrence, skipped),
+		});
+	}
+
 	return {
 		records,
 		active,
@@ -158,5 +236,7 @@ export const useTasksStore = defineStore('tasksMatrix', () => {
 		close: store.close,
 		reopen: store.reopen,
 		replaceAll: store.replaceAll,
+		setOccurrenceDone,
+		setOccurrenceSkipped,
 	};
 });

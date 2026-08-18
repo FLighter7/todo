@@ -282,6 +282,123 @@ describe('useTasksStore load pruning', () => {
 	});
 });
 
+describe('useTasksStore setOccurrenceDone / setOccurrenceSkipped', () => {
+	async function loadWithTask(overrides: Partial<Task> = {}) {
+		const task = makeTask({
+			schedule: { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR;COUNT=3' },
+			...overrides,
+		});
+		const store = useTasksStore();
+		await store.load(async () => new EntityMemoryRepository([task]));
+		return store;
+	}
+
+	it('writes a done completion and clears any exdate entry for that occurrence', async () => {
+		const store = await loadWithTask({
+			schedule: {
+				start: '2026-08-07T09:00',
+				rrule: 'FREQ=WEEKLY;BYDAY=FR;COUNT=3',
+				exdate: ['2026-08-14T09:00'],
+			},
+		});
+
+		await store.setOccurrenceDone('task-1', '2026-08-14T09:00', true);
+
+		const record = store.records[0];
+		expect(record.completions).toEqual([
+			expect.objectContaining({ occurrence: '2026-08-14T09:00', done: true }),
+		]);
+		expect(record.schedule?.exdate).toBeUndefined();
+	});
+
+	it('writes an explicit done: false completion, not a deletion, when unmarking', async () => {
+		const store = await loadWithTask();
+		await store.setOccurrenceDone('task-1', '2026-08-07T09:00', true);
+
+		await store.setOccurrenceDone('task-1', '2026-08-07T09:00', false);
+
+		expect(store.records[0].completions).toEqual([
+			expect.objectContaining({ occurrence: '2026-08-07T09:00', done: false }),
+		]);
+	});
+
+	it('adds the occurrence to exdate and clears any completion when skipping', async () => {
+		const store = await loadWithTask();
+		await store.setOccurrenceDone('task-1', '2026-08-07T09:00', true);
+
+		await store.setOccurrenceSkipped('task-1', '2026-08-07T09:00', true);
+
+		const record = store.records[0];
+		expect(record.schedule?.exdate).toEqual(['2026-08-07T09:00']);
+		expect(record.completions).toEqual([]);
+	});
+
+	it('removes the occurrence from exdate when un-skipping, writing no completion', async () => {
+		const store = await loadWithTask({
+			schedule: {
+				start: '2026-08-07T09:00',
+				rrule: 'FREQ=WEEKLY;BYDAY=FR;COUNT=3',
+				exdate: ['2026-08-07T09:00'],
+			},
+		});
+
+		await store.setOccurrenceSkipped('task-1', '2026-08-07T09:00', false);
+
+		const record = store.records[0];
+		expect(record.schedule?.exdate).toBeUndefined();
+		expect(record.completions ?? []).toEqual([]);
+	});
+
+	it('closes the task when the last occurrence of a bounded series is marked done', async () => {
+		const store = await loadWithTask();
+
+		await store.setOccurrenceDone('task-1', '2026-08-21T09:00', true);
+
+		expect(store.records[0].status).toBe(Status.Done);
+	});
+
+	it('reopens the task when the last occurrence is unmarked', async () => {
+		const store = await loadWithTask();
+		await store.setOccurrenceDone('task-1', '2026-08-21T09:00', true);
+
+		await store.setOccurrenceDone('task-1', '2026-08-21T09:00', false);
+
+		expect(store.records[0].status).toBe(Status.Opened);
+	});
+
+	it('closes the task when the last occurrence is skipped', async () => {
+		const store = await loadWithTask();
+
+		await store.setOccurrenceSkipped('task-1', '2026-08-21T09:00', true);
+
+		expect(store.records[0].status).toBe(Status.Done);
+	});
+
+	it('does not touch status when a non-last occurrence is marked done', async () => {
+		const store = await loadWithTask();
+
+		await store.setOccurrenceDone('task-1', '2026-08-07T09:00', true);
+
+		expect(store.records[0].status).toBe(Status.Opened);
+	});
+
+	it('never touches a Cancelled task, even on its last occurrence', async () => {
+		const store = await loadWithTask({ status: Status.Cancelled });
+
+		await store.setOccurrenceDone('task-1', '2026-08-21T09:00', true);
+
+		expect(store.records[0].status).toBe(Status.Cancelled);
+	});
+
+	it('moves updated once per call', async () => {
+		const store = await loadWithTask({ updated: '2026-08-06T10:00:00.000Z' });
+
+		await store.setOccurrenceDone('task-1', '2026-08-07T09:00', true);
+
+		expect(store.records[0].updated).not.toBe('2026-08-06T10:00:00.000Z');
+	});
+});
+
 describe('useTasksStore groupedByGoal', () => {
 	it('puts a goalless task in the ungrouped tail', async () => {
 		const store = useTasksStore();
