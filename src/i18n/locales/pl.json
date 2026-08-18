@@ -132,6 +132,12 @@
 		"title": "Cel",
 		"dreamLabel": "Marzenie",
 		"noDream": "Bez marzenia",
-		"empty": "Brak celów."
+		"empty": "Brak celów.",
+		"deadline": {
+			"seasonWinter": "Zima",
+			"seasonSpring": "Wiosna",
+			"seasonSummer": "Lato",
+			"seasonAutumn": "Jesień"
+		}
 	}
 }

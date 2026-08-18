@@ -132,6 +132,12 @@
 		"title": "Goal",
 		"dreamLabel": "Dream",
 		"noDream": "No dream",
-		"empty": "No goals yet."
+		"empty": "No goals yet.",
+		"deadline": {
+			"seasonWinter": "Winter",
+			"seasonSpring": "Spring",
+			"seasonSummer": "Summer",
+			"seasonAutumn": "Autumn"
+		}
 	}
 }

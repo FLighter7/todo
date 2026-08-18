@@ -132,6 +132,12 @@
 		"title": "Цель",
 		"dreamLabel": "Мечта",
 		"noDream": "Без мечты",
-		"empty": "Пока нет целей."
+		"empty": "Пока нет целей.",
+		"deadline": {
+			"seasonWinter": "Зима",
+			"seasonSpring": "Весна",
+			"seasonSummer": "Лето",
+			"seasonAutumn": "Осень"
+		}
 	}
 }
