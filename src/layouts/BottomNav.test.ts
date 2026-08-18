@@ -14,7 +14,7 @@ async function mountAt(path: string) {
 		routes: [
 			{ path: '/dreams', name: 'dreams', component: { template: '<div />' } },
 			{ path: '/goals', name: 'goals', component: { template: '<div />' } },
-			{ path: '/list', name: 'list', component: { template: '<div />' } },
+			{ path: '/tasks', name: 'tasks', component: { template: '<div />' } },
 			{ path: '/matrix', name: 'matrix', component: { template: '<div />' } },
 		],
 	});
@@ -30,7 +30,7 @@ describe('BottomNav', () => {
 
 		expect(wrapper.text()).toContain('Dreams');
 		expect(wrapper.text()).toContain('Goals');
-		expect(wrapper.text()).toContain('List');
+		expect(wrapper.text()).toContain('Tasks');
 		expect(wrapper.text()).toContain('Matrix');
 		expect(wrapper.findComponent({ name: 'QuickAddFab' }).exists()).toBe(true);
 	});

@@ -50,14 +50,14 @@
 		</div>
 
 		<v-btn
-			:to="{ name: 'list' }"
+			:to="{ name: 'tasks' }"
 			variant="text"
 			stacked
 			size="small"
 			:prepend-icon="mdiViewListOutline"
-			:color="route.name === 'list' ? 'primary' : undefined"
+			:color="route.name === 'tasks' ? 'primary' : undefined"
 		>
-			{{ t('nav.list') }}
+			{{ t('nav.tasks') }}
 		</v-btn>
 
 		<v-btn
