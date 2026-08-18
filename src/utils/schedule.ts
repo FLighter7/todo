@@ -498,7 +498,7 @@ export function listOccurrences(
 			.sort((a, b) => a.getTime() - b.getTime())
 			.filter((date, index, all) => index === 0 || date.getTime() !== all[index - 1].getTime());
 
-		return direction === 'after' ? merged.slice(0, count) : merged.slice(-count);
+		return direction === 'after' ? merged.slice(0, count) : count === 0 ? [] : merged.slice(-count);
 	}
 
 	const past = windowSide('before', pastCount);

@@ -507,6 +507,19 @@ describe('listOccurrences', () => {
 		]);
 	});
 
+	it('returns no past entries when pastCount is 0, even with a past rdate entry (slice(-0) pitfall)', () => {
+		const schedule: Schedule = {
+			start: '2026-08-07T09:00',
+			rrule: 'FREQ=WEEKLY;BYDAY=FR',
+			rdate: ['2026-08-01T09:00'],
+		};
+		const from = new Date('2026-08-08T00:00:00Z');
+
+		const entries = listOccurrences(schedule, undefined, from, 0, 2);
+
+		expect(entries.map((entry) => entry.start)).toEqual(['2026-08-14T09:00', '2026-08-21T09:00']);
+	});
+
 	it('reads state from completions: an explicit done: false entry is still pending', () => {
 		const schedule: Schedule = { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
 		const completions: Completion[] = [
