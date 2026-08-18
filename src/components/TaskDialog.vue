@@ -40,12 +40,16 @@
 					item-value="value"
 					:label="t('task.goalLabel')"
 				/>
+				<schedule-field v-model="schedule" />
 			</template>
 			<template v-else>
 				<div class="text-h6">{{ name }}</div>
 				<p v-if="note" class="text-body-2 mt-2">{{ note }}</p>
 				<p v-if="goalName" class="text-body-2 mt-2 text-medium-emphasis">
 					{{ t('task.goalLabel') }}: {{ goalName }}
+				</p>
+				<p v-if="schedule" class="text-body-2 mt-2 text-medium-emphasis">
+					{{ t('task.schedule.label') }}: {{ scheduleSummary }}
 				</p>
 				<div v-if="important || urgent" :class="$style.chips">
 					<v-chip v-if="important" size="small" color="primary">{{ t('task.important') }}</v-chip>
@@ -60,6 +64,9 @@
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EntityDialog from './EntityDialog.vue';
+import ScheduleField from './ScheduleField.vue';
+import { describeRecurrence, formatWallClock, parseRRule } from '@/utils/schedule';
+import type { Schedule } from '@/types';
 import type { TaskDraft } from '@/stores/tasks';
 
 const props = withDefaults(
@@ -75,13 +82,14 @@ const emit = defineEmits<{ save: [draft: TaskDraft]; cancel: [] }>();
 
 const open = defineModel<boolean>({ required: true });
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const name = ref('');
 const note = ref('');
 const important = ref(false);
 const urgent = ref(false);
 const goalId = ref('');
+const schedule = ref<Schedule | undefined>(undefined);
 const showErrors = ref(false);
 
 const nameError = computed(() =>
@@ -93,6 +101,23 @@ const selectItems = computed(() => [{ value: '', title: t('task.noGoal') }, ...p
 const goalName = computed(
 	() => selectItems.value.find((item) => item.value === goalId.value)?.title,
 );
+
+const scheduleSummary = computed(() => {
+	if (schedule.value === undefined) {
+		return '';
+	}
+
+	if (schedule.value.rrule === undefined) {
+		return formatWallClock(schedule.value.start, locale.value);
+	}
+
+	const rule = parseRRule(schedule.value.rrule);
+	if (rule === undefined) {
+		return formatWallClock(schedule.value.start, locale.value);
+	}
+
+	return describeRecurrence(rule, t, locale.value);
+});
 
 watch(
 	open,
@@ -106,6 +131,7 @@ watch(
 		important.value = props.initial.important ?? false;
 		urgent.value = props.initial.urgent ?? false;
 		goalId.value = props.initial.goalId ?? '';
+		schedule.value = props.initial.schedule;
 		showErrors.value = false;
 	},
 	{ immediate: true },
@@ -125,6 +151,7 @@ function onSave(): void {
 		important: important.value,
 		urgent: urgent.value,
 		goalId: goalId.value === '' ? undefined : goalId.value,
+		schedule: schedule.value,
 	});
 	open.value = false;
 }

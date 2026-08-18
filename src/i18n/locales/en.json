@@ -29,6 +29,7 @@
 		"noGoal": "No goal",
 		"empty": "No tasks yet. Add the first one.",
 		"schedule": {
+			"label": "Schedule",
 			"enabled": "Has a schedule",
 			"start": "Start",
 			"hasEndTime": "Add an end time",

@@ -135,3 +135,98 @@ describe('TaskDialog edit mode', () => {
 		expect(wrapper.emitted('cancel')).toHaveLength(1);
 	});
 });
+
+describe('TaskDialog schedule', () => {
+	it('round-trips an existing one-time schedule back out unchanged', async () => {
+		const wrapper = mount(TaskDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				initial: { name: 'Water plants', schedule: { start: '2026-08-21T09:00' } },
+				goalOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(wrapper.emitted('save')).toEqual([
+			[
+				{
+					name: 'Water plants',
+					note: undefined,
+					important: false,
+					urgent: false,
+					goalId: undefined,
+					schedule: {
+						start: '2026-08-21T09:00',
+						tzid: undefined,
+						duration: undefined,
+						rrule: undefined,
+					},
+				},
+			],
+		]);
+	});
+
+	it('emits schedule undefined after the schedule switch is turned off', async () => {
+		const wrapper = mount(TaskDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				initial: { name: 'Water plants', schedule: { start: '2026-08-21T09:00' } },
+				goalOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		await wrapper.findAll('input[type="checkbox"]')[2].setValue(false);
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(wrapper.emitted('save')).toEqual([
+			[
+				{
+					name: 'Water plants',
+					note: undefined,
+					important: false,
+					urgent: false,
+					goalId: undefined,
+					schedule: undefined,
+				},
+			],
+		]);
+	});
+
+	it('shows the recurrence description in the read-only view', () => {
+		const wrapper = mount(TaskDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				initial: {
+					name: 'File the report',
+					schedule: { start: '2026-08-21T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR;INTERVAL=1' },
+				},
+				goalOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		expect(wrapper.text()).toContain('Every week, on Fri');
+	});
+
+	it('shows the formatted start time for a non-recurring schedule in the read-only view', () => {
+		const wrapper = mount(TaskDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				initial: { name: 'Water plants', schedule: { start: '2026-08-21T09:00' } },
+				goalOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		expect(wrapper.text()).toContain('Aug 21, 2026');
+	});
+});

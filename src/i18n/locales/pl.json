@@ -29,6 +29,7 @@
 		"noGoal": "Bez celu",
 		"empty": "Brak zadań. Dodaj pierwsze.",
 		"schedule": {
+			"label": "Harmonogram",
 			"enabled": "Ma harmonogram",
 			"start": "Początek",
 			"hasEndTime": "Dodaj czas zakończenia",
