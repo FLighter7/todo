@@ -5,7 +5,7 @@ import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import EntityListItem from './EntityListItem.vue';
 
-function mountItem(props: { name: string; note?: string; done: boolean }) {
+function mountItem(props: { name: string; note?: string; done: boolean; date?: string }) {
 	return mount(EntityListItem, { props, global: { plugins: [vuetify, i18n] } });
 }
 
@@ -44,5 +44,19 @@ describe('EntityListItem', () => {
 		await wrapper.get('.v-list-item').trigger('click');
 
 		expect(wrapper.emitted('click')).toHaveLength(1);
+	});
+});
+
+describe('EntityListItem date', () => {
+	it('renders the date when provided', () => {
+		const wrapper = mountItem({ name: 'Visit Japan', done: false, date: 'March 2027' });
+
+		expect(wrapper.text()).toContain('March 2027');
+	});
+
+	it('omits the date element entirely when there is none', () => {
+		const wrapper = mountItem({ name: 'Visit Japan', done: false });
+
+		expect(wrapper.find('.text-caption').exists()).toBe(false);
 	});
 });

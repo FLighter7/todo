@@ -11,6 +11,10 @@
 
 		<v-list-item-title>{{ name }}</v-list-item-title>
 		<v-list-item-subtitle v-if="note">{{ note }}</v-list-item-subtitle>
+
+		<template v-if="date" #append>
+			<span class="text-caption text-medium-emphasis">{{ date }}</span>
+		</template>
 	</v-list-item>
 </template>
 
@@ -21,6 +25,7 @@ defineProps<{
 	name: string;
 	note?: string;
 	done: boolean;
+	date?: string;
 }>();
 
 const emit = defineEmits<{

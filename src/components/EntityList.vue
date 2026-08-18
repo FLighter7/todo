@@ -11,6 +11,7 @@
 				:name="item.name"
 				:note="showNote ? item.note : undefined"
 				:done="item.status === Status.Done"
+				:date="dateLabel?.(item)"
 				@update:done="emit('toggle', item.id, $event)"
 				@click="emit('open', item)"
 			/>
@@ -22,6 +23,7 @@
 			:name="item.name"
 			:note="showNote ? item.note : undefined"
 			:done="item.status === Status.Done"
+			:date="dateLabel?.(item)"
 			@update:done="emit('toggle', item.id, $event)"
 			@click="emit('open', item)"
 		/>
@@ -38,6 +40,7 @@ defineProps<{
 	ungrouped: T[];
 	emptyText: string;
 	showNote: boolean;
+	dateLabel?: (item: T) => string | undefined;
 }>();
 
 const emit = defineEmits<{

@@ -195,3 +195,25 @@ describe('GoalList tabs', () => {
 		expect(wrapper.text()).toContain('Done goal');
 	});
 });
+
+describe('GoalList deadline', () => {
+	it('shows the formatted deadline next to the goal', async () => {
+		const { wrapper } = await mountWithData([], [makeGoal({ deadline: { year: 2027 } })]);
+
+		expect(wrapper.text()).toContain('2027');
+	});
+
+	it('preserves an existing deadline when an unrelated field is edited', async () => {
+		const { wrapper, goalsStore } = await mountWithData(
+			[],
+			[makeGoal({ deadline: { year: 2027 } })],
+		);
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		await wrapper.get('input').setValue('Learn Japanese (updated)');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(goalsStore.records[0].deadline).toEqual({ year: 2027 });
+	});
+});

@@ -10,6 +10,7 @@
 			:ungrouped="ungrouped"
 			:empty-text="t('goal.empty')"
 			:show-note="showNote"
+			:date-label="dateLabel"
 			@toggle="onToggle"
 			@open="openEdit"
 		/>
@@ -50,11 +51,12 @@ import { useDreamsStore } from '@/stores/dreams';
 import { useSettingsStore } from '@/stores/settings';
 import { useCascadeCancel } from '@/composables/useCascadeCancel';
 import { useToggleConfirm } from '@/composables/useToggleConfirm';
+import { formatDeadline } from '@/utils/deadline';
 import EntityList from '@/components/EntityList.vue';
 import GoalDialog from '@/components/GoalDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const goals = useGoalsStore();
 const dreams = useDreamsStore();
 const settings = useSettingsStore();
@@ -65,6 +67,10 @@ const showNote = computed(() => settings.goals.rows === 2);
 
 function labelFor(dreamId: string): string {
 	return dreams.records.find((dream) => dream.id === dreamId)?.name ?? '';
+}
+
+function dateLabel(goal: Goal): string | undefined {
+	return goal.deadline ? formatDeadline(goal.deadline, locale.value, t) : undefined;
 }
 
 const activeGrouped = computed(() => goals.groupedByDream.active);
@@ -89,8 +95,8 @@ const initialDraft = computed<Partial<GoalDraft>>(() => {
 		return {};
 	}
 
-	const { name, note, dreamId } = editing.value;
-	return { name, note, dreamId };
+	const { name, note, dreamId, deadline } = editing.value;
+	return { name, note, dreamId, deadline };
 });
 
 const dreamOptions = computed(() => {

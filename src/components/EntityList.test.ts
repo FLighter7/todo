@@ -131,3 +131,34 @@ describe('EntityList events', () => {
 		expect(wrapper.emitted('open')).toEqual([[dream]]);
 	});
 });
+
+describe('EntityList date label', () => {
+	it('passes the formatted date through to each item when dateLabel is provided', () => {
+		const wrapper = mount(EntityList, {
+			props: {
+				groups: [],
+				ungrouped: [makeDream({ id: 'a', name: 'Visit Japan' })],
+				emptyText: 'Nothing here yet.',
+				showNote: false,
+				dateLabel: () => 'March 2027',
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		expect(wrapper.text()).toContain('March 2027');
+	});
+
+	it('shows nothing extra when dateLabel is omitted', () => {
+		const wrapper = mount(EntityList, {
+			props: {
+				groups: [],
+				ungrouped: [makeDream({ id: 'a' })],
+				emptyText: 'Nothing here yet.',
+				showNote: false,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		expect(wrapper.find('.text-caption').exists()).toBe(false);
+	});
+});
