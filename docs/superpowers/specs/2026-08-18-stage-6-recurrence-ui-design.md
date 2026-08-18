@@ -69,6 +69,11 @@ export interface RecurrenceRule {
 	freq: 'daily' | 'weekly' | 'monthly' | 'yearly';
 	interval: number; // "every N days/weeks/months/years"
 	byweekday?: number[]; // weekly only; ISO weekday numbers, 1=Mon..7=Sun
+	// `until` is a bare calendar date, 'YYYY-MM-DD' — the field only ever
+	// offers a date picker, no time. `buildRRule` turns it into the RRULE's
+	// UNTIL at 23:59 wall-clock on that date, so the picked date is always
+	// fully included regardless of `start`'s own time-of-day, without
+	// relying on an exact-match inclusive-boundary comparison.
 	end: { type: 'never' } | { type: 'count'; count: number } | { type: 'until'; until: string };
 }
 ```
@@ -87,13 +92,41 @@ export interface RecurrenceRule {
   `Intl.DateTimeFormat(locale, {weekday:'short'})`, not hand-translated
   strings, the same reasoning `DeadlineField` already applies to month
   names.
-- `nextOccurrence(schedule: Schedule, from: Date): Date | undefined` —
-  resolves the next occurrence at or after `from`, honoring wall-clock
-  start, `tzid` (anchored) vs. floating, and `duration` for the resulting
-  window. Deliberately unaware of `exdate`/`rdate`: this stage's UI never
+- `nextOccurrence(schedule: Schedule, from: Date): { start: string; end: string } | undefined` —
+  resolves the next occurrence at or after `from`, both fields wall-clock
+  strings in the same `'YYYY-MM-DDTHH:mm'` shape as `Schedule.start` /
+  `Completion.occurrence` (`start === end` when there's no `duration`).
+  Returning wall-clock strings rather than `Date` instants matches how this
+  app already models an occurrence — `Completion.occurrence` is a string for
+  exactly this reason — and sidesteps a real bug this design ran into (see
+  below): a `Date` claiming to be "the occurrence, as a moment" is
+  ambiguous for a floating schedule, which has no moment, only a wall-clock
+  reading. Deliberately unaware of `exdate`/`rdate`: this stage's UI never
   writes them, so a schedule this form produces never has any to consider.
   The completion-history stage, when it starts editing those fields, will
   need to fold them into this function.
+
+  **Implementation note — do not pass `tzid` to `RRule`'s own constructor
+  option.** Verified empirically against the installed `rrule` 2.8.1
+  (`node_modules/rrule/dist/esm/dateutil.js`'s `dateInTimeZone`): its native
+  `tzid` support computes the anchor offset via
+  `Intl.DateTimeFormat().resolvedOptions().timeZone` — the **host
+  machine's** own system zone, not the schedule's `tzid` — and shifts every
+  occurrence by the difference between the two. On any host not itself
+  running in UTC (a Vitest run, a developer's machine, a user's browser in
+  almost any timezone), every anchored occurrence comes out wrong by a
+  host-dependent, non-obvious amount; on a Europe/Warsaw host, a schedule
+  anchored to `America/New_York` at 09:00 rendered as 10:00 across a whole
+  month, DST transition included. RRULE iteration in this adapter always
+  happens in the tzid-oblivious wall-clock-encoded domain (`RRule` never
+  receives `tzid`); when `schedule.tzid` is set, `from` is converted into
+  "what wall-clock reading is this instant in `tzid`" via
+  `Intl.DateTimeFormat`'s `formatToParts` (two passes, to converge across a
+  DST transition) before being handed to `rule.after()`, and the result's
+  UTC-getter components are read directly as the wall-clock occurrence —
+  no further zone conversion needed, since the desired output is already a
+  wall-clock string. This was verified directly against the DST scenario in
+  Edge cases below before being written into this spec.
 
 ## Input component — `src/components/ScheduleField.vue`
 
