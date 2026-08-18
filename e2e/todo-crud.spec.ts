@@ -22,23 +22,23 @@ test('an important and urgent task lands in the Do quadrant', async ({ page }) =
 	await expect(doQuadrant.getByText('Ship the release')).toBeVisible();
 });
 
-test('toggling done crosses the task out', async ({ page }) => {
+test('toggling done moves the task from Active to History', async ({ page }) => {
 	await page.goto('/');
 
 	await page.getByRole('button', { name: 'Add task' }).click();
 	await page.getByLabel('Name').fill('Finish the report');
 	await page.getByRole('button', { name: 'Save' }).click();
 
-	const row = page.getByRole('row', { name: /Finish the report/ });
-	await row.getByRole('checkbox').click();
+	const item = page.locator('.v-list-item', { hasText: 'Finish the report' });
+	await item.getByRole('checkbox').click();
 
-	await expect(row.getByText('Finish the report')).toHaveCSS(
-		'text-decoration-line',
-		'line-through',
-	);
+	await expect(page.getByText('Finish the report')).not.toBeVisible();
+
+	await page.getByRole('button', { name: 'History' }).click();
+	await expect(page.getByText('Finish the report')).toBeVisible();
 });
 
-test('deleting a task removes it from the list', async ({ page }) => {
+test('cancelling a task removes it from the active list', async ({ page }) => {
 	await page.goto('/');
 
 	await page.getByRole('button', { name: 'Add task' }).click();
@@ -46,10 +46,8 @@ test('deleting a task removes it from the list', async ({ page }) => {
 	await page.getByRole('button', { name: 'Save' }).click();
 	await expect(page.getByText('Throwaway task')).toBeVisible();
 
-	await page
-		.getByRole('row', { name: /Throwaway task/ })
-		.getByRole('button', { name: 'Cancel this task' })
-		.click();
+	await page.getByText('Throwaway task').click();
+	await page.getByRole('button', { name: 'Cancel this record' }).click();
 
 	await expect(page.getByText('No tasks yet. Add the first one.')).toBeVisible();
 });
