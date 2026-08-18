@@ -1,5 +1,5 @@
 import { Frequency, RRule, Weekday, type Options } from 'rrule';
-import type { Schedule } from '@/types';
+import type { Completion, Schedule } from '@/types';
 
 export interface RecurrenceRule {
 	freq: 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -313,34 +313,79 @@ function addDurationToWallClock(wallClock: Date, duration: string): Date {
 	return new Date(wallClock.getTime() + (hours * 60 + minutes) * 60_000);
 }
 
+function buildRule(schedule: Schedule): RRule {
+	const parsedRRule: Partial<Options> = { ...RRule.parseString(schedule.rrule as string) };
+	delete parsedRRule.tzid;
+	delete parsedRRule.dtstart;
+	return new RRule({ ...parsedRRule, dtstart: wallClockStringToDate(schedule.start) });
+}
+
+/**
+ * `comparisonPoint` must already be in the wall-clock-as-UTC encoded domain
+ * `wallClockStringToDate`/`dtstart` use -- callers holding a real moment
+ * convert first (see `nextOccurrence`); callers already holding a wall-clock
+ * occurrence (`isLastOccurrence`, `listOccurrences`) pass it straight
+ * through. Honors `schedule.exdate` (skipped, the walk continues past it)
+ * and `schedule.rdate` (considered as an extra standalone candidate).
+ */
+function walkOccurrence(
+	schedule: Schedule,
+	comparisonPoint: Date,
+	direction: 'after' | 'before',
+): Date | undefined {
+	const excluded = new Set(schedule.exdate ?? []);
+	const rule = buildRule(schedule);
+
+	let candidate: Date | null =
+		direction === 'after' ? rule.after(comparisonPoint, true) : rule.before(comparisonPoint, true);
+	while (candidate !== null && excluded.has(dateToWallClockString(candidate))) {
+		candidate =
+			direction === 'after' ? rule.after(candidate, false) : rule.before(candidate, false);
+	}
+
+	const rdateMatch = (schedule.rdate ?? [])
+		.filter((entry) => !excluded.has(entry))
+		.map(wallClockStringToDate)
+		.filter((date) =>
+			direction === 'after'
+				? date.getTime() >= comparisonPoint.getTime()
+				: date.getTime() <= comparisonPoint.getTime(),
+		)
+		.reduce<Date | undefined>((best, date) => {
+			if (best === undefined) {
+				return date;
+			}
+			const better =
+				direction === 'after' ? date.getTime() < best.getTime() : date.getTime() > best.getTime();
+			return better ? date : best;
+		}, undefined);
+
+	if (candidate === null) {
+		return rdateMatch;
+	}
+	if (rdateMatch === undefined) {
+		return candidate;
+	}
+
+	const rdateWins =
+		direction === 'after'
+			? rdateMatch.getTime() < candidate.getTime()
+			: rdateMatch.getTime() > candidate.getTime();
+	return rdateWins ? rdateMatch : candidate;
+}
+
 export function nextOccurrence(schedule: Schedule, from: Date): OccurrenceWindow | undefined {
 	if (schedule.rrule === undefined) {
 		return undefined;
 	}
-
-	// `RRule.parseString` can surface `tzid`/`dtstart` from a `DTSTART;TZID=`
-	// line if one is present in `schedule.rrule` -- this app's own writers
-	// never produce that (`Schedule.rrule` is "RRULE without the prefix",
-	// dtstart lives in `Schedule.start`), but a hand-edited or imported
-	// record could. Never let either reach `RRule`'s constructor: `dtstart`
-	// is always derived from `schedule.start` below, and `tzid` is the exact
-	// trap `instantAsWallClockInZone`'s note above documents.
-	const parsedRRule: Partial<Options> = { ...RRule.parseString(schedule.rrule) };
-	delete parsedRRule.tzid;
-	delete parsedRRule.dtstart;
-
-	const rule = new RRule({
-		...parsedRRule,
-		dtstart: wallClockStringToDate(schedule.start),
-	});
 
 	const comparisonPoint =
 		schedule.tzid === undefined
 			? deviceLocalWallClock(from)
 			: instantAsWallClockInZone(from, schedule.tzid);
 
-	const next = rule.after(comparisonPoint, true);
-	if (next === null) {
+	const next = walkOccurrence(schedule, comparisonPoint, 'after');
+	if (next === undefined) {
 		return undefined;
 	}
 
@@ -351,4 +396,22 @@ export function nextOccurrence(schedule: Schedule, from: Date): OccurrenceWindow
 			: dateToWallClockString(addDurationToWallClock(next, schedule.duration));
 
 	return { start, end };
+}
+
+/**
+ * Whether `occurrence` is the last one a bounded (`COUNT`- or `UNTIL`-ended)
+ * series will ever produce. Answered empirically -- probing one minute past
+ * `occurrence` for a following one -- rather than by re-deriving COUNT/UNTIL
+ * arithmetic; occurrences are minute-granularity (`WALL_CLOCK_PATTERN` in
+ * `src/types/task.ts` has no seconds), so one minute strictly clears any
+ * occurrence this schedule itself produces. Correctly accounts for `exdate`
+ * since `walkOccurrence` already skips excluded dates.
+ */
+export function isLastOccurrence(schedule: Schedule, occurrence: string): boolean {
+	if (schedule.rrule === undefined) {
+		return false;
+	}
+
+	const probe = new Date(wallClockStringToDate(occurrence).getTime() + 60_000);
+	return walkOccurrence(schedule, probe, 'after') === undefined;
 }

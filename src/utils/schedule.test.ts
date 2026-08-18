@@ -10,7 +10,7 @@ import {
 } from './schedule';
 import { i18n } from '@/i18n';
 import type { Schedule } from '@/types';
-import { nextOccurrence } from './schedule';
+import { isLastOccurrence, nextOccurrence } from './schedule';
 
 const t = i18n.global.t;
 const originalLocale = i18n.global.locale.value;
@@ -370,5 +370,74 @@ describe('nextOccurrence, anchored to a tzid', () => {
 				hourCycle: 'h23',
 			}).format(new Date(`${after?.start}:00-04:00`)),
 		).toBe('13:00');
+	});
+});
+
+describe('nextOccurrence, exdate and rdate', () => {
+	it('skips an excluded date and returns the following occurrence', () => {
+		const schedule: Schedule = {
+			start: '2026-08-07T09:00',
+			rrule: 'FREQ=WEEKLY;BYDAY=FR',
+			exdate: ['2026-08-14T09:00'],
+		};
+		const from = new Date('2026-08-08T00:00:00Z');
+
+		expect(nextOccurrence(schedule, from)?.start).toBe('2026-08-21T09:00');
+	});
+
+	it('considers an rdate entry when it is the nearest candidate', () => {
+		const schedule: Schedule = {
+			start: '2026-08-07T09:00',
+			rrule: 'FREQ=WEEKLY;BYDAY=FR',
+			rdate: ['2026-08-10T09:00'],
+		};
+		const from = new Date('2026-08-08T00:00:00Z');
+
+		expect(nextOccurrence(schedule, from)?.start).toBe('2026-08-10T09:00');
+	});
+
+	it('falls back to the rrule candidate when the rdate entry is farther away', () => {
+		const schedule: Schedule = {
+			start: '2026-08-07T09:00',
+			rrule: 'FREQ=WEEKLY;BYDAY=FR',
+			rdate: ['2026-09-01T09:00'],
+		};
+		const from = new Date('2026-08-08T00:00:00Z');
+
+		expect(nextOccurrence(schedule, from)?.start).toBe('2026-08-14T09:00');
+	});
+});
+
+describe('isLastOccurrence', () => {
+	it('is true for the final occurrence of a COUNT-bounded rule', () => {
+		const schedule: Schedule = { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR;COUNT=3' };
+
+		expect(isLastOccurrence(schedule, '2026-08-21T09:00')).toBe(true);
+	});
+
+	it('is false for an earlier occurrence of the same rule', () => {
+		const schedule: Schedule = { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR;COUNT=3' };
+
+		expect(isLastOccurrence(schedule, '2026-08-14T09:00')).toBe(false);
+	});
+
+	it('is false for an unbounded rule', () => {
+		const schedule: Schedule = { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
+
+		expect(isLastOccurrence(schedule, '2026-08-21T09:00')).toBe(false);
+	});
+
+	it('is false when the schedule has no rrule at all', () => {
+		expect(isLastOccurrence({ start: '2026-08-07T09:00' }, '2026-08-07T09:00')).toBe(false);
+	});
+
+	it('is true once exdate excludes what would otherwise be a later occurrence', () => {
+		const schedule: Schedule = {
+			start: '2026-08-07T09:00',
+			rrule: 'FREQ=WEEKLY;BYDAY=FR;COUNT=3',
+			exdate: ['2026-08-21T09:00'],
+		};
+
+		expect(isLastOccurrence(schedule, '2026-08-14T09:00')).toBe(true);
 	});
 });
