@@ -138,8 +138,11 @@ export function parseCompletion(value: unknown): Completion {
 		fail('"completions" must contain objects');
 	}
 
+	const occurrence = readString(value, 'occurrence');
+	assertWallClock(occurrence, 'completions.occurrence');
+
 	return {
-		occurrence: readString(value, 'occurrence'),
+		occurrence,
 		done: readBoolean(value, 'done'),
 		at: readString(value, 'at'),
 	};
