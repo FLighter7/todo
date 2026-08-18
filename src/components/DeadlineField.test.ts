@@ -73,7 +73,7 @@ describe('DeadlineField day precision', () => {
 		const [, monthSelect] = wrapper.findAllComponents({ name: 'VSelect' });
 		await monthSelect.vm.$emit('update:modelValue', 3);
 
-		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([undefined]);
+		expect(wrapper.emitted('update:modelValue')).toBeUndefined();
 	});
 
 	it('emits an exact day without a year once month and day are both set', async () => {
