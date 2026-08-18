@@ -68,7 +68,6 @@ const year = ref<number>();
 const month = ref<number>();
 const day = ref<number>();
 const season = ref<Season>();
-let wasEverDefined = false;
 
 function syncFromValue(value: Deadline | undefined): void {
 	if (value === undefined) {
@@ -76,7 +75,6 @@ function syncFromValue(value: Deadline | undefined): void {
 		return;
 	}
 
-	wasEverDefined = true;
 	hasDeadline.value = true;
 	year.value = value.year;
 
@@ -163,7 +161,9 @@ const precisionItems = computed(() => [
 const monthItems = computed(() =>
 	Array.from({ length: 12 }, (_, index) => ({
 		value: index + 1,
-		title: new Intl.DateTimeFormat(locale.value, { month: 'long' }).format(new Date(2000, index, 1)),
+		title: new Intl.DateTimeFormat(locale.value, { month: 'long' }).format(
+			new Date(2000, index, 1),
+		),
 	})),
 );
 
