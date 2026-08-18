@@ -9,6 +9,8 @@ import {
 	weekdayName,
 } from './schedule';
 import { i18n } from '@/i18n';
+import type { Schedule } from '@/types';
+import { nextOccurrence } from './schedule';
 
 const t = i18n.global.t;
 const originalLocale = i18n.global.locale.value;
@@ -236,5 +238,107 @@ describe('weekdayName', () => {
 			'Sat',
 			'Sun',
 		]);
+	});
+});
+
+describe('nextOccurrence, floating (no tzid)', () => {
+	it('returns the next weekly occurrence after "from", using the device-local reading of "from"', () => {
+		const schedule: Schedule = { start: '2026-08-21T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
+		// A Saturday, the day after the first Friday occurrence.
+		const from = new Date('2026-08-22T00:00:00Z');
+
+		expect(nextOccurrence(schedule, from)).toEqual({
+			start: '2026-08-28T09:00',
+			end: '2026-08-28T09:00',
+		});
+	});
+
+	it('is inclusive: "from" landing exactly on an occurrence returns that occurrence', () => {
+		const schedule: Schedule = { start: '2026-08-21T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
+		const from = new Date(Date.UTC(2026, 7, 21, 9, 0) + new Date().getTimezoneOffset() * 60_000);
+
+		expect(nextOccurrence(schedule, from)?.start).toBe('2026-08-21T09:00');
+	});
+
+	it('applies duration to the returned window', () => {
+		const schedule: Schedule = {
+			start: '2026-08-21T09:00',
+			duration: 'PT4H',
+			rrule: 'FREQ=WEEKLY;BYDAY=FR',
+		};
+		const from = new Date('2026-08-22T00:00:00Z');
+
+		expect(nextOccurrence(schedule, from)).toEqual({
+			start: '2026-08-28T09:00',
+			end: '2026-08-28T13:00',
+		});
+	});
+
+	it('returns undefined once a COUNT-bounded rule is exhausted', () => {
+		const schedule: Schedule = { start: '2026-08-21T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR;COUNT=1' };
+		const from = new Date('2030-01-01T00:00:00Z');
+
+		expect(nextOccurrence(schedule, from)).toBeUndefined();
+	});
+
+	it('returns undefined when the schedule has no rrule at all', () => {
+		expect(nextOccurrence({ start: '2026-08-21T09:00' }, new Date())).toBeUndefined();
+	});
+});
+
+describe('nextOccurrence, anchored to a tzid', () => {
+	it('keeps the local wall-clock time fixed across a DST transition, independent of the host timezone', () => {
+		// Weekly Friday 09:00 in America/New_York, crossing the 2026-03-08
+		// US spring-forward. Every occurrence must read 09:00 local in New
+		// York, regardless of what timezone the test runner itself is in.
+		const schedule: Schedule = {
+			start: '2026-02-27T09:00',
+			tzid: 'America/New_York',
+			rrule: 'FREQ=WEEKLY;BYDAY=FR;COUNT=4',
+		};
+
+		const results = [
+			new Date('2026-02-20T00:00:00Z'),
+			new Date('2026-03-01T00:00:00Z'),
+			new Date('2026-03-08T00:00:00Z'),
+			new Date('2026-03-15T00:00:00Z'),
+		].map((from) => nextOccurrence(schedule, from)?.start);
+
+		expect(results).toEqual([
+			'2026-02-27T09:00',
+			'2026-03-06T09:00',
+			'2026-03-13T09:00',
+			'2026-03-20T09:00',
+		]);
+	});
+
+	it('resolves to the correct UTC instant on both sides of the transition', () => {
+		const schedule: Schedule = {
+			start: '2026-02-27T09:00',
+			tzid: 'America/New_York',
+			rrule: 'FREQ=WEEKLY;BYDAY=FR;COUNT=4',
+		};
+
+		// Before the transition: EST, UTC-5, so 09:00 local is 14:00 UTC.
+		const before = nextOccurrence(schedule, new Date('2026-03-01T00:00:00Z'));
+		expect(
+			new Intl.DateTimeFormat('en-US', {
+				timeZone: 'UTC',
+				hour: '2-digit',
+				minute: '2-digit',
+				hourCycle: 'h23',
+			}).format(new Date(`${before?.start}:00-05:00`)),
+		).toBe('14:00');
+
+		// After the transition: EDT, UTC-4, so 09:00 local is 13:00 UTC.
+		const after = nextOccurrence(schedule, new Date('2026-03-15T00:00:00Z'));
+		expect(
+			new Intl.DateTimeFormat('en-US', {
+				timeZone: 'UTC',
+				hour: '2-digit',
+				minute: '2-digit',
+				hourCycle: 'h23',
+			}).format(new Date(`${after?.start}:00-04:00`)),
+		).toBe('13:00');
 	});
 });

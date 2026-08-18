@@ -1,4 +1,5 @@
 import { Frequency, RRule, Weekday, type Options } from 'rrule';
+import type { Schedule } from '@/types';
 
 export interface RecurrenceRule {
 	freq: 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -238,4 +239,105 @@ export function describeRecurrence(rule: RecurrenceRule, t: Translate, locale: s
 	}
 
 	return parts.join(', ');
+}
+
+function wallClockStringToDate(wallClock: string): Date {
+	const [datePart, timePart] = wallClock.split('T');
+	const [year, month, day] = datePart.split('-').map(Number);
+	const [hour, minute] = timePart.split(':').map(Number);
+	return new Date(Date.UTC(year, month - 1, day, hour, minute));
+}
+
+function dateToWallClockString(date: Date): string {
+	const pad = (n: number) => String(n).padStart(2, '0');
+	return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
+}
+
+/** The device's own current wall-clock reading, encoded the same way a
+ *  floating schedule's occurrences are -- a floating time has no zone, so
+ *  "is the next occurrence upcoming" is answered from this device's own
+ *  clock, not from a real UTC instant. */
+function deviceLocalWallClock(instant: Date): Date {
+	return new Date(
+		Date.UTC(
+			instant.getFullYear(),
+			instant.getMonth(),
+			instant.getDate(),
+			instant.getHours(),
+			instant.getMinutes(),
+		),
+	);
+}
+
+/**
+ * What wall-clock time `instant` (a real moment) shows in `tzid`, encoded
+ * the same way `wallClockStringToDate` encodes a floating time.
+ *
+ * This project never passes `tzid` to `RRule`'s own constructor option.
+ * Verified against the installed rrule 2.8.1
+ * (`node_modules/rrule/dist/esm/dateutil.js`'s `dateInTimeZone`): its native
+ * `tzid` support computes the anchor offset via
+ * `Intl.DateTimeFormat().resolvedOptions().timeZone` -- the *host machine's*
+ * own system zone, not the schedule's `tzid` -- and shifts every occurrence
+ * by the difference between the two. On a host whose own zone isn't UTC
+ * (confirmed on Europe/Warsaw against a schedule anchored to
+ * America/New_York), every anchored occurrence comes out wrong by a
+ * host-dependent amount, DST transition included. RRULE iteration below
+ * therefore always happens in the tzid-oblivious wall-clock-encoded domain;
+ * this function is the only place `tzid` is applied, entirely by hand via
+ * `Intl.DateTimeFormat`.
+ */
+function instantAsWallClockInZone(instant: Date, tzid: string): Date {
+	const parts = new Intl.DateTimeFormat('en-US', {
+		timeZone: tzid,
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit',
+		hourCycle: 'h23',
+	}).formatToParts(instant);
+	const get = (type: string) => Number(parts.find((part) => part.type === type)?.value);
+
+	return new Date(Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute')));
+}
+
+function addDurationToWallClock(wallClock: Date, duration: string): Date {
+	const match = DURATION_PATTERN.exec(duration);
+	if (match === null) {
+		return wallClock;
+	}
+
+	const hours = Number(match[1] ?? 0);
+	const minutes = Number(match[2] ?? 0);
+	return new Date(wallClock.getTime() + (hours * 60 + minutes) * 60_000);
+}
+
+export function nextOccurrence(schedule: Schedule, from: Date): OccurrenceWindow | undefined {
+	if (schedule.rrule === undefined) {
+		return undefined;
+	}
+
+	const rule = new RRule({
+		...RRule.parseString(schedule.rrule),
+		dtstart: wallClockStringToDate(schedule.start),
+	});
+
+	const comparisonPoint =
+		schedule.tzid === undefined
+			? deviceLocalWallClock(from)
+			: instantAsWallClockInZone(from, schedule.tzid);
+
+	const next = rule.after(comparisonPoint, true);
+	if (next === null) {
+		return undefined;
+	}
+
+	const start = dateToWallClockString(next);
+	const end =
+		schedule.duration === undefined
+			? start
+			: dateToWallClockString(addDurationToWallClock(next, schedule.duration));
+
+	return { start, end };
 }
