@@ -15,20 +15,15 @@
 		@click="dialogOpen = true"
 	/>
 
-	<dream-dialog
-		v-if="route.name === 'dreams'"
+	<add-entity-dialog
 		v-model="dialogOpen"
-		mode="add"
-		@save="handleDreamSave"
-	/>
-	<goal-dialog
-		v-else-if="route.name === 'goals'"
-		v-model="dialogOpen"
-		mode="add"
+		:default-tab="defaultTab"
 		:dream-options="dreamOptions"
-		@save="handleGoalSave"
+		:goal-options="goalOptions"
+		@save-dream="handleDreamSave"
+		@save-goal="handleGoalSave"
+		@save-task="handleTaskSubmit"
 	/>
-	<task-form v-else v-model="dialogOpen" @submit="handleTaskSubmit" />
 </template>
 
 <script setup lang="ts">
@@ -36,9 +31,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { mdiPlus } from '@mdi/js';
-import TaskForm from '@/components/TaskForm.vue';
-import DreamDialog from '@/components/DreamDialog.vue';
-import GoalDialog from '@/components/GoalDialog.vue';
+import AddEntityDialog from '@/components/AddEntityDialog.vue';
 import { useTasksStore, type TaskDraft } from '@/stores/tasks';
 import { useDreamsStore, type DreamDraft } from '@/stores/dreams';
 import { useGoalsStore, type GoalDraft } from '@/stores/goals';
@@ -51,8 +44,23 @@ const goalsStore = useGoalsStore();
 
 const dialogOpen = ref(false);
 
+const defaultTab = computed<'dream' | 'goal' | 'task'>(() => {
+	if (route.name === 'dreams') {
+		return 'dream';
+	}
+
+	if (route.name === 'goals') {
+		return 'goal';
+	}
+
+	return 'task';
+});
+
 const dreamOptions = computed(() =>
 	dreamsStore.active.map((dream) => ({ value: dream.id, title: dream.name })),
+);
+const goalOptions = computed(() =>
+	goalsStore.active.map((goal) => ({ value: goal.id, title: goal.name })),
 );
 
 async function handleTaskSubmit(draft: TaskDraft): Promise<void> {

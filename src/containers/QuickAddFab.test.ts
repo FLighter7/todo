@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
+import { clickButtonByText } from '@/vitestHelpers';
 import { Status, type Dream, type Goal, type Task } from '@/types';
 import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
 import { useDreamsStore } from '@/stores/dreams';
@@ -23,10 +24,21 @@ function makeDream(overrides: Partial<Dream> = {}): Dream {
 	};
 }
 
-async function mountAt(path: string, seed: { dreams?: Dream[] } = {}) {
+function makeGoal(overrides: Partial<Goal> = {}): Goal {
+	return {
+		id: 'goal-1',
+		name: 'Learn Japanese',
+		created: '2026-08-06T10:00:00.000Z',
+		updated: '2026-08-06T10:00:00.000Z',
+		status: Status.Opened,
+		...overrides,
+	};
+}
+
+async function mountAt(path: string, seed: { dreams?: Dream[]; goals?: Goal[] } = {}) {
 	setActivePinia(createPinia());
 	await useDreamsStore().load(async () => new EntityMemoryRepository<Dream>(seed.dreams ?? []));
-	await useGoalsStore().load(async () => new EntityMemoryRepository<Goal>());
+	await useGoalsStore().load(async () => new EntityMemoryRepository<Goal>(seed.goals ?? []));
 	await useTasksStore().load(async () => new EntityMemoryRepository<Task>());
 
 	const testRouter = createRouter({
@@ -34,7 +46,7 @@ async function mountAt(path: string, seed: { dreams?: Dream[] } = {}) {
 		routes: [
 			{ path: '/dreams', name: 'dreams', component: { template: '<div />' } },
 			{ path: '/goals', name: 'goals', component: { template: '<div />' } },
-			{ path: '/list', name: 'list', component: { template: '<div />' } },
+			{ path: '/tasks', name: 'tasks', component: { template: '<div />' } },
 		],
 	});
 	await testRouter.push(path);
@@ -47,30 +59,29 @@ beforeEach(() => {
 	window.localStorage.clear();
 });
 
-describe('QuickAddFab route awareness', () => {
-	it('opens a Dream-create dialog on /dreams', async () => {
+describe('QuickAddFab default tab', () => {
+	it('defaults to Dream on /dreams', async () => {
 		const wrapper = await mountAt('/dreams');
 
 		await wrapper.get('button[aria-label="Add task"]').trigger('click');
 
-		expect(wrapper.text()).toContain('Dream');
-		expect(wrapper.findComponent({ name: 'VSelect' }).exists()).toBe(false);
+		expect(wrapper.findComponent({ name: 'VTabs' }).props('modelValue')).toBe('dream');
 	});
 
-	it('opens a Goal-create dialog on /goals', async () => {
+	it('defaults to Goal on /goals', async () => {
 		const wrapper = await mountAt('/goals');
 
 		await wrapper.get('button[aria-label="Add task"]').trigger('click');
 
-		expect(wrapper.text()).toContain('Goal');
+		expect(wrapper.findComponent({ name: 'VTabs' }).props('modelValue')).toBe('goal');
 	});
 
-	it('opens TaskForm everywhere else', async () => {
-		const wrapper = await mountAt('/list');
+	it('defaults to Task everywhere else', async () => {
+		const wrapper = await mountAt('/tasks');
 
 		await wrapper.get('button[aria-label="Add task"]').trigger('click');
 
-		expect(wrapper.text()).toContain('Add task');
+		expect(wrapper.findComponent({ name: 'VTabs' }).props('modelValue')).toBe('task');
 	});
 });
 
@@ -81,7 +92,7 @@ describe('QuickAddFab creating a dream', () => {
 
 		await wrapper.get('button[aria-label="Add task"]').trigger('click');
 		await wrapper.get('input').setValue('Visit Japan');
-		await wrapper.get('button[aria-label="Save"]').trigger('click');
+		await clickButtonByText(wrapper, 'Save');
 
 		expect(dreams.records).toHaveLength(1);
 		expect(dreams.records[0].name).toBe('Visit Japan');
@@ -94,18 +105,28 @@ describe('QuickAddFab creating a goal', () => {
 		const goals = useGoalsStore();
 
 		await wrapper.get('button[aria-label="Add task"]').trigger('click');
-
-		const [select] = wrapper.findAllComponents({ name: 'VSelect' });
-		expect((select.props('items') as Array<{ title: string }>).map((item) => item.title)).toEqual([
-			'No dream',
-			'Visit Japan',
-		]);
-
 		await wrapper.get('input').setValue('Learn Japanese');
+		const [select] = wrapper.findAllComponents({ name: 'VSelect' });
 		await select.vm.$emit('update:modelValue', 'dream-1');
-		await wrapper.get('button[aria-label="Save"]').trigger('click');
+		await clickButtonByText(wrapper, 'Save');
 
 		expect(goals.records).toHaveLength(1);
 		expect(goals.records[0]).toMatchObject({ name: 'Learn Japanese', dreamId: 'dream-1' });
+	});
+});
+
+describe('QuickAddFab creating a task', () => {
+	it('adds a task through the tasks store, offering only active goals', async () => {
+		const wrapper = await mountAt('/tasks', { goals: [makeGoal({ name: 'Learn Japanese' })] });
+		const tasks = useTasksStore();
+
+		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		await wrapper.get('input').setValue('Do Duolingo');
+		const [select] = wrapper.findAllComponents({ name: 'VSelect' });
+		await select.vm.$emit('update:modelValue', 'goal-1');
+		await clickButtonByText(wrapper, 'Save');
+
+		expect(tasks.records).toHaveLength(1);
+		expect(tasks.records[0]).toMatchObject({ name: 'Do Duolingo', goalId: 'goal-1' });
 	});
 });
