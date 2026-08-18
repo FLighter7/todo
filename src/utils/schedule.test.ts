@@ -9,8 +9,8 @@ import {
 	weekdayName,
 } from './schedule';
 import { i18n } from '@/i18n';
-import type { Schedule } from '@/types';
-import { isLastOccurrence, nextOccurrence } from './schedule';
+import type { Completion, Schedule } from '@/types';
+import { isLastOccurrence, listOccurrences, nextOccurrence } from './schedule';
 
 const t = i18n.global.t;
 const originalLocale = i18n.global.locale.value;
@@ -439,5 +439,106 @@ describe('isLastOccurrence', () => {
 		};
 
 		expect(isLastOccurrence(schedule, '2026-08-14T09:00')).toBe(true);
+	});
+});
+
+describe('listOccurrences', () => {
+	it('returns pastCount occurrences strictly before "from" and futureCount at or after it', () => {
+		const schedule: Schedule = { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
+		const from = new Date('2026-08-22T00:00:00Z'); // a Saturday, day after the Aug 21 occurrence
+
+		const entries = listOccurrences(schedule, undefined, from, 2, 2);
+
+		expect(entries.map((entry) => entry.start)).toEqual([
+			'2026-08-14T09:00',
+			'2026-08-21T09:00',
+			'2026-08-28T09:00',
+			'2026-09-04T09:00',
+		]);
+	});
+
+	it('returns fewer than requested at the start of a new series', () => {
+		const schedule: Schedule = { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
+		const from = new Date('2026-08-08T00:00:00Z'); // the Saturday right after the first occurrence
+
+		const entries = listOccurrences(schedule, undefined, from, 5, 5);
+
+		expect(entries.map((entry) => entry.start)).toEqual([
+			'2026-08-07T09:00',
+			'2026-08-14T09:00',
+			'2026-08-21T09:00',
+			'2026-08-28T09:00',
+			'2026-09-04T09:00',
+			'2026-09-11T09:00',
+		]);
+	});
+
+	it('tags an excluded occurrence as skipped instead of omitting it', () => {
+		const schedule: Schedule = {
+			start: '2026-08-07T09:00',
+			rrule: 'FREQ=WEEKLY;BYDAY=FR',
+			exdate: ['2026-08-21T09:00'],
+		};
+		const from = new Date('2026-08-15T00:00:00Z');
+
+		const entries = listOccurrences(schedule, undefined, from, 1, 2);
+
+		expect(entries.map((entry) => [entry.start, entry.state])).toEqual([
+			['2026-08-14T09:00', 'pending'],
+			['2026-08-21T09:00', 'skipped'],
+			['2026-08-28T09:00', 'pending'],
+		]);
+	});
+
+	it('merges an rdate entry into the window, interleaved chronologically', () => {
+		const schedule: Schedule = {
+			start: '2026-08-07T09:00',
+			rrule: 'FREQ=WEEKLY;BYDAY=FR',
+			rdate: ['2026-08-10T09:00'],
+		};
+		const from = new Date('2026-08-09T00:00:00Z');
+
+		const entries = listOccurrences(schedule, undefined, from, 1, 2);
+
+		expect(entries.map((entry) => entry.start)).toEqual([
+			'2026-08-07T09:00',
+			'2026-08-10T09:00',
+			'2026-08-14T09:00',
+		]);
+	});
+
+	it('reads state from completions: an explicit done: false entry is still pending', () => {
+		const schedule: Schedule = { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
+		const completions: Completion[] = [
+			{ occurrence: '2026-08-07T09:00', done: true, at: '2026-08-07T10:00:00.000Z' },
+			{ occurrence: '2026-08-14T09:00', done: false, at: '2026-08-14T10:00:00.000Z' },
+		];
+		const from = new Date('2026-08-15T00:00:00Z');
+
+		const entries = listOccurrences(schedule, completions, from, 2, 0);
+
+		expect(entries.map((entry) => [entry.start, entry.state])).toEqual([
+			['2026-08-07T09:00', 'done'],
+			['2026-08-14T09:00', 'pending'],
+		]);
+	});
+
+	it('returns an empty list for a non-recurring schedule', () => {
+		expect(listOccurrences({ start: '2026-08-07T09:00' }, undefined, new Date(), 5, 5)).toEqual([]);
+	});
+
+	it("applies duration to every entry's end", () => {
+		const schedule: Schedule = {
+			start: '2026-08-07T09:00',
+			duration: 'PT2H',
+			rrule: 'FREQ=WEEKLY;BYDAY=FR',
+		};
+		const from = new Date('2026-08-08T00:00:00Z');
+
+		const entries = listOccurrences(schedule, undefined, from, 0, 1);
+
+		expect(entries).toEqual([
+			{ start: '2026-08-14T09:00', end: '2026-08-14T11:00', state: 'pending' },
+		]);
 	});
 });

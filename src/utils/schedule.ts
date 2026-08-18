@@ -415,3 +415,103 @@ export function isLastOccurrence(schedule: Schedule, occurrence: string): boolea
 	const probe = new Date(wallClockStringToDate(occurrence).getTime() + 60_000);
 	return walkOccurrence(schedule, probe, 'after') === undefined;
 }
+
+export interface OccurrenceEntry {
+	/** Wall-clock start -- the same value `Completion.occurrence` keys on. */
+	start: string;
+	end: string;
+	state: 'pending' | 'done' | 'skipped';
+}
+
+function rawCandidates(
+	schedule: Schedule,
+	comparisonPoint: Date,
+	direction: 'after' | 'before',
+	count: number,
+): Date[] {
+	const rule = buildRule(schedule);
+	const result: Date[] = [];
+	let cursor = comparisonPoint;
+	let inclusive = direction === 'after';
+
+	for (let i = 0; i < count; i += 1) {
+		const next =
+			direction === 'after' ? rule.after(cursor, inclusive) : rule.before(cursor, inclusive);
+		if (next === null) {
+			break;
+		}
+		result.push(next);
+		cursor = next;
+		inclusive = false;
+	}
+
+	return result;
+}
+
+function occurrenceState(
+	occurrence: string,
+	schedule: Schedule,
+	completions: Completion[] | undefined,
+): OccurrenceEntry['state'] {
+	if (schedule.exdate?.includes(occurrence)) {
+		return 'skipped';
+	}
+
+	const completion = completions?.find((entry) => entry.occurrence === occurrence);
+	return completion?.done === true ? 'done' : 'pending';
+}
+
+/**
+ * Never filters by `exdate` -- it tags. `nextOccurrence` must skip an
+ * excluded date entirely (it really doesn't happen); this function answers
+ * "what can the user act on," and a skipped occurrence has to stay on
+ * screen with an un-skip affordance, or skipping would be irreversible
+ * through this UI.
+ */
+export function listOccurrences(
+	schedule: Schedule,
+	completions: Completion[] | undefined,
+	from: Date,
+	pastCount: number,
+	futureCount: number,
+): OccurrenceEntry[] {
+	if (schedule.rrule === undefined) {
+		return [];
+	}
+
+	const comparisonPoint =
+		schedule.tzid === undefined
+			? deviceLocalWallClock(from)
+			: instantAsWallClockInZone(from, schedule.tzid);
+
+	const rdateDates = (schedule.rdate ?? []).map(wallClockStringToDate);
+
+	function windowSide(direction: 'after' | 'before', count: number): Date[] {
+		const fromRule = rawCandidates(schedule, comparisonPoint, direction, count);
+		const fromRdate = rdateDates.filter((date) =>
+			direction === 'after'
+				? date.getTime() >= comparisonPoint.getTime()
+				: date.getTime() < comparisonPoint.getTime(),
+		);
+
+		const merged = [...fromRule, ...fromRdate]
+			.sort((a, b) => a.getTime() - b.getTime())
+			.filter((date, index, all) => index === 0 || date.getTime() !== all[index - 1].getTime());
+
+		return direction === 'after' ? merged.slice(0, count) : merged.slice(-count);
+	}
+
+	const past = windowSide('before', pastCount);
+	const future = windowSide('after', futureCount);
+
+	return [...past, ...future]
+		.sort((a, b) => a.getTime() - b.getTime())
+		.map((date) => {
+			const start = dateToWallClockString(date);
+			const end =
+				schedule.duration === undefined
+					? start
+					: dateToWallClockString(addDurationToWallClock(date, schedule.duration));
+			return { start, end, state: occurrenceState(start, schedule, completions) };
+		});
+}
