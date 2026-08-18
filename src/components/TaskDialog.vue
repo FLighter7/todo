@@ -51,6 +51,13 @@
 				<p v-if="schedule" class="text-body-2 mt-2 text-medium-emphasis">
 					{{ t('task.schedule.label') }}: {{ scheduleSummary }}
 				</p>
+				<task-completions
+					v-if="showCompletions"
+					:occurrences="occurrences"
+					:locale="locale"
+					@toggle-done="onToggleDone"
+					@toggle-skip="onToggleSkip"
+				/>
 				<div v-if="important || urgent" :class="$style.chips">
 					<v-chip v-if="important" size="small" color="primary">{{ t('task.important') }}</v-chip>
 					<v-chip v-if="urgent" size="small" color="primary">{{ t('task.urgent') }}</v-chip>
@@ -65,20 +72,29 @@ import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EntityDialog from './EntityDialog.vue';
 import ScheduleField from './ScheduleField.vue';
-import { describeRecurrence, formatWallClock, parseRRule } from '@/utils/schedule';
-import type { Schedule } from '@/types';
+import TaskCompletions from './TaskCompletions.vue';
+import { describeRecurrence, formatWallClock, listOccurrences, parseRRule } from '@/utils/schedule';
+import { isPeriodic, type Schedule, type Task } from '@/types';
 import type { TaskDraft } from '@/stores/tasks';
+
+const PAST_WINDOW = 5;
+const FUTURE_WINDOW = 5;
 
 const props = withDefaults(
 	defineProps<{
-		initial?: Partial<TaskDraft>;
+		record?: Task | null;
 		mode?: 'add' | 'edit';
 		goalOptions: Array<{ value: string; title: string }>;
 	}>(),
-	{ initial: () => ({}), mode: 'edit' },
+	{ record: null, mode: 'edit' },
 );
 
-const emit = defineEmits<{ save: [draft: TaskDraft]; cancel: [] }>();
+const emit = defineEmits<{
+	save: [draft: TaskDraft];
+	cancel: [];
+	'toggle-completion-done': [taskId: string, occurrence: string, done: boolean];
+	'toggle-completion-skip': [taskId: string, occurrence: string, skipped: boolean];
+}>();
 
 const open = defineModel<boolean>({ required: true });
 
@@ -119,6 +135,39 @@ const scheduleSummary = computed(() => {
 	return describeRecurrence(rule, t, locale.value);
 });
 
+const showCompletions = computed(() => props.record !== null && isPeriodic(props.record));
+
+const occurrences = computed(() => {
+	const record = props.record;
+	if (record === null || record.schedule === undefined || !isPeriodic(record)) {
+		return [];
+	}
+
+	return listOccurrences(
+		record.schedule,
+		record.completions,
+		new Date(),
+		PAST_WINDOW,
+		FUTURE_WINDOW,
+	);
+});
+
+function onToggleDone(occurrence: string, done: boolean): void {
+	if (props.record === null) {
+		return;
+	}
+
+	emit('toggle-completion-done', props.record.id, occurrence, done);
+}
+
+function onToggleSkip(occurrence: string, skipped: boolean): void {
+	if (props.record === null) {
+		return;
+	}
+
+	emit('toggle-completion-skip', props.record.id, occurrence, skipped);
+}
+
 watch(
 	open,
 	(isOpen) => {
@@ -126,12 +175,12 @@ watch(
 			return;
 		}
 
-		name.value = props.initial.name ?? '';
-		note.value = props.initial.note ?? '';
-		important.value = props.initial.important ?? false;
-		urgent.value = props.initial.urgent ?? false;
-		goalId.value = props.initial.goalId ?? '';
-		schedule.value = props.initial.schedule;
+		name.value = props.record?.name ?? '';
+		note.value = props.record?.note ?? '';
+		important.value = props.record?.important ?? false;
+		urgent.value = props.record?.urgent ?? false;
+		goalId.value = props.record?.goalId ?? '';
+		schedule.value = props.record?.schedule;
 		showErrors.value = false;
 	},
 	{ immediate: true },

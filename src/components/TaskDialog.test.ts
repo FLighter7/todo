@@ -4,9 +4,25 @@ import { mount } from '@vue/test-utils';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
+import { Status, type Task } from '@/types';
+import { listOccurrences } from '@/utils/schedule';
+import TaskCompletions from './TaskCompletions.vue';
 import TaskDialog from './TaskDialog.vue';
 
 const goalOptions = [{ value: 'goal-1', title: 'Learn Japanese' }];
+
+function makeTask(overrides: Partial<Task> = {}): Task {
+	return {
+		id: 'task-1',
+		name: 'Buy milk',
+		created: '2026-08-06T10:00:00.000Z',
+		updated: '2026-08-06T10:00:00.000Z',
+		status: Status.Opened,
+		important: false,
+		urgent: false,
+		...overrides,
+	};
+}
 
 describe('TaskDialog add mode', () => {
 	it('emits a draft including flags and the picked goal', async () => {
@@ -74,7 +90,7 @@ describe('TaskDialog goal picker', () => {
 			props: {
 				modelValue: true,
 				mode: 'edit',
-				initial: { name: 'Buy milk', important: false, urgent: false, goalId: 'closed-goal' },
+				record: makeTask({ goalId: 'closed-goal' }),
 				goalOptions: closedOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
@@ -93,7 +109,7 @@ describe('TaskDialog edit mode', () => {
 			props: {
 				modelValue: true,
 				mode: 'edit',
-				initial: { name: 'Buy milk', important: true, urgent: false, goalId: 'goal-1' },
+				record: makeTask({ important: true, goalId: 'goal-1' }),
 				goalOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
@@ -107,12 +123,7 @@ describe('TaskDialog edit mode', () => {
 
 	it('omits the important/urgent chips entirely when both flags are false', () => {
 		const wrapper = mount(TaskDialog, {
-			props: {
-				modelValue: true,
-				mode: 'edit',
-				initial: { name: 'Buy milk', important: false, urgent: false },
-				goalOptions,
-			},
+			props: { modelValue: true, mode: 'edit', record: makeTask(), goalOptions },
 			global: { plugins: [vuetify, i18n] },
 		});
 
@@ -121,12 +132,7 @@ describe('TaskDialog edit mode', () => {
 
 	it('emits cancel when the cancel-record button is clicked', async () => {
 		const wrapper = mount(TaskDialog, {
-			props: {
-				modelValue: true,
-				mode: 'edit',
-				initial: { name: 'Buy milk', important: false, urgent: false },
-				goalOptions,
-			},
+			props: { modelValue: true, mode: 'edit', record: makeTask(), goalOptions },
 			global: { plugins: [vuetify, i18n] },
 		});
 
@@ -142,7 +148,7 @@ describe('TaskDialog schedule', () => {
 			props: {
 				modelValue: true,
 				mode: 'edit',
-				initial: { name: 'Water plants', schedule: { start: '2026-08-21T09:00' } },
+				record: makeTask({ name: 'Water plants', schedule: { start: '2026-08-21T09:00' } }),
 				goalOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
@@ -175,7 +181,7 @@ describe('TaskDialog schedule', () => {
 			props: {
 				modelValue: true,
 				mode: 'edit',
-				initial: { name: 'Water plants', schedule: { start: '2026-08-21T09:00' } },
+				record: makeTask({ name: 'Water plants', schedule: { start: '2026-08-21T09:00' } }),
 				goalOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
@@ -204,10 +210,10 @@ describe('TaskDialog schedule', () => {
 			props: {
 				modelValue: true,
 				mode: 'edit',
-				initial: {
+				record: makeTask({
 					name: 'File the report',
 					schedule: { start: '2026-08-21T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR;INTERVAL=1' },
-				},
+				}),
 				goalOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
@@ -221,12 +227,114 @@ describe('TaskDialog schedule', () => {
 			props: {
 				modelValue: true,
 				mode: 'edit',
-				initial: { name: 'Water plants', schedule: { start: '2026-08-21T09:00' } },
+				record: makeTask({ name: 'Water plants', schedule: { start: '2026-08-21T09:00' } }),
 				goalOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
 		});
 
 		expect(wrapper.text()).toContain('Aug 21, 2026');
+	});
+});
+
+describe('TaskDialog completions', () => {
+	it('shows the completions section for a periodic record', () => {
+		const wrapper = mount(TaskDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				record: makeTask({
+					schedule: { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' },
+				}),
+				goalOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		expect(wrapper.findComponent(TaskCompletions).exists()).toBe(true);
+	});
+
+	it('hides the completions section for a non-periodic record', () => {
+		const wrapper = mount(TaskDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				record: makeTask({ schedule: { start: '2026-08-07T09:00' } }),
+				goalOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		expect(wrapper.findComponent(TaskCompletions).exists()).toBe(false);
+	});
+
+	it('hides the completions section when there is no record', () => {
+		const wrapper = mount(TaskDialog, {
+			props: { modelValue: true, mode: 'add', goalOptions },
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		expect(wrapper.findComponent(TaskCompletions).exists()).toBe(false);
+	});
+
+	it("computes the occurrence window from the record's schedule and completions", () => {
+		const schedule = { start: '2020-01-03T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
+		const completions = [
+			{ occurrence: '2020-01-03T09:00', done: true, at: '2020-01-03T10:00:00.000Z' },
+		];
+		const wrapper = mount(TaskDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				record: makeTask({ schedule, completions }),
+				goalOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		const expected = listOccurrences(schedule, completions, new Date(), 5, 5);
+		expect(wrapper.findComponent(TaskCompletions).props('occurrences')).toEqual(expected);
+	});
+
+	it('re-emits toggle-completion-done with the record id attached', async () => {
+		const wrapper = mount(TaskDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				record: makeTask({
+					id: 'task-9',
+					schedule: { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' },
+				}),
+				goalOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		await wrapper.findComponent(TaskCompletions).vm.$emit('toggle-done', '2026-08-07T09:00', true);
+
+		expect(wrapper.emitted('toggle-completion-done')).toEqual([
+			['task-9', '2026-08-07T09:00', true],
+		]);
+	});
+
+	it('re-emits toggle-completion-skip with the record id attached', async () => {
+		const wrapper = mount(TaskDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				record: makeTask({
+					id: 'task-9',
+					schedule: { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' },
+				}),
+				goalOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		await wrapper.findComponent(TaskCompletions).vm.$emit('toggle-skip', '2026-08-07T09:00', true);
+
+		expect(wrapper.emitted('toggle-completion-skip')).toEqual([
+			['task-9', '2026-08-07T09:00', true],
+		]);
 	});
 });
