@@ -75,7 +75,7 @@ describe('ScheduleField timezone anchor', () => {
 		await wrapper.get('input[type="checkbox"]').setValue(true);
 		await wrapper.get('input[type="datetime-local"]').setValue('2026-08-21T09:00');
 		await wrapper.findAll('input[type="checkbox"]')[2].setValue(true); // hasTzid
-		const [, tzidSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		const [tzidSelect] = wrapper.findAllComponents({ name: 'VSelect' });
 		await tzidSelect.vm.$emit('update:modelValue', 'America/New_York');
 
 		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([
@@ -99,7 +99,7 @@ describe('ScheduleField existing value', () => {
 	it('derives the timezone switch and field from an existing tzid', () => {
 		const wrapper = mountField({ start: '2026-08-21T09:00', tzid: 'Europe/Warsaw' });
 
-		const [, tzidSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		const [tzidSelect] = wrapper.findAllComponents({ name: 'VSelect' });
 		expect(tzidSelect.props('modelValue')).toBe('Europe/Warsaw');
 	});
 

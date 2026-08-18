@@ -22,20 +22,20 @@
 			:label="t('task.schedule.endTime')"
 		/>
 
-		<v-select
-			v-model="repeat"
-			:items="repeatItems"
-			item-title="title"
-			item-value="value"
-			:label="t('task.schedule.repeat')"
-		/>
-
 		<v-switch v-model="hasTzid" :label="t('task.schedule.hasTzid')" color="primary" hide-details />
 		<v-select
 			v-if="hasTzid"
 			v-model="tzid"
 			:items="timeZoneItems"
 			:label="t('task.schedule.tzid')"
+		/>
+
+		<v-select
+			v-model="repeat"
+			:items="repeatItems"
+			item-title="title"
+			item-value="value"
+			:label="t('task.schedule.repeat')"
 		/>
 	</template>
 </template>
