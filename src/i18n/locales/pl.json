@@ -29,6 +29,14 @@
 		"noGoal": "Bez celu",
 		"empty": "Brak zadań. Dodaj pierwsze.",
 		"schedule": {
+			"enabled": "Ma harmonogram",
+			"start": "Początek",
+			"hasEndTime": "Dodaj czas zakończenia",
+			"endTime": "Czas zakończenia",
+			"hasTzid": "Przypisz strefę czasową",
+			"tzid": "Strefa czasowa",
+			"repeat": "Powtarzanie",
+			"repeatNone": "Nie powtarza się",
 			"recurrence": {
 				"daily": "Codziennie | Co {n} dni | Co {n} dni",
 				"weekly": "Co tydzień | Co {n} tygodnie | Co {n} tygodni",

@@ -29,6 +29,14 @@
 		"noGoal": "No goal",
 		"empty": "No tasks yet. Add the first one.",
 		"schedule": {
+			"enabled": "Has a schedule",
+			"start": "Start",
+			"hasEndTime": "Add an end time",
+			"endTime": "End time",
+			"hasTzid": "Anchor to a timezone",
+			"tzid": "Timezone",
+			"repeat": "Repeat",
+			"repeatNone": "Doesn't repeat",
 			"recurrence": {
 				"daily": "Every day | Every {n} days",
 				"weekly": "Every week | Every {n} weeks",
