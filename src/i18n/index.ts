@@ -6,6 +6,7 @@ import { settingsService } from '@/services/settings/SettingsService';
 import en from './locales/en.json';
 import ru from './locales/ru.json';
 import pl from './locales/pl.json';
+import { slavicPluralRule } from './pluralRules';
 
 export const SUPPORTED_LOCALES = ['en', 'ru', 'pl'] as const;
 
@@ -59,4 +60,5 @@ export const i18n = createI18n({
 	locale: initialLocale,
 	fallbackLocale: 'en',
 	messages: { en, ru, pl },
+	pluralRules: { ru: slavicPluralRule, pl: slavicPluralRule },
 });
