@@ -42,6 +42,7 @@
 						item-value="value"
 						:label="t('goal.dreamLabel')"
 					/>
+					<deadline-field v-model="goalDeadline" />
 				</template>
 
 				<template v-else>
@@ -86,6 +87,8 @@ import { useI18n } from 'vue-i18n';
 import type { DreamDraft } from '@/stores/dreams';
 import type { GoalDraft } from '@/stores/goals';
 import type { TaskDraft } from '@/stores/tasks';
+import DeadlineField from './DeadlineField.vue';
+import type { Deadline } from '@/types';
 
 const props = defineProps<{
 	defaultTab: 'dream' | 'goal' | 'task';
@@ -112,6 +115,7 @@ const dreamNote = ref('');
 const goalName = ref('');
 const goalNote = ref('');
 const goalDreamId = ref('');
+const goalDeadline = ref<Deadline | undefined>(undefined);
 
 const taskName = ref('');
 const taskNote = ref('');
@@ -150,6 +154,7 @@ watch(open, (isOpen) => {
 	goalName.value = '';
 	goalNote.value = '';
 	goalDreamId.value = '';
+	goalDeadline.value = undefined;
 	taskName.value = '';
 	taskNote.value = '';
 	taskImportant.value = false;
@@ -184,6 +189,7 @@ function onSave(): void {
 			name: goalName.value.trim(),
 			note: trimmedNote === '' ? undefined : trimmedNote,
 			dreamId: goalDreamId.value === '' ? undefined : goalDreamId.value,
+			deadline: goalDeadline.value,
 		});
 		open.value = false;
 		return;

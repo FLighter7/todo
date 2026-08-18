@@ -58,6 +58,19 @@ describe('AddEntityDialog saving a goal', () => {
 			[{ name: 'Learn Japanese', note: undefined, dreamId: 'dream-1' }],
 		]);
 	});
+
+	it('emits save-goal with a deadline when one is set', async () => {
+		const wrapper = mountDialog('goal');
+
+		await wrapper.get('input').setValue('Learn Japanese');
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+		await wrapper.get('input[type="number"]').setValue('2027');
+		await clickButtonByText(wrapper, 'Save');
+
+		expect(wrapper.emitted('save-goal')).toEqual([
+			[{ name: 'Learn Japanese', note: undefined, dreamId: undefined, deadline: { year: 2027 } }],
+		]);
+	});
 });
 
 describe('AddEntityDialog saving a task', () => {
