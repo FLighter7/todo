@@ -4,7 +4,6 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { clickButtonByText } from '@/vitestHelpers';
 import { Status, type Task } from '@/types';
 import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
 import { useTasksStore } from '@/stores/tasks';
@@ -55,7 +54,7 @@ describe('MatrixBoard', () => {
 		await addButtons[2].trigger('click'); // delegate: urgent, not important
 
 		await wrapper.get('input').setValue('Call the bank');
-		await clickButtonByText(wrapper, 'Save');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
 
 		expect(store.records[0]).toMatchObject({
 			name: 'Call the bank',

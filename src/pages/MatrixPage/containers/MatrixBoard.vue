@@ -27,19 +27,26 @@
 			/>
 		</div>
 
-		<task-form v-model="dialogOpen" :initial="initialDraft" @submit="store.add($event)" />
+		<task-dialog
+			v-model="dialogOpen"
+			mode="add"
+			:initial="initialDraft"
+			:goal-options="goalOptions"
+			@save="store.add($event)"
+		/>
 	</v-container>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import {
 	mdiAccountArrowRightOutline,
 	mdiCalendarClockOutline,
 	mdiFire,
 	mdiTrashCanOutline,
 } from '@mdi/js';
-import TaskForm from '@/components/TaskForm.vue';
+import TaskDialog from '@/components/TaskDialog.vue';
+import { useGoalsStore } from '@/stores/goals';
 import TaskQuadrant from '../TaskQuadrant.vue';
 import { Status } from '@/types';
 import {
@@ -51,9 +58,14 @@ import {
 } from '@/stores/tasks';
 
 const store = useTasksStore();
+const goals = useGoalsStore();
 
 const dialogOpen = ref(false);
 const initialDraft = ref<Partial<TaskDraft>>({});
+
+const goalOptions = computed(() =>
+	goals.active.map((goal) => ({ value: goal.id, title: goal.name })),
+);
 
 const quadrantMeta: Record<QuadrantKey, { icon: string; accent?: boolean }> = {
 	do: { icon: mdiFire, accent: true },
