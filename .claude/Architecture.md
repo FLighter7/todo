@@ -63,6 +63,8 @@ src/
 
 	composables/             — Vue-tied reusable logic, e.g. useCascadeCancel.ts (cascading-cancel
 	                            counting/execution, shared by the Dreams and Goals page containers)
+	                            and useToggleConfirm.ts (Done/Reopen confirm gating, shared by all
+	                            three page containers)
 	utils/                   — pure, Vue-independent utility functions, one per file, e.g.
 	                            collectGarbage.ts (closed-record and stale-completion pruning)
 	assets/                  — assets imported into the build, e.g. the self-hosted webfonts under
