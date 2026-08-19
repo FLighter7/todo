@@ -148,14 +148,18 @@ describe('parseTask', () => {
 		expect(() =>
 			parseTask(
 				makeRaw({
-					completions: [{ occurrence: '2026-08-07T09:00:00', done: true, at: '2026-08-07T10:00:00.000Z' }],
+					completions: [
+						{ occurrence: '2026-08-07T09:00:00', done: true, at: '2026-08-07T10:00:00.000Z' },
+					],
 				}),
 			),
 		).toThrow(EntityFormatError);
 	});
 
 	it('accepts a valid wall-clock completion occurrence', () => {
-		const completions = [{ occurrence: '2026-08-07T09:00', done: true, at: '2026-08-07T10:00:00.000Z' }];
+		const completions = [
+			{ occurrence: '2026-08-07T09:00', done: true, at: '2026-08-07T10:00:00.000Z' },
+		];
 
 		expect(parseTask(makeRaw({ completions })).completions).toEqual(completions);
 	});
