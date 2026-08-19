@@ -8,7 +8,7 @@ The detailed reference for how this repository is organized. CLAUDE.md keeps onl
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `.claude/`                            | Claude Code config: `CLAUDE.md` (working notes) and this file                                                                     |
 | `dist/`                               | Build output, git-ignored                                                                                                         |
-| `docs/`                               | `docs/superpowers/specs/` and `docs/superpowers/plans/` — design intent and step-by-step plans, see CLAUDE.md's "Process" section |
+| `docs/`                               | `docs/decisions.md` — durable rationale and conventions from finished build stages, see CLAUDE.md's "Process" section            |
 | `e2e/`                                | Playwright end-to-end tests, run against a built `npm run preview` server                                                         |
 | `node_modules/`                       | Installed dependencies                                                                                                            |
 | `public/`                             | Static assets copied verbatim into the build (PWA icons, favicon)                                                                 |

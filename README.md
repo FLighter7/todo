@@ -83,4 +83,4 @@ The app targets GitHub Pages and builds with the base path `/todo/`, so the addr
 
 ## Documentation
 
-Project documents live in [docs/superpowers/](docs/superpowers/): specs describe the intent and the decisions behind it, plans describe the implementation step by step.
+Durable rationale and conventions from finished build stages live in [docs/decisions.md](docs/decisions.md).
