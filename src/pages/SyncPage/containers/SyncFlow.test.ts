@@ -300,6 +300,49 @@ describe('SyncFlow task completions', () => {
 	});
 });
 
+describe('SyncFlow busy flag', () => {
+	it('is false while idle, true once a pairing starts, and false again once it fails', async () => {
+		createOffer.mockResolvedValue('1oc.offer');
+		exchange.mockRejectedValue(new Error('boom'));
+
+		await loadStores([], [], []);
+
+		const wrapper = mount(SyncFlow, {
+			global: { plugins: [vuetify, i18n], stubs: { SyncCode: true, SyncScanner: true } },
+		});
+
+		expect(wrapper.vm.busy).toBe(false);
+
+		await clickButtonByText(wrapper, 'This device starts');
+		expect(wrapper.vm.busy).toBe(true);
+
+		await wrapper.findComponent(SyncScanner).vm.$emit('code', '1oa.answer');
+		await flushPromises();
+
+		expect(wrapper.vm.busy).toBe(false);
+	});
+
+	it('is false again once a pairing finishes successfully', async () => {
+		createOffer.mockResolvedValue('1oc.offer');
+		acceptAnswer.mockResolvedValue(undefined);
+		exchange.mockResolvedValue(remotePayload());
+
+		await loadStores([], [], []);
+
+		const wrapper = mount(SyncFlow, {
+			global: { plugins: [vuetify, i18n], stubs: { SyncCode: true, SyncScanner: true } },
+		});
+
+		await clickButtonByText(wrapper, 'This device starts');
+		expect(wrapper.vm.busy).toBe(true);
+
+		await wrapper.findComponent(SyncScanner).vm.$emit('code', '1oa.answer');
+		await flushPromises();
+
+		expect(wrapper.vm.busy).toBe(false);
+	});
+});
+
 describe('SyncFlow reset', () => {
 	it('closes the connection and returns to idle', async () => {
 		createOffer.mockResolvedValue('1oc.offer');

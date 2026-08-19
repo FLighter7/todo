@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SyncCode from '../SyncCode.vue';
 import SyncScanner from '../SyncScanner.vue';
@@ -127,6 +127,11 @@ const ourCode = ref('');
 const failure = ref('');
 const result = ref({ added: 0, updated: 0 });
 const incomingSettings = ref<AppSettings | null>(null);
+
+/** Whether unmounting right now would silently abort an in-progress pairing. */
+const busy = computed(() => !['idle', 'done', 'failed'].includes(step.value));
+
+defineExpose({ busy });
 
 let connection: SyncConnection | null = null;
 

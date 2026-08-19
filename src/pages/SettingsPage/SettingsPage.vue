@@ -38,13 +38,6 @@
 				class="mx-4 mb-4"
 			/>
 
-			<VListItem
-				:to="{ name: 'sync' }"
-				:title="t('sync.title')"
-				:prepend-icon="mdiSync"
-				:append-icon="mdiChevronRight"
-			/>
-
 			<VListSubheader>{{ t('backup.title') }}</VListSubheader>
 
 			<BackupActions @notify="emit('notify', $event)" />
@@ -89,7 +82,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { mdiChevronRight, mdiSync } from '@mdi/js';
 import BackupActions from '@/containers/BackupActions.vue';
 import { getStartPageOptions, type StartPage } from '@/router';
 import { useSettingsStore, type SettingsEntity } from '@/stores/settings';

@@ -116,7 +116,10 @@
 		"confirmSettingsBody": "The other device sent its settings. Replace your local settings with them?",
 		"confirmSettingsAccept": "Replace",
 		"confirmSettingsDecline": "Keep mine",
-		"settingsDone": "Settings synced."
+		"settingsDone": "Settings synced.",
+		"tabQr": "QR code",
+		"tabServer": "Server",
+		"serverStub": "Server connection options will appear here soon."
 	},
 	"settings": {
 		"startPage": "Start page",

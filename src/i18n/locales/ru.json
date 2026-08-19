@@ -116,7 +116,10 @@
 		"confirmSettingsBody": "Второе устройство прислало свои настройки. Заменить ими локальные?",
 		"confirmSettingsAccept": "Заменить",
 		"confirmSettingsDecline": "Оставить свои",
-		"settingsDone": "Настройки синхронизированы."
+		"settingsDone": "Настройки синхронизированы.",
+		"tabQr": "QR-код",
+		"tabServer": "Сервер",
+		"serverStub": "Здесь скоро появятся варианты подключения к серверу."
 	},
 	"settings": {
 		"startPage": "Стартовая страница",

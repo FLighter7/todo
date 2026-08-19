@@ -23,7 +23,13 @@
 					:icon="mdiCogOutline"
 					variant="text"
 					:aria-label="t('nav.settings')"
-					@click="onGearClick"
+					@click="onNavIconClick('settings')"
+				/>
+				<VBtn
+					:icon="mdiSync"
+					variant="text"
+					:aria-label="t('sync.title')"
+					@click="onNavIconClick('sync')"
 				/>
 			</template>
 
@@ -60,7 +66,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useLocale } from 'vuetify';
-import { mdiCogOutline } from '@mdi/js';
+import { mdiCogOutline, mdiSync } from '@mdi/js';
 import BottomNav from './BottomNav.vue';
 import LocaleMenu from '@/containers/LocaleMenu.vue';
 import ThemeMenu from '@/containers/ThemeMenu.vue';
@@ -82,7 +88,10 @@ const router = useRouter();
 
 const notice = ref('');
 
-const lastMainRoute = ref<StartPage>(readStoredStartPage());
+// Prefer the route we actually landed on (e.g. a reload on /matrix) over the
+// stored start page — otherwise a deep-link toggles back to the wrong place.
+const initialMainRoute = getStartPageOptions().find((option) => option.value === route.name)?.value;
+const lastMainRoute = ref<StartPage>(initialMainRoute ?? readStoredStartPage());
 
 watch(
 	() => route.name,
@@ -121,12 +130,12 @@ const snackbarOpen = computed({
 	},
 });
 
-function onGearClick(): void {
-	if (route.name === 'settings') {
+function onNavIconClick(target: 'settings' | 'sync'): void {
+	if (route.name === target) {
 		router.push({ name: lastMainRoute.value });
 		return;
 	}
 
-	router.push({ name: 'settings' });
+	router.push({ name: target });
 }
 </script>
