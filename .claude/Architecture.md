@@ -4,24 +4,24 @@ The detailed reference for how this repository is organized. CLAUDE.md keeps onl
 
 ## Root
 
-| Path                                  | What it is                                                                                                                        |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `.claude/`                            | Claude Code config: `CLAUDE.md` (working notes) and this file                                                                     |
-| `dist/`                               | Build output, git-ignored                                                                                                         |
-| `docs/`                               | `docs/decisions.md` — durable rationale and conventions from finished build stages, see CLAUDE.md's "Process" section            |
-| `e2e/`                                | Playwright end-to-end tests, run against a built `npm run preview` server                                                         |
-| `node_modules/`                       | Installed dependencies                                                                                                            |
-| `public/`                             | Static assets copied verbatim into the build (PWA icons, favicon)                                                                 |
-| `src/`                                | Application source — see below                                                                                                    |
-| `index.html`                          | Vite's HTML entry point, loads `/src/index.ts`                                                                                    |
-| `package.json`, `package-lock.json`   | npm manifest and lockfile                                                                                                         |
-| `tsconfig.json`                       | TypeScript config; declares the `@/*` → `./src/*` path alias                                                                      |
-| `vite.config.ts`                      | Vite config; also the Vitest config (single `test` block) and the PWA plugin config                                               |
-| `playwright.config.ts`                | Playwright config: test directory, base URL, and the `webServer` that runs `npm run preview`                                      |
-| `eslint.config.js`                    | Flat ESLint config, including the `vue/block-order` rule (style → template → script)                                              |
-| `.prettierrc.json`, `.prettierignore` | Formatting config                                                                                                                 |
-| `.gitignore`, `.gitattributes`        | git settings (the latter normalizes line endings to LF)                                                                           |
-| `README.md`                           | Project overview for a human reader: commands, data durability, sync, install, deployment                                         |
+| Path                                  | What it is                                                                                                            |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `.claude/`                            | Claude Code config: `CLAUDE.md` (working notes) and this file                                                         |
+| `dist/`                               | Build output, git-ignored                                                                                             |
+| `docs/`                               | `docs/decisions.md` — durable rationale and conventions from finished build stages, see CLAUDE.md's "Process" section |
+| `e2e/`                                | Playwright end-to-end tests, run against a built `npm run preview` server                                             |
+| `node_modules/`                       | Installed dependencies                                                                                                |
+| `public/`                             | Static assets copied verbatim into the build (PWA icons, favicon)                                                     |
+| `src/`                                | Application source — see below                                                                                        |
+| `index.html`                          | Vite's HTML entry point, loads `/src/index.ts`                                                                        |
+| `package.json`, `package-lock.json`   | npm manifest and lockfile                                                                                             |
+| `tsconfig.json`                       | TypeScript config; declares the `@/*` → `./src/*` path alias                                                          |
+| `vite.config.ts`                      | Vite config; also the Vitest config (single `test` block) and the PWA plugin config                                   |
+| `playwright.config.ts`                | Playwright config: test directory, base URL, and the `webServer` that runs `npm run preview`                          |
+| `eslint.config.js`                    | Flat ESLint config, including the `vue/block-order` rule (style → template → script)                                  |
+| `.prettierrc.json`, `.prettierignore` | Formatting config                                                                                                     |
+| `.gitignore`, `.gitattributes`        | git settings (the latter normalizes line endings to LF)                                                               |
+| `README.md`                           | Project overview for a human reader: commands, data durability, sync, install, deployment                             |
 
 ## `src/` structure
 
@@ -71,7 +71,7 @@ src/
 	                            fonts/
 ```
 
-Test files (`*.test.ts`) are co-located next to the file they test — every layer has some today, `.vue` files included (e.g. `TaskForm.test.ts` next to `TaskForm.vue`).
+Test files (`*.test.ts`) live in a `__tests__/` subfolder next to the file they test — every layer has some today, `.vue` files included (e.g. `src/components/__tests__/TaskDialog.test.ts` next to `src/components/TaskDialog.vue`).
 
 ## Dependency direction
 
