@@ -96,7 +96,7 @@ import {
 	type SyncSettingsPayload,
 } from '@/services/sync/SyncConnection';
 import { syncMerger } from '@/services/sync/SyncMerger';
-import { collectGarbage, pruneCompletions } from '@/utils';
+import { collectGarbage, pruneCompletions, pruneExdate } from '@/utils';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
@@ -235,7 +235,12 @@ async function runExchange(): Promise<void> {
 		const mergedDreams = sweep(syncMerger.merge([...dreams.records], theirs.dreams), now);
 		const mergedGoals = sweep(syncMerger.merge([...goals.records], theirs.goals), now);
 		const mergedTasks = sweep(syncMerger.mergeTasks([...tasks.records], theirs.tasks), now).map(
-			(task) => pruneCompletions(task, settings.general.cleanupDays, now),
+			(task) =>
+				pruneExdate(
+					pruneCompletions(task, settings.general.cleanupDays, now),
+					settings.general.cleanupDays,
+					now,
+				),
 		);
 
 		const merged = [...mergedDreams, ...mergedGoals, ...mergedTasks];
