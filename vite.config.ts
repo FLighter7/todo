@@ -12,7 +12,13 @@ export default defineConfig({
 		vue(),
 		vuetify({ autoImport: true }),
 		vueI18n({
-			include: [fileURLToPath(new URL('./src/i18n/locales/**', import.meta.url))],
+			// Only the top-level catalogs (en/ru/pl.json) are real translation
+			// message tables. `**` would also sweep up src/i18n/locales/mockData/
+			// -- plain content pools for the sample-data generator, not messages
+			// -- and precompile their string arrays into vue-i18n's compiled
+			// message AST format, silently corrupting them for any non-i18n
+			// consumer (see src/services/mockData/pools.ts / MockDataService.ts).
+			include: [fileURLToPath(new URL('./src/i18n/locales/*.json', import.meta.url))],
 			runtimeOnly: true,
 		}),
 		VitePWA({
