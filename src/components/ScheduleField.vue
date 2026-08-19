@@ -7,38 +7,33 @@
 </style>
 
 <template>
-	<v-switch
-		v-model="hasSchedule"
-		:label="t('task.schedule.enabled')"
-		color="primary"
-		hide-details
-	/>
+	<VSwitch v-model="hasSchedule" :label="t('task.schedule.enabled')" color="primary" hide-details />
 
 	<template v-if="hasSchedule">
-		<v-text-field v-model="start" type="datetime-local" :label="t('task.schedule.start')" />
+		<VTextField v-model="start" type="datetime-local" :label="t('task.schedule.start')" />
 
-		<v-switch
+		<VSwitch
 			v-model="hasEndTime"
 			:label="t('task.schedule.hasEndTime')"
 			color="primary"
 			hide-details
 		/>
-		<v-text-field
+		<VTextField
 			v-if="hasEndTime"
 			v-model="endTime"
 			type="time"
 			:label="t('task.schedule.endTime')"
 		/>
 
-		<v-switch v-model="hasTzid" :label="t('task.schedule.hasTzid')" color="primary" hide-details />
-		<v-select
+		<VSwitch v-model="hasTzid" :label="t('task.schedule.hasTzid')" color="primary" hide-details />
+		<VSelect
 			v-if="hasTzid"
 			v-model="tzid"
 			:items="timeZoneItems"
 			:label="t('task.schedule.tzid')"
 		/>
 
-		<v-select
+		<VSelect
 			v-model="repeat"
 			:items="repeatItems"
 			item-title="title"
@@ -47,7 +42,7 @@
 		/>
 
 		<template v-if="repeat !== 'none' && repeat !== 'custom'">
-			<v-text-field
+			<VTextField
 				v-model.number="interval"
 				type="number"
 				min="1"
@@ -55,7 +50,7 @@
 			/>
 
 			<div v-if="repeat === 'weekly'" :class="$style.weekdays">
-				<v-checkbox
+				<VCheckbox
 					v-for="day in weekdayItems"
 					:key="day.value"
 					:model-value="byweekday.includes(day.value)"
@@ -67,7 +62,7 @@
 				/>
 			</div>
 
-			<v-select
+			<VSelect
 				v-model="endType"
 				:items="endTypeItems"
 				item-title="title"
@@ -75,7 +70,7 @@
 				:label="t('task.schedule.endType')"
 			/>
 
-			<v-text-field
+			<VTextField
 				v-if="endType === 'count'"
 				v-model.number="count"
 				type="number"
@@ -83,7 +78,7 @@
 				:label="t('task.schedule.endCountField')"
 			/>
 
-			<v-text-field
+			<VTextField
 				v-if="endType === 'until'"
 				v-model="until"
 				type="date"

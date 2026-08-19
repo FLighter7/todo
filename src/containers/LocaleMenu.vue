@@ -14,19 +14,19 @@
 </style>
 
 <template>
-	<v-btn
+	<VBtn
 		:icon="mdiTranslate"
 		variant="text"
 		:aria-label="t('app.toggleLanguage')"
 		@click="open = true"
 	/>
 
-	<v-dialog v-model="open" max-width="360">
-		<v-card variant="elevated">
-			<v-card-title>{{ t('settings.language') }}</v-card-title>
+	<VDialog v-model="open" max-width="360">
+		<VCard variant="elevated">
+			<VCardTitle>{{ t('settings.language') }}</VCardTitle>
 
-			<v-list :class="$style.list">
-				<v-list-item
+			<VList :class="$style.list">
+				<VListItem
 					v-for="code in SUPPORTED_LOCALES"
 					:key="code"
 					:active="locale === code"
@@ -38,10 +38,10 @@
 					<template #prepend>
 						<img :src="LOCALE_FLAGS[code]" :class="$style.flag" alt="" />
 					</template>
-				</v-list-item>
-			</v-list>
-		</v-card>
-	</v-dialog>
+				</VListItem>
+			</VList>
+		</VCard>
+	</VDialog>
 </template>
 
 <script setup lang="ts">

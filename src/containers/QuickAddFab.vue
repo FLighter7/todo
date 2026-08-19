@@ -5,7 +5,7 @@
 </style>
 
 <template>
-	<v-btn
+	<VBtn
 		:class="$style.fab"
 		:icon="mdiPlus"
 		color="primary"
@@ -15,7 +15,7 @@
 		@click="dialogOpen = true"
 	/>
 
-	<add-entity-dialog
+	<AddEntityDialog
 		v-model="dialogOpen"
 		:default-tab="defaultTab"
 		:dream-options="dreamOptions"

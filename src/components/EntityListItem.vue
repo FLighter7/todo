@@ -1,7 +1,7 @@
 <template>
-	<v-list-item @click="emit('click')">
+	<VListItem @click="emit('click')">
 		<template #prepend>
-			<v-checkbox-btn
+			<VCheckboxBtn
 				:model-value="done"
 				:aria-label="t('task.done')"
 				@click.stop
@@ -9,13 +9,13 @@
 			/>
 		</template>
 
-		<v-list-item-title>{{ name }}</v-list-item-title>
-		<v-list-item-subtitle v-if="note">{{ note }}</v-list-item-subtitle>
+		<VListItemTitle>{{ name }}</VListItemTitle>
+		<VListItemSubtitle v-if="note">{{ note }}</VListItemSubtitle>
 
 		<template v-if="date" #append>
 			<span class="text-caption text-medium-emphasis">{{ date }}</span>
 		</template>
-	</v-list-item>
+	</VListItem>
 </template>
 
 <script setup lang="ts">

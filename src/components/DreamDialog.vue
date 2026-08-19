@@ -1,5 +1,5 @@
 <template>
-	<entity-dialog
+	<EntityDialog
 		v-model="open"
 		:title="t('dream.title')"
 		:mode="mode"
@@ -8,21 +8,21 @@
 	>
 		<template #default="{ editing }">
 			<template v-if="editing">
-				<v-text-field
+				<VTextField
 					v-model="name"
 					:label="t('entity.name')"
 					:error-messages="nameError"
 					autofocus
 					@keyup.enter="onSave"
 				/>
-				<v-textarea v-model="note" :label="t('entity.note')" rows="3" />
+				<VTextarea v-model="note" :label="t('entity.note')" rows="3" />
 			</template>
 			<template v-else>
 				<div class="text-h6">{{ name }}</div>
 				<p v-if="note" class="text-body-2 mt-2">{{ note }}</p>
 			</template>
 		</template>
-	</entity-dialog>
+	</EntityDialog>
 </template>
 
 <script setup lang="ts">

@@ -23,7 +23,7 @@
 
 <template>
 	<nav :class="$style.bar">
-		<v-btn
+		<VBtn
 			:to="{ name: 'dreams' }"
 			variant="text"
 			stacked
@@ -32,9 +32,9 @@
 			:color="route.name === 'dreams' ? 'primary' : undefined"
 		>
 			{{ t('nav.dreams') }}
-		</v-btn>
+		</VBtn>
 
-		<v-btn
+		<VBtn
 			:to="{ name: 'goals' }"
 			variant="text"
 			stacked
@@ -43,13 +43,13 @@
 			:color="route.name === 'goals' ? 'primary' : undefined"
 		>
 			{{ t('nav.goals') }}
-		</v-btn>
+		</VBtn>
 
 		<div :class="$style.fabWrap">
-			<quick-add-fab />
+			<QuickAddFab />
 		</div>
 
-		<v-btn
+		<VBtn
 			:to="{ name: 'tasks' }"
 			variant="text"
 			stacked
@@ -58,9 +58,9 @@
 			:color="route.name === 'tasks' ? 'primary' : undefined"
 		>
 			{{ t('nav.tasks') }}
-		</v-btn>
+		</VBtn>
 
-		<v-btn
+		<VBtn
 			:to="{ name: 'matrix' }"
 			variant="text"
 			stacked
@@ -69,7 +69,7 @@
 			:color="route.name === 'matrix' ? 'primary' : undefined"
 		>
 			{{ t('nav.matrix') }}
-		</v-btn>
+		</VBtn>
 	</nav>
 </template>
 

@@ -23,42 +23,42 @@
 </style>
 
 <template>
-	<v-card
+	<VCard
 		:class="$style.card"
 		:variant="accent ? 'tonal' : 'outlined'"
 		:color="accent ? 'primary' : undefined"
 	>
-		<v-card-title :class="$style.title">
-			<v-icon :icon="icon" size="small" />
+		<VCardTitle :class="$style.title">
+			<VIcon :icon="icon" size="small" />
 			<span class="text-subtitle-1" :class="quadrant === 'eliminate' ? $style.muted : undefined">
 				{{ t(`quadrant.${quadrant}`) }}
 			</span>
-			<v-spacer />
-			<v-btn
+			<VSpacer />
+			<VBtn
 				:icon="mdiPlus"
 				variant="text"
 				density="comfortable"
 				:aria-label="t('form.add')"
 				@click="emit('add', quadrant)"
 			/>
-		</v-card-title>
+		</VCardTitle>
 
-		<v-list :class="$style.list" bg-color="transparent" density="compact">
-			<v-list-item v-if="items.length === 0" :title="t('quadrant.empty')" disabled />
+		<VList :class="$style.list" bg-color="transparent" density="compact">
+			<VListItem v-if="items.length === 0" :title="t('quadrant.empty')" disabled />
 
-			<v-list-item v-for="task in items" :key="task.id">
+			<VListItem v-for="task in items" :key="task.id">
 				<template #prepend>
-					<v-checkbox-btn
+					<VCheckboxBtn
 						:model-value="false"
 						:aria-label="t('task.done')"
 						@update:model-value="emit('done', task.id)"
 					/>
 				</template>
 
-				<v-list-item-title>{{ task.name }}</v-list-item-title>
-			</v-list-item>
-		</v-list>
-	</v-card>
+				<VListItemTitle>{{ task.name }}</VListItemTitle>
+			</VListItem>
+		</VList>
+	</VCard>
 </template>
 
 <script setup lang="ts">

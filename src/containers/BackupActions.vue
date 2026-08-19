@@ -5,8 +5,8 @@
 </style>
 
 <template>
-	<v-list-item :prepend-icon="mdiDownloadOutline" :title="t('backup.export')" @click="exportFile" />
-	<v-list-item :prepend-icon="mdiUploadOutline" :title="t('backup.import')" @click="pickFile" />
+	<VListItem :prepend-icon="mdiDownloadOutline" :title="t('backup.export')" @click="exportFile" />
+	<VListItem :prepend-icon="mdiUploadOutline" :title="t('backup.import')" @click="pickFile" />
 
 	<input
 		ref="fileInput"
@@ -16,26 +16,26 @@
 		@change="onFileChosen"
 	/>
 
-	<v-dialog v-model="confirmOpen" max-width="440">
-		<v-card variant="elevated">
-			<v-card-title>{{ t('backup.confirmTitle') }}</v-card-title>
+	<VDialog v-model="confirmOpen" max-width="440">
+		<VCard variant="elevated">
+			<VCardTitle>{{ t('backup.confirmTitle') }}</VCardTitle>
 
-			<v-card-text>
+			<VCardText>
 				<p>
 					{{ t('backup.confirmBody', { incoming: incomingCount, current: currentCount }) }}
 				</p>
 				<p v-if="exportedAt" class="text-medium-emphasis mt-2">
 					{{ t('backup.exportedAt', { date: exportedAt }) }}
 				</p>
-			</v-card-text>
+			</VCardText>
 
-			<v-card-actions>
-				<v-spacer />
-				<v-btn variant="text" @click="cancelImport">{{ t('form.cancel') }}</v-btn>
-				<v-btn color="error" variant="flat" @click="confirmImport">{{ t('backup.replace') }}</v-btn>
-			</v-card-actions>
-		</v-card>
-	</v-dialog>
+			<VCardActions>
+				<VSpacer />
+				<VBtn variant="text" @click="cancelImport">{{ t('form.cancel') }}</VBtn>
+				<VBtn color="error" variant="flat" @click="confirmImport">{{ t('backup.replace') }}</VBtn>
+			</VCardActions>
+		</VCard>
+	</VDialog>
 </template>
 
 <script setup lang="ts">

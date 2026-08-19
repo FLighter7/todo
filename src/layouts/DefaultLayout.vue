@@ -16,10 +16,10 @@
 </style>
 
 <template>
-	<v-app>
-		<v-app-bar density="comfortable">
+	<VApp>
+		<VAppBar density="comfortable">
 			<template #prepend>
-				<v-btn
+				<VBtn
 					:icon="mdiCogOutline"
 					variant="text"
 					:aria-label="t('nav.settings')"
@@ -30,13 +30,13 @@
 			<span :class="$style.logo">TODO</span>
 
 			<template #append>
-				<theme-menu />
-				<locale-menu />
+				<ThemeMenu />
+				<LocaleMenu />
 			</template>
-		</v-app-bar>
+		</VAppBar>
 
-		<v-main :class="$style.main">
-			<v-alert
+		<VMain :class="$style.main">
+			<VAlert
 				v-if="!store.persistent"
 				type="warning"
 				variant="tonal"
@@ -44,15 +44,15 @@
 				:text="t('storage.unavailable')"
 			/>
 
-			<router-view @notify="notice = $event" />
+			<RouterView @notify="notice = $event" />
 
-			<v-snackbar v-model="snackbarOpen" :color="snackbarColor" location="top" timeout="5000">
+			<VSnackbar v-model="snackbarOpen" :color="snackbarColor" location="top" timeout="5000">
 				{{ snackbarText }}
-			</v-snackbar>
-		</v-main>
+			</VSnackbar>
+		</VMain>
 
-		<bottom-nav />
-	</v-app>
+		<BottomNav />
+	</VApp>
 </template>
 
 <script setup lang="ts">

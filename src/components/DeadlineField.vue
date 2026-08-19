@@ -1,13 +1,8 @@
 <template>
-	<v-switch
-		v-model="hasDeadline"
-		:label="t('goal.deadline.enabled')"
-		color="primary"
-		hide-details
-	/>
+	<VSwitch v-model="hasDeadline" :label="t('goal.deadline.enabled')" color="primary" hide-details />
 
 	<template v-if="hasDeadline">
-		<v-select
+		<VSelect
 			v-model="precision"
 			:items="precisionItems"
 			item-title="title"
@@ -15,7 +10,7 @@
 			:label="t('goal.deadline.precision')"
 		/>
 
-		<v-text-field
+		<VTextField
 			:model-value="yearInput"
 			type="number"
 			min="1"
@@ -24,7 +19,7 @@
 			@update:model-value="onYearInput"
 		/>
 
-		<v-select
+		<VSelect
 			v-if="precision === 'day' || precision === 'month'"
 			v-model="month"
 			:items="monthItems"
@@ -33,7 +28,7 @@
 			:label="t('goal.deadline.month')"
 		/>
 
-		<v-select
+		<VSelect
 			v-if="precision === 'day'"
 			v-model="day"
 			:items="dayItems"
@@ -42,7 +37,7 @@
 			:label="t('goal.deadline.day')"
 		/>
 
-		<v-select
+		<VSelect
 			v-if="precision === 'season'"
 			v-model="season"
 			:items="seasonItems"

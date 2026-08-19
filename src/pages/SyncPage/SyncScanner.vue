@@ -18,10 +18,10 @@
 	<div :class="$style.wrap">
 		<video v-show="cameraOn" ref="video" :class="$style.video" muted playsinline />
 
-		<v-alert v-if="cameraError" type="info" variant="tonal" :text="t('sync.cameraFailed')" />
+		<VAlert v-if="cameraError" type="info" variant="tonal" :text="t('sync.cameraFailed')" />
 		<p v-else-if="cameraOn" class="text-center text-medium-emphasis">{{ t('sync.scanning') }}</p>
 
-		<v-textarea
+		<VTextarea
 			v-model="pasted"
 			:label="t('sync.orPaste')"
 			rows="2"
@@ -29,9 +29,9 @@
 			hide-details
 			class="mt-2"
 		/>
-		<v-btn :disabled="pasted.trim() === ''" variant="tonal" @click="submitPasted">
+		<VBtn :disabled="pasted.trim() === ''" variant="tonal" @click="submitPasted">
 			{{ t('sync.paste') }}
-		</v-btn>
+		</VBtn>
 	</div>
 </template>
 

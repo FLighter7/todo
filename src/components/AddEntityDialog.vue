@@ -6,80 +6,80 @@
 </style>
 
 <template>
-	<v-dialog v-model="open" max-width="480">
-		<v-card variant="elevated">
-			<v-tabs v-model="activeTab" color="primary">
-				<v-tab value="dream">{{ t('dream.title') }}</v-tab>
-				<v-tab value="goal">{{ t('goal.title') }}</v-tab>
-				<v-tab value="task">{{ t('task.title') }}</v-tab>
-			</v-tabs>
+	<VDialog v-model="open" max-width="480">
+		<VCard variant="elevated">
+			<VTabs v-model="activeTab" color="primary">
+				<VTab value="dream">{{ t('dream.title') }}</VTab>
+				<VTab value="goal">{{ t('goal.title') }}</VTab>
+				<VTab value="task">{{ t('task.title') }}</VTab>
+			</VTabs>
 
-			<v-card-text>
+			<VCardText>
 				<template v-if="activeTab === 'dream'">
-					<v-text-field
+					<VTextField
 						v-model="dreamName"
 						:label="t('entity.name')"
 						:error-messages="dreamNameError"
 						autofocus
 						@keyup.enter="onSave"
 					/>
-					<v-textarea v-model="dreamNote" :label="t('entity.note')" rows="3" />
+					<VTextarea v-model="dreamNote" :label="t('entity.note')" rows="3" />
 				</template>
 
 				<template v-else-if="activeTab === 'goal'">
-					<v-text-field
+					<VTextField
 						v-model="goalName"
 						:label="t('entity.name')"
 						:error-messages="goalNameError"
 						autofocus
 						@keyup.enter="onSave"
 					/>
-					<v-textarea v-model="goalNote" :label="t('entity.note')" rows="3" />
-					<v-select
+					<VTextarea v-model="goalNote" :label="t('entity.note')" rows="3" />
+					<VSelect
 						v-model="goalDreamId"
 						:items="goalDreamSelectItems"
 						item-title="title"
 						item-value="value"
 						:label="t('goal.dreamLabel')"
 					/>
-					<deadline-field v-model="goalDeadline" />
+					<DeadlineField v-model="goalDeadline" />
 				</template>
 
 				<template v-else>
-					<v-text-field
+					<VTextField
 						v-model="taskName"
 						:label="t('entity.name')"
 						:error-messages="taskNameError"
 						autofocus
 						@keyup.enter="onSave"
 					/>
-					<v-textarea v-model="taskNote" :label="t('entity.note')" rows="3" />
+					<VTextarea v-model="taskNote" :label="t('entity.note')" rows="3" />
 					<div :class="$style.flags">
-						<v-switch
+						<VSwitch
 							v-model="taskImportant"
 							:label="t('task.important')"
 							color="primary"
 							hide-details
 						/>
-						<v-switch v-model="taskUrgent" :label="t('task.urgent')" color="primary" hide-details />
+						<VSwitch v-model="taskUrgent" :label="t('task.urgent')" color="primary" hide-details />
 					</div>
-					<v-select
+					<VSelect
 						v-model="taskGoalId"
 						:items="taskGoalSelectItems"
 						item-title="title"
 						item-value="value"
 						:label="t('task.goalLabel')"
 					/>
-					<schedule-field v-model="taskSchedule" />
+					<ScheduleField v-model="taskSchedule" />
 				</template>
-			</v-card-text>
+			</VCardText>
 
-			<v-card-actions>
-				<v-spacer />
-				<v-btn color="primary" variant="flat" @click="onSave">{{ t('form.save') }}</v-btn>
-			</v-card-actions>
-		</v-card>
-	</v-dialog>
+			<VCardActions>
+				<VSpacer />
+				<VBtn color="primary" variant="flat" @click="onSave">{{ t('form.save') }}</VBtn>
+			</VCardActions>
+		</VCard>
+	</VDialog>
 </template>
 
 <script setup lang="ts">

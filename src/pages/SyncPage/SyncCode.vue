@@ -20,9 +20,9 @@
 <template>
 	<div :class="$style.wrap">
 		<canvas ref="canvas" :class="$style.canvas" />
-		<v-btn :prepend-icon="mdiContentCopy" variant="tonal" size="small" @click="copy">
+		<VBtn :prepend-icon="mdiContentCopy" variant="tonal" size="small" @click="copy">
 			{{ t('sync.copy') }}
-		</v-btn>
+		</VBtn>
 	</div>
 </template>
 

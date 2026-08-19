@@ -1,5 +1,5 @@
 <template>
-	<entity-dialog
+	<EntityDialog
 		v-model="open"
 		:title="t('goal.title')"
 		:mode="mode"
@@ -8,22 +8,22 @@
 	>
 		<template #default="{ editing }">
 			<template v-if="editing">
-				<v-text-field
+				<VTextField
 					v-model="name"
 					:label="t('entity.name')"
 					:error-messages="nameError"
 					autofocus
 					@keyup.enter="onSave"
 				/>
-				<v-textarea v-model="note" :label="t('entity.note')" rows="3" />
-				<v-select
+				<VTextarea v-model="note" :label="t('entity.note')" rows="3" />
+				<VSelect
 					v-model="dreamId"
 					:items="selectItems"
 					item-title="title"
 					item-value="value"
 					:label="t('goal.dreamLabel')"
 				/>
-				<deadline-field v-model="deadline" />
+				<DeadlineField v-model="deadline" />
 			</template>
 			<template v-else>
 				<div class="text-h6">{{ name }}</div>
@@ -36,7 +36,7 @@
 				</p>
 			</template>
 		</template>
-	</entity-dialog>
+	</EntityDialog>
 </template>
 
 <script setup lang="ts">

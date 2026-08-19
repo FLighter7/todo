@@ -28,6 +28,11 @@ export default defineConfigWithVueTs(
 		name: 'app/rules',
 		rules: {
 			'vue/block-order': ['error', { order: ['style', 'template', 'script'] }],
+			'vue/component-name-in-template-casing': [
+				'error',
+				'PascalCase',
+				{ registeredComponentsOnly: false },
+			],
 		},
 	},
 );

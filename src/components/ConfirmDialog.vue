@@ -1,11 +1,11 @@
 <template>
-	<v-dialog v-model="open" max-width="440">
-		<v-card variant="elevated">
-			<v-card-title>{{ title }}</v-card-title>
-			<v-card-text>{{ body }}</v-card-text>
-			<v-card-actions>
-				<v-spacer />
-				<v-btn
+	<VDialog v-model="open" max-width="440">
+		<VCard variant="elevated">
+			<VCardTitle>{{ title }}</VCardTitle>
+			<VCardText>{{ body }}</VCardText>
+			<VCardActions>
+				<VSpacer />
+				<VBtn
 					v-for="action in actions"
 					:key="action.key"
 					:color="action.color"
@@ -13,10 +13,10 @@
 					@click="choose(action.key)"
 				>
 					{{ action.label }}
-				</v-btn>
-			</v-card-actions>
-		</v-card>
-	</v-dialog>
+				</VBtn>
+			</VCardActions>
+		</VCard>
+	</VDialog>
 </template>
 
 <script setup lang="ts">

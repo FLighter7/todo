@@ -6,10 +6,10 @@
 </style>
 
 <template>
-	<v-container :class="$style.page">
-		<v-list>
-			<v-list-subheader>{{ t('settings.startPage') }}</v-list-subheader>
-			<v-select
+	<VContainer :class="$style.page">
+		<VList>
+			<VListSubheader>{{ t('settings.startPage') }}</VListSubheader>
+			<VSelect
 				v-model="startPage"
 				:items="startPageItems"
 				item-title="title"
@@ -19,17 +19,17 @@
 				class="mx-4 mb-4"
 			>
 				<template #item="{ item, props: itemProps }">
-					<v-list-item v-bind="itemProps" :prepend-icon="item.icon" />
+					<VListItem v-bind="itemProps" :prepend-icon="item.icon" />
 				</template>
 
 				<template #selection="{ item }">
-					<v-icon :icon="item.icon" class="mr-2" />
+					<VIcon :icon="item.icon" class="mr-2" />
 					{{ item.title }}
 				</template>
-			</v-select>
+			</VSelect>
 
-			<v-list-subheader>{{ t('settings.cleanupDays') }}</v-list-subheader>
-			<v-select
+			<VListSubheader>{{ t('settings.cleanupDays') }}</VListSubheader>
+			<VSelect
 				v-model="cleanupDays"
 				:items="cleanupDaysItems"
 				variant="outlined"
@@ -38,30 +38,30 @@
 				class="mx-4 mb-4"
 			/>
 
-			<v-list-item
+			<VListItem
 				:to="{ name: 'sync' }"
 				:title="t('sync.title')"
 				:prepend-icon="mdiSync"
 				:append-icon="mdiChevronRight"
 			/>
 
-			<v-list-subheader>{{ t('backup.title') }}</v-list-subheader>
+			<VListSubheader>{{ t('backup.title') }}</VListSubheader>
 
-			<backup-actions @notify="emit('notify', $event)" />
+			<BackupActions @notify="emit('notify', $event)" />
 
 			<template v-for="entity in ENTITIES" :key="entity">
-				<v-list-subheader>{{ t(`settings.${entity}`) }}</v-list-subheader>
-				<v-btn-toggle
+				<VListSubheader>{{ t(`settings.${entity}`) }}</VListSubheader>
+				<VBtnToggle
 					:model-value="settings[entity].rows"
 					mandatory
 					color="primary"
 					class="mx-4 mb-2"
 					@update:model-value="settings.updatePageSettings(entity, { rows: $event === 2 ? 2 : 1 })"
 				>
-					<v-btn :value="1">{{ t('settings.rows1') }}</v-btn>
-					<v-btn :value="2">{{ t('settings.rows2') }}</v-btn>
-				</v-btn-toggle>
-				<v-switch
+					<VBtn :value="1">{{ t('settings.rows1') }}</VBtn>
+					<VBtn :value="2">{{ t('settings.rows2') }}</VBtn>
+				</VBtnToggle>
+				<VSwitch
 					:model-value="settings[entity].confirmDone"
 					:label="t('settings.confirmDone')"
 					color="primary"
@@ -71,7 +71,7 @@
 						settings.updatePageSettings(entity, { confirmDone: $event ?? false })
 					"
 				/>
-				<v-switch
+				<VSwitch
 					:model-value="settings[entity].confirmReopen"
 					:label="t('settings.confirmReopen')"
 					color="primary"
@@ -82,8 +82,8 @@
 					"
 				/>
 			</template>
-		</v-list>
-	</v-container>
+		</VList>
+	</VContainer>
 </template>
 
 <script setup lang="ts">

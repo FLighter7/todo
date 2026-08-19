@@ -4,8 +4,8 @@
 	</p>
 
 	<template v-else>
-		<entity-list-group v-for="group in groups" :key="group.key" :label="group.label">
-			<entity-list-item
+		<EntityListGroup v-for="group in groups" :key="group.key" :label="group.label">
+			<EntityListItem
 				v-for="item in group.items"
 				:key="item.id"
 				:name="item.name"
@@ -15,9 +15,9 @@
 				@update:done="emit('toggle', item.id, $event)"
 				@click="emit('open', item)"
 			/>
-		</entity-list-group>
+		</EntityListGroup>
 
-		<entity-list-item
+		<EntityListItem
 			v-for="item in ungrouped"
 			:key="item.id"
 			:name="item.name"

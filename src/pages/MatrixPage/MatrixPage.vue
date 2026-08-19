@@ -1,5 +1,5 @@
 <template>
-	<matrix-board />
+	<MatrixBoard />
 </template>
 
 <script setup lang="ts">

@@ -1,5 +1,5 @@
 <template>
-	<goal-list />
+	<GoalList />
 </template>
 
 <script setup lang="ts">

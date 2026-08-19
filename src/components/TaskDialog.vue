@@ -12,7 +12,7 @@
 </style>
 
 <template>
-	<entity-dialog
+	<EntityDialog
 		v-model="open"
 		v-model:editing="editingRecord"
 		:title="t('task.title')"
@@ -22,26 +22,26 @@
 	>
 		<template #default="{ editing }">
 			<template v-if="editing">
-				<v-text-field
+				<VTextField
 					v-model="name"
 					:label="t('entity.name')"
 					:error-messages="nameError"
 					autofocus
 					@keyup.enter="onSave"
 				/>
-				<v-textarea v-model="note" :label="t('entity.note')" rows="3" />
+				<VTextarea v-model="note" :label="t('entity.note')" rows="3" />
 				<div :class="$style.flags">
-					<v-switch v-model="important" :label="t('task.important')" color="primary" hide-details />
-					<v-switch v-model="urgent" :label="t('task.urgent')" color="primary" hide-details />
+					<VSwitch v-model="important" :label="t('task.important')" color="primary" hide-details />
+					<VSwitch v-model="urgent" :label="t('task.urgent')" color="primary" hide-details />
 				</div>
-				<v-select
+				<VSelect
 					v-model="goalId"
 					:items="selectItems"
 					item-title="title"
 					item-value="value"
 					:label="t('task.goalLabel')"
 				/>
-				<schedule-field v-model="schedule" />
+				<ScheduleField v-model="schedule" />
 			</template>
 			<template v-else>
 				<div class="text-h6">{{ name }}</div>
@@ -52,7 +52,7 @@
 				<p v-if="schedule" class="text-body-2 mt-2 text-medium-emphasis">
 					{{ t('task.schedule.label') }}: {{ scheduleSummary }}
 				</p>
-				<task-completions
+				<TaskCompletions
 					v-if="showCompletions"
 					:occurrences="occurrences"
 					:locale="locale"
@@ -60,12 +60,12 @@
 					@toggle-skip="onToggleSkip"
 				/>
 				<div v-if="important || urgent" :class="$style.chips">
-					<v-chip v-if="important" size="small" color="primary">{{ t('task.important') }}</v-chip>
-					<v-chip v-if="urgent" size="small" color="primary">{{ t('task.urgent') }}</v-chip>
+					<VChip v-if="important" size="small" color="primary">{{ t('task.important') }}</VChip>
+					<VChip v-if="urgent" size="small" color="primary">{{ t('task.urgent') }}</VChip>
 				</div>
 			</template>
 		</template>
-	</entity-dialog>
+	</EntityDialog>
 </template>
 
 <script setup lang="ts">

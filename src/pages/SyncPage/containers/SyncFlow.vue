@@ -12,75 +12,75 @@
 </style>
 
 <template>
-	<v-container :class="$style.page">
+	<VContainer :class="$style.page">
 		<p class="text-medium-emphasis mb-4">{{ t('sync.intro') }}</p>
 
 		<div v-if="step === 'idle'" :class="$style.choices">
-			<v-btn-toggle v-model="mode" mandatory color="primary" class="mb-2">
-				<v-btn value="data">{{ t('sync.modeData') }}</v-btn>
-				<v-btn value="settings">{{ t('sync.modeSettings') }}</v-btn>
-			</v-btn-toggle>
-			<v-btn color="primary" size="large" @click="startAsInitiator">
+			<VBtnToggle v-model="mode" mandatory color="primary" class="mb-2">
+				<VBtn value="data">{{ t('sync.modeData') }}</VBtn>
+				<VBtn value="settings">{{ t('sync.modeSettings') }}</VBtn>
+			</VBtnToggle>
+			<VBtn color="primary" size="large" @click="startAsInitiator">
 				{{ t('sync.startHere') }}
-			</v-btn>
-			<v-btn variant="tonal" size="large" @click="startAsResponder">
+			</VBtn>
+			<VBtn variant="tonal" size="large" @click="startAsResponder">
 				{{ t('sync.joinHere') }}
-			</v-btn>
+			</VBtn>
 		</div>
 
 		<template v-else-if="step === 'show-offer'">
 			<p class="mb-3">{{ t('sync.showingCode') }}</p>
-			<sync-code :code="ourCode" @copied="notify(t('sync.copied'))" />
-			<v-divider class="my-5" />
+			<SyncCode :code="ourCode" @copied="notify(t('sync.copied'))" />
+			<VDivider class="my-5" />
 			<p class="mb-3">{{ t('sync.scanTheirCode') }}</p>
-			<sync-scanner @code="onAnswerScanned" />
+			<SyncScanner @code="onAnswerScanned" />
 		</template>
 
 		<template v-else-if="step === 'scan-offer'">
 			<p class="mb-3">{{ t('sync.scanInvite') }}</p>
-			<sync-scanner @code="onOfferScanned" />
+			<SyncScanner @code="onOfferScanned" />
 		</template>
 
 		<template v-else-if="step === 'show-answer'">
 			<p class="mb-3">{{ t('sync.showAnswer') }}</p>
-			<sync-code :code="ourCode" @copied="notify(t('sync.copied'))" />
+			<SyncCode :code="ourCode" @copied="notify(t('sync.copied'))" />
 			<p class="mt-4 text-center text-medium-emphasis">{{ t('sync.waiting') }}</p>
-			<v-progress-linear indeterminate class="mt-2" />
+			<VProgressLinear indeterminate class="mt-2" />
 		</template>
 
 		<template v-else-if="step === 'working'">
 			<p class="text-center">{{ t('sync.connecting') }}</p>
-			<v-progress-linear indeterminate class="mt-2" />
+			<VProgressLinear indeterminate class="mt-2" />
 		</template>
 
 		<template v-else-if="step === 'confirm-settings'">
 			<p class="mb-3">{{ t('sync.confirmSettingsBody') }}</p>
 			<div :class="$style.choices">
-				<v-btn color="primary" size="large" @click="acceptSettings">
+				<VBtn color="primary" size="large" @click="acceptSettings">
 					{{ t('sync.confirmSettingsAccept') }}
-				</v-btn>
-				<v-btn variant="tonal" size="large" @click="declineSettings">
+				</VBtn>
+				<VBtn variant="tonal" size="large" @click="declineSettings">
 					{{ t('sync.confirmSettingsDecline') }}
-				</v-btn>
+				</VBtn>
 			</div>
 		</template>
 
-		<v-alert v-else-if="step === 'done'" type="success" variant="tonal" class="mb-4">
+		<VAlert v-else-if="step === 'done'" type="success" variant="tonal" class="mb-4">
 			{{
 				mode === 'settings'
 					? t('sync.settingsDone')
 					: t('sync.done', { added: result.added, updated: result.updated })
 			}}
-		</v-alert>
+		</VAlert>
 
-		<v-alert v-else-if="step === 'failed'" type="error" variant="tonal" class="mb-4">
+		<VAlert v-else-if="step === 'failed'" type="error" variant="tonal" class="mb-4">
 			{{ t('sync.failed', { reason: failure }) }}
-		</v-alert>
+		</VAlert>
 
-		<v-btn v-if="step !== 'idle'" variant="text" class="mt-4" block @click="reset">
+		<VBtn v-if="step !== 'idle'" variant="text" class="mt-4" block @click="reset">
 			{{ step === 'done' || step === 'failed' ? t('sync.restart') : t('sync.cancel') }}
-		</v-btn>
-	</v-container>
+		</VBtn>
+	</VContainer>
 </template>
 
 <script setup lang="ts">

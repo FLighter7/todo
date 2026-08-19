@@ -16,14 +16,14 @@
 		<div v-for="entry in occurrences" :key="entry.start" :class="$style.row">
 			<span>{{ formatWallClock(entry.start, locale) }}</span>
 			<template v-if="entry.state === 'pending'">
-				<v-btn
+				<VBtn
 					:icon="mdiCheckCircleOutline"
 					variant="text"
 					density="comfortable"
 					:aria-label="t('task.completions.markDone')"
 					@click="emit('toggle-done', entry.start, true)"
 				/>
-				<v-btn
+				<VBtn
 					:icon="mdiCloseCircleOutline"
 					variant="text"
 					density="comfortable"
@@ -31,7 +31,7 @@
 					@click="emit('toggle-skip', entry.start, true)"
 				/>
 			</template>
-			<v-btn
+			<VBtn
 				v-else-if="entry.state === 'done'"
 				:icon="mdiCheckCircle"
 				variant="text"
@@ -40,7 +40,7 @@
 				:aria-label="t('task.completions.markPending')"
 				@click="emit('toggle-done', entry.start, false)"
 			/>
-			<v-btn
+			<VBtn
 				v-else
 				:icon="mdiCloseCircle"
 				variant="text"

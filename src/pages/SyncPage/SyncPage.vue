@@ -1,5 +1,5 @@
 <template>
-	<sync-flow />
+	<SyncFlow />
 </template>
 
 <script setup lang="ts">

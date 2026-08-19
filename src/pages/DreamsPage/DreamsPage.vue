@@ -1,5 +1,5 @@
 <template>
-	<dream-list />
+	<DreamList />
 </template>
 
 <script setup lang="ts">

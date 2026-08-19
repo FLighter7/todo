@@ -1,14 +1,14 @@
 <style lang="scss" module></style>
 
 <template>
-	<v-btn :icon="themeIcon" variant="text" :aria-label="t('app.toggleTheme')" @click="open = true" />
+	<VBtn :icon="themeIcon" variant="text" :aria-label="t('app.toggleTheme')" @click="open = true" />
 
-	<v-dialog v-model="open" max-width="360">
-		<v-card variant="elevated">
-			<v-card-title>{{ t('settings.theme') }}</v-card-title>
+	<VDialog v-model="open" max-width="360">
+		<VCard variant="elevated">
+			<VCardTitle>{{ t('settings.theme') }}</VCardTitle>
 
-			<v-list>
-				<v-list-item
+			<VList>
+				<VListItem
 					v-for="option in options"
 					:key="option.value"
 					:active="settings.general.theme === option.value"
@@ -18,9 +18,9 @@
 					:append-icon="settings.general.theme === option.value ? mdiCheck : undefined"
 					@click="select(option.value)"
 				/>
-			</v-list>
-		</v-card>
-	</v-dialog>
+			</VList>
+		</VCard>
+	</VDialog>
 </template>
 
 <script setup lang="ts">

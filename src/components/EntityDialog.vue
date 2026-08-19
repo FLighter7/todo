@@ -1,10 +1,10 @@
 <template>
-	<v-dialog v-model="open" max-width="480">
-		<v-card variant="elevated">
-			<v-card-title class="d-flex align-center">
+	<VDialog v-model="open" max-width="480">
+		<VCard variant="elevated">
+			<VCardTitle class="d-flex align-center">
 				<span>{{ title }}</span>
-				<v-spacer />
-				<v-btn
+				<VSpacer />
+				<VBtn
 					v-if="!editing"
 					:icon="mdiPencilOutline"
 					variant="text"
@@ -12,7 +12,7 @@
 					:aria-label="t('entity.edit')"
 					@click="editing = true"
 				/>
-				<v-btn
+				<VBtn
 					v-else
 					:icon="mdiCheck"
 					variant="text"
@@ -20,25 +20,20 @@
 					:aria-label="t('form.save')"
 					@click="emit('save')"
 				/>
-			</v-card-title>
+			</VCardTitle>
 
-			<v-card-text>
+			<VCardText>
 				<slot :editing="editing" />
-			</v-card-text>
+			</VCardText>
 
-			<v-card-actions v-if="mode === 'edit'">
-				<v-btn
-					color="error"
-					variant="text"
-					:prepend-icon="mdiDeleteOutline"
-					@click="emit('cancel')"
-				>
+			<VCardActions v-if="mode === 'edit'">
+				<VBtn color="error" variant="text" :prepend-icon="mdiDeleteOutline" @click="emit('cancel')">
 					{{ t('entity.cancelRecord') }}
-				</v-btn>
-				<v-spacer />
-			</v-card-actions>
-		</v-card>
-	</v-dialog>
+				</VBtn>
+				<VSpacer />
+			</VCardActions>
+		</VCard>
+	</VDialog>
 </template>
 
 <script setup lang="ts">

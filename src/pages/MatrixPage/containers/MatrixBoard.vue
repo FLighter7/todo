@@ -13,9 +13,9 @@
 </style>
 
 <template>
-	<v-container>
+	<VContainer>
 		<div :class="$style.grid">
-			<task-quadrant
+			<TaskQuadrant
 				v-for="key in QUADRANT_KEYS"
 				:key="key"
 				:quadrant="key"
@@ -27,14 +27,14 @@
 			/>
 		</div>
 
-		<task-dialog
+		<TaskDialog
 			v-model="dialogOpen"
 			mode="add"
 			:initial-flags="initialFlags"
 			:goal-options="goalOptions"
 			@save="store.add($event)"
 		/>
-	</v-container>
+	</VContainer>
 </template>
 
 <script setup lang="ts">

@@ -1,11 +1,11 @@
 <template>
-	<v-container>
-		<v-btn-toggle v-model="tab" mandatory color="primary" class="mb-4">
-			<v-btn value="active">{{ t('entity.active') }}</v-btn>
-			<v-btn value="history">{{ t('entity.history') }}</v-btn>
-		</v-btn-toggle>
+	<VContainer>
+		<VBtnToggle v-model="tab" mandatory color="primary" class="mb-4">
+			<VBtn value="active">{{ t('entity.active') }}</VBtn>
+			<VBtn value="history">{{ t('entity.history') }}</VBtn>
+		</VBtnToggle>
 
-		<entity-list
+		<EntityList
 			:groups="groups"
 			:ungrouped="ungrouped"
 			:empty-text="t('goal.empty')"
@@ -15,7 +15,7 @@
 			@open="openEdit"
 		/>
 
-		<goal-dialog
+		<GoalDialog
 			v-model="dialogOpen"
 			mode="edit"
 			:initial="initialDraft"
@@ -24,7 +24,7 @@
 			@cancel="onCancel"
 		/>
 
-		<confirm-dialog
+		<ConfirmDialog
 			v-model="toggleConfirmOpen"
 			:title="toggleConfirmTitle"
 			:body="toggleConfirmBody"
@@ -32,14 +32,14 @@
 			@choose="onToggleChoice"
 		/>
 
-		<confirm-dialog
+		<ConfirmDialog
 			v-model="cascadeOpen"
 			:title="t('entity.cascadeTitle')"
 			:body="cascadeBody"
 			:actions="cascadeActions"
 			@choose="onCascadeChoice"
 		/>
-	</v-container>
+	</VContainer>
 </template>
 
 <script setup lang="ts">

@@ -1,5 +1,5 @@
 <template>
-	<task-list />
+	<TaskList />
 </template>
 
 <script setup lang="ts">
