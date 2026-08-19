@@ -313,6 +313,15 @@ function addDurationToWallClock(wallClock: Date, duration: string): Date {
 	return new Date(wallClock.getTime() + (hours * 60 + minutes) * 60_000);
 }
 
+/**
+ * `RRule.parseString` can surface `tzid`/`dtstart` from a `DTSTART;TZID=`
+ * line if one is present in `schedule.rrule` -- this app's own writers never
+ * produce that (`Schedule.rrule` is "RRULE without the prefix", dtstart
+ * lives in `Schedule.start`), but a hand-edited or imported record could.
+ * Never let either reach `RRule`'s constructor: `dtstart` is always derived
+ * from `schedule.start` below, and `tzid` is the exact trap
+ * `instantAsWallClockInZone`'s note above documents.
+ */
 function buildRule(schedule: Schedule): RRule {
 	const parsedRRule: Partial<Options> = { ...RRule.parseString(schedule.rrule as string) };
 	delete parsedRRule.tzid;
