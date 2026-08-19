@@ -186,3 +186,29 @@ describe('TaskList schedule', () => {
 		expect(tasksStore.records[0].schedule).toEqual(schedule);
 	});
 });
+
+describe('TaskList completions', () => {
+	it('marking an occurrence done from the open dialog calls the store action and updates the dialog live', async () => {
+		const schedule: Schedule = { start: '2020-01-03T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
+		const { wrapper, tasksStore } = await mountWithData([], [makeTask({ schedule })]);
+
+		await wrapper.get('.v-list-item').trigger('click');
+		expect(wrapper.text()).not.toContain('time done');
+
+		await wrapper.get('button[aria-label="Mark done"]').trigger('click');
+
+		expect(tasksStore.records[0].completions).toHaveLength(1);
+		expect(tasksStore.records[0].completions?.[0].done).toBe(true);
+		expect(wrapper.text()).toContain('1 time done');
+	});
+
+	it('skipping an occurrence from the open dialog calls the store action', async () => {
+		const schedule: Schedule = { start: '2020-01-03T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
+		const { wrapper, tasksStore } = await mountWithData([], [makeTask({ schedule })]);
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await wrapper.get('button[aria-label="Skip"]').trigger('click');
+
+		expect(tasksStore.records[0].schedule?.exdate).toHaveLength(1);
+	});
+});

@@ -17,10 +17,12 @@
 		<task-dialog
 			v-model="dialogOpen"
 			mode="edit"
-			:initial="initialDraft"
+			:record="editingTask"
 			:goal-options="goalOptions"
 			@save="handleSave"
 			@cancel="onCancel"
+			@toggle-completion-done="onToggleCompletionDone"
+			@toggle-completion-skip="onToggleCompletionSkip"
 		/>
 
 		<confirm-dialog
@@ -82,19 +84,14 @@ const {
 } = useToggleConfirm(tasks, 'tasks', tab);
 
 const dialogOpen = ref(false);
-const editing = ref<Task | null>(null);
-const initialDraft = computed<Partial<TaskDraft>>(() => {
-	if (editing.value === null) {
-		return {};
-	}
-
-	const { name, note, important, urgent, goalId, schedule } = editing.value;
-	return { name, note, important, urgent, goalId, schedule };
-});
+const editingId = ref<string | null>(null);
+const editingTask = computed<Task | null>(
+	() => tasks.records.find((task) => task.id === editingId.value) ?? null,
+);
 
 const goalOptions = computed(() => {
 	const options = goals.active.map((goal) => ({ value: goal.id, title: goal.name }));
-	const currentGoalId = editing.value?.goalId;
+	const currentGoalId = editingTask.value?.goalId;
 
 	if (currentGoalId !== undefined && !options.some((option) => option.value === currentGoalId)) {
 		const closedGoal = goals.records.find((goal) => goal.id === currentGoalId);
@@ -107,27 +104,35 @@ const goalOptions = computed(() => {
 });
 
 function openEdit(task: Task): void {
-	editing.value = task;
+	editingId.value = task.id;
 	dialogOpen.value = true;
 }
 
 async function handleSave(draft: TaskDraft): Promise<void> {
-	if (editing.value === null) {
+	if (editingId.value === null) {
 		return;
 	}
 
-	await tasks.update(editing.value.id, draft);
-	editing.value = null;
+	await tasks.update(editingId.value, draft);
+	editingId.value = null;
 }
 
 function onCancel(): void {
-	const task = editing.value;
-	if (!task) {
+	const id = editingId.value;
+	if (id === null) {
 		return;
 	}
 
-	void tasks.close(task.id, Status.Cancelled);
+	void tasks.close(id, Status.Cancelled);
 	dialogOpen.value = false;
-	editing.value = null;
+	editingId.value = null;
+}
+
+function onToggleCompletionDone(taskId: string, occurrence: string, done: boolean): void {
+	void tasks.setOccurrenceDone(taskId, occurrence, done);
+}
+
+function onToggleCompletionSkip(taskId: string, occurrence: string, skipped: boolean): void {
+	void tasks.setOccurrenceSkipped(taskId, occurrence, skipped);
 }
 </script>
