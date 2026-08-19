@@ -145,8 +145,10 @@ describe('MockDataService.generate', () => {
 	it('keeps closed records, occurrences and exdate entries within 14 days of now, and created <= updated always', () => {
 		const { dreams, goals, tasks } = service.generate('en', { now: NOW, random: randomA() });
 		const fourteenDaysMs = 14 * 24 * 60 * 60 * 1000;
-		const within14 = (wallClockOrIso: string) =>
-			NOW.getTime() - Date.parse(withZ(wallClockOrIso)) <= fourteenDaysMs;
+		const within14 = (wallClockOrIso: string) => {
+			const delta = NOW.getTime() - Date.parse(withZ(wallClockOrIso));
+			return delta >= 0 && delta <= fourteenDaysMs;
+		};
 
 		for (const record of [...dreams, ...goals, ...tasks]) {
 			expect(Date.parse(record.created)).toBeLessThanOrEqual(Date.parse(record.updated));

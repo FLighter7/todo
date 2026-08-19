@@ -57,9 +57,15 @@ function toWallClock(date: Date): string {
 }
 
 /**
- * The inverse of `toWallClock`, for this service's own arithmetic only --
- * never handed to `src/utils/schedule.ts`, which interprets a floating
- * wall-clock string through the device's own local clock.
+ * The inverse of `toWallClock`. Note this service's wall-clock strings
+ * (`toWallClock`/`atFixedTime` output) ARE handed to
+ * `src/utils/schedule.ts`'s `listOccurrences`, as `schedule.start` and
+ * `schedule.exdate` -- and that function's `wallClockStringToDate` reads
+ * them as UTC-encoded, not device-local. What's actually device-local there
+ * is the *comparison point* derived from `now` (`deviceLocalWallClock`), so
+ * returned occurrences can land up to the host's local UTC offset outside
+ * the intended window. `withinLastDays` below -- not the schedule math --
+ * is what actually enforces this service's GC-safety bound.
  */
 function fromWallClock(wallClock: string): Date {
 	return new Date(`${wallClock}Z`);
@@ -148,9 +154,12 @@ function buildSchedule(
 		}
 
 		case 'recurringWeeklyWithCompletions': {
-			// Mon/Wed/Fri, anchored ~3 weeks back: any 6 consecutive real
-			// occurrences of this pattern span at most 12 days, so pastCount=6
-			// from `now` always lands well inside the 14-day GC-safe window.
+			// Mon/Wed/Fri, anchored ~3 weeks back so pastCount=6 has real
+			// occurrences to pull. The 12-day span between the oldest and
+			// newest of those 6 does NOT bound how old the oldest one is
+			// relative to `now` -- the most recent occurrence can itself
+			// already be a few days old. The `.filter(withinLastDays(...))`
+			// below is what actually enforces the 14-day GC-safe window.
 			const start = atFixedTime(addDays(now, -21), '09:00');
 			const rrule = buildRRule({
 				freq: 'weekly',

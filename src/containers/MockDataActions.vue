@@ -66,9 +66,8 @@ function resolveLocale(): AppLocale {
  * the user's `AppSettings` are out of scope for this feature entirely.
  */
 async function generateAndReplace(): Promise<void> {
-	const result = mockDataService.generate(resolveLocale());
-
 	try {
+		const result = mockDataService.generate(resolveLocale());
 		await dreams.replaceAll(result.dreams);
 		await goals.replaceAll(result.goals);
 		await tasks.replaceAll(result.tasks);
