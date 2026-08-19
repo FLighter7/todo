@@ -42,6 +42,9 @@
 
 			<BackupActions @notify="emit('notify', $event)" />
 
+			<VListSubheader>{{ t('mockData.title') }}</VListSubheader>
+			<MockDataActions @notify="emit('notify', $event)" />
+
 			<template v-for="entity in ENTITIES" :key="entity">
 				<VListSubheader>{{ t(`settings.${entity}`) }}</VListSubheader>
 				<VBtnToggle
@@ -83,6 +86,7 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BackupActions from '@/containers/BackupActions.vue';
+import MockDataActions from '@/containers/MockDataActions.vue';
 import { getStartPageOptions, type StartPage } from '@/router';
 import { useSettingsStore, type SettingsEntity } from '@/stores/settings';
 

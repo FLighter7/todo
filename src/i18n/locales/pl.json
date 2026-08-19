@@ -90,6 +90,15 @@
 		"exported": "Kopia zapisana.",
 		"invalid": "Nie udało się odczytać pliku: {reason}"
 	},
+	"mockData": {
+		"title": "Przykładowe dane",
+		"action": "Wygeneruj przykładowe dane",
+		"confirmTitle": "Zastąpić wszystko?",
+		"confirmBody": "To zastąpi wszystkie marzenia, cele i zadania obecne w aplikacji (łącznie {current} rekordów) nowo wygenerowanymi danymi przykładowymi. Ustawienia nie zostaną naruszone. Tej operacji nie można cofnąć.",
+		"replace": "Generuj",
+		"generated": "Wygenerowano przykładowe dane. Rekordów: {count}.",
+		"failed": "Nie udało się wygenerować przykładowych danych: {reason}"
+	},
 	"sync": {
 		"title": "Synchronizacja",
 		"intro": "Synchronizacja dwóch urządzeń przez bezpośrednie połączenie. Oba muszą być w tej samej sieci; nic nie przechodzi przez serwer.",

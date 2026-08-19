@@ -90,6 +90,15 @@
 		"exported": "Backup saved.",
 		"invalid": "Could not read the file: {reason}"
 	},
+	"mockData": {
+		"title": "Sample data",
+		"action": "Generate sample data",
+		"confirmTitle": "Replace everything?",
+		"confirmBody": "This replaces every dream, goal and task currently in the app ({current} records total) with freshly generated sample data. Settings are not affected. This cannot be undone.",
+		"replace": "Generate",
+		"generated": "Sample data generated. Records: {count}.",
+		"failed": "Could not generate sample data: {reason}"
+	},
 	"sync": {
 		"title": "Sync",
 		"intro": "Sync two devices over a direct connection. Both must be on the same network; nothing goes through a server.",
