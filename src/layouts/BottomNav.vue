@@ -5,14 +5,20 @@
 	bottom: 0;
 	z-index: 1005;
 	display: flex;
+	justify-content: center;
 	align-items: center;
-	justify-content: space-between;
 	gap: 0.25rem;
 	height: 4rem;
 	padding-inline: 0.5rem;
 	padding-bottom: env(safe-area-inset-bottom);
 	background-color: rgb(var(--v-theme-surface));
 	border-top: 1px solid rgb(var(--v-theme-outline));
+}
+
+.link {
+	flex: 1 1 0;
+	min-width: 0;
+	max-width: 4rem;
 }
 
 .fabWrap {
@@ -25,10 +31,11 @@
 	<nav :class="$style.bar">
 		<VBtn
 			:to="{ name: 'dreams' }"
+			:class="$style.link"
 			variant="text"
 			stacked
 			size="small"
-			:prepend-icon="mdiTelescope"
+			:prepend-icon="mdiShimmer"
 			:color="route.name === 'dreams' ? 'primary' : undefined"
 		>
 			{{ t('nav.dreams') }}
@@ -36,10 +43,11 @@
 
 		<VBtn
 			:to="{ name: 'goals' }"
+			:class="$style.link"
 			variant="text"
 			stacked
 			size="small"
-			:prepend-icon="mdiFlagOutline"
+			:prepend-icon="mdiBullseyeArrow"
 			:color="route.name === 'goals' ? 'primary' : undefined"
 		>
 			{{ t('nav.goals') }}
@@ -51,10 +59,11 @@
 
 		<VBtn
 			:to="{ name: 'tasks' }"
+			:class="$style.link"
 			variant="text"
 			stacked
 			size="small"
-			:prepend-icon="mdiViewListOutline"
+			:prepend-icon="mdiFormatListBulleted"
 			:color="route.name === 'tasks' ? 'primary' : undefined"
 		>
 			{{ t('nav.tasks') }}
@@ -62,6 +71,7 @@
 
 		<VBtn
 			:to="{ name: 'matrix' }"
+			:class="$style.link"
 			variant="text"
 			stacked
 			size="small"
@@ -76,7 +86,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import { mdiFlagOutline, mdiTelescope, mdiViewGridOutline, mdiViewListOutline } from '@mdi/js';
+import { mdiBullseyeArrow, mdiFormatListBulleted, mdiShimmer, mdiViewGridOutline } from '@mdi/js';
 import QuickAddFab from '@/containers/QuickAddFab.vue';
 
 const { t } = useI18n();
