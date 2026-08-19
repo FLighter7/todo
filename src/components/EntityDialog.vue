@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { mdiCheck, mdiDeleteOutline, mdiPencilOutline } from '@mdi/js';
 
@@ -60,7 +60,8 @@ const open = defineModel<boolean>({ required: true });
 
 const { t } = useI18n();
 
-const editing = ref(props.mode === 'add');
+const editing = defineModel<boolean>('editing', { default: false });
+editing.value = props.mode === 'add';
 
 watch(open, (isOpen) => {
 	if (!isOpen) {

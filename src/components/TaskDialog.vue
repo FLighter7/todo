@@ -14,6 +14,7 @@
 <template>
 	<entity-dialog
 		v-model="open"
+		v-model:editing="editingRecord"
 		:title="t('task.title')"
 		:mode="mode"
 		@save="onSave"
@@ -108,6 +109,7 @@ const urgent = ref(false);
 const goalId = ref('');
 const schedule = ref<Schedule | undefined>(undefined);
 const showErrors = ref(false);
+const editingRecord = ref(props.mode === 'add');
 
 const nameError = computed(() =>
 	showErrors.value && name.value.trim() === '' ? t('form.nameRequired') : '',
@@ -169,6 +171,20 @@ function onToggleSkip(occurrence: string, skipped: boolean): void {
 	emit('toggle-completion-skip', props.record.id, occurrence, skipped);
 }
 
+/** Snapshots the draft from the live `props.record` -- run both when the
+ *  dialog opens and whenever editing is (re-)entered, so a change applied to
+ *  the record while the dialog sat in its read view (e.g. a completion skip
+ *  toggled from `TaskCompletions`) is never silently overwritten by a stale
+ *  draft. */
+function seedDraftFromRecord(): void {
+	name.value = props.record?.name ?? '';
+	note.value = props.record?.note ?? '';
+	important.value = props.record?.important ?? props.initialFlags?.important ?? false;
+	urgent.value = props.record?.urgent ?? props.initialFlags?.urgent ?? false;
+	goalId.value = props.record?.goalId ?? '';
+	schedule.value = props.record?.schedule;
+}
+
 watch(
 	open,
 	(isOpen) => {
@@ -176,16 +192,17 @@ watch(
 			return;
 		}
 
-		name.value = props.record?.name ?? '';
-		note.value = props.record?.note ?? '';
-		important.value = props.record?.important ?? props.initialFlags?.important ?? false;
-		urgent.value = props.record?.urgent ?? props.initialFlags?.urgent ?? false;
-		goalId.value = props.record?.goalId ?? '';
-		schedule.value = props.record?.schedule;
+		seedDraftFromRecord();
 		showErrors.value = false;
 	},
 	{ immediate: true },
 );
+
+watch(editingRecord, (isEditing) => {
+	if (isEditing) {
+		seedDraftFromRecord();
+	}
+});
 
 function onSave(): void {
 	if (name.value.trim() === '') {

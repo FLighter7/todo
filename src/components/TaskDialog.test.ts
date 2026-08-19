@@ -353,4 +353,35 @@ describe('TaskDialog completions', () => {
 			['task-9', '2026-08-07T09:00', true],
 		]);
 	});
+
+	it('re-seeds the draft schedule on entering edit mode, so a skip applied while reading survives a save', async () => {
+		const schedule = { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
+		const record = makeTask({ id: 'task-9', name: 'File the report', schedule });
+		const wrapper = mount(TaskDialog, {
+			props: { modelValue: true, mode: 'edit', record, goalOptions },
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		// User skips an occurrence from the read view -- TaskDialog only
+		// re-emits the toggle, it doesn't mutate anything itself.
+		await wrapper.findComponent(TaskCompletions).vm.$emit('toggle-skip', '2026-08-07T09:00', true);
+
+		// Simulate the store round-trip: `TaskList`'s live `editingTask` now
+		// supplies a task whose `schedule` carries the freshly added exdate.
+		const recordWithSkipApplied = makeTask({
+			id: 'task-9',
+			name: 'File the report',
+			schedule: { ...schedule, exdate: ['2026-08-07T09:00'] },
+		});
+		await wrapper.setProps({ record: recordWithSkipApplied });
+
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		await wrapper.get('input').setValue('File the report (updated)');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		const emitted = wrapper.emitted('save');
+		expect(emitted).toHaveLength(1);
+		const [draft] = emitted![0] as [{ schedule?: { exdate?: string[] } }];
+		expect(draft.schedule?.exdate).toEqual(['2026-08-07T09:00']);
+	});
 });
