@@ -1,6 +1,10 @@
 <style lang="scss" module>
 .main {
 	padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+
+	:global(.v-main__scroller) {
+		scrollbar-gutter: stable both-edges;
+	}
 }
 
 .logo {
@@ -41,7 +45,7 @@
 			</template>
 		</VAppBar>
 
-		<VMain :class="$style.main">
+		<VMain scrollable :class="$style.main">
 			<VAlert
 				v-if="!store.persistent"
 				type="warning"
