@@ -1,6 +1,16 @@
+<style lang="scss" module>
+.tabs {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	width: 100%;
+	background-color: rgb(var(--v-theme-background));
+}
+</style>
+
 <template>
 	<VContainer>
-		<VBtnToggle v-model="tab" mandatory color="primary" class="mb-4">
+		<VBtnToggle v-model="tab" mandatory color="primary" :class="[$style.tabs, 'mb-4']">
 			<VBtn value="active">{{ t('entity.active') }}</VBtn>
 			<VBtn value="history">{{ t('entity.history') }}</VBtn>
 		</VBtnToggle>
