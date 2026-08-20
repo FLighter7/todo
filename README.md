@@ -81,6 +81,8 @@ It should complete silently. If it throws `InvalidAccessError: Entry already exi
 
 The app targets GitHub Pages and builds with the base path `/todo/`, so the address will look like `https://<user>.github.io/todo/`. For different hosting the base path is the `base` option in [vite.config.ts](vite.config.ts); hosting at a domain root needs only `'/'`.
 
+Deployment is automatic: the `deploy` job in [.github/workflows/ci.yml](.github/workflows/ci.yml) builds and publishes `dist/` via GitHub's Pages Actions (`actions/deploy-pages`) on every push to `main`, once `test` passes. This requires a one-time repo setting: Settings → Pages → Source → "GitHub Actions".
+
 ## Documentation
 
 Durable rationale and conventions from finished build stages live in [docs/decisions.md](docs/decisions.md).
