@@ -5,7 +5,6 @@
 	z-index: 1;
 	display: flex;
 	width: 100%;
-	padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
 	background-color: rgb(var(--v-theme-background));
 
 	:global(.v-btn) {
@@ -15,10 +14,12 @@
 </style>
 
 <template>
-	<VBtnToggle v-model="model" mandatory color="primary" :class="$style.tabs">
-		<VBtn value="active">{{ t('entity.active') }}</VBtn>
-		<VBtn value="history">{{ t('entity.history') }}</VBtn>
-	</VBtnToggle>
+	<VContainer class="py-0">
+		<VBtnToggle v-model="model" mandatory color="primary" :class="$style.tabs">
+			<VBtn value="active">{{ t('entity.active') }}</VBtn>
+			<VBtn value="history">{{ t('entity.history') }}</VBtn>
+		</VBtnToggle>
+	</VContainer>
 </template>
 
 <script setup lang="ts">
