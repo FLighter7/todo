@@ -6,6 +6,10 @@
 	margin: 0;
 }
 
+.group + .group {
+	margin-top: 4px;
+}
+
 .legend {
 	margin-left: 8px;
 	font-size: 0.875rem;
