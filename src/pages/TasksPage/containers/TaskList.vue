@@ -1,20 +1,7 @@
-<style lang="scss" module>
-.tabs {
-	position: sticky;
-	top: 0;
-	z-index: 1;
-	width: 100%;
-	background-color: rgb(var(--v-theme-background));
-}
-</style>
-
 <template>
-	<VContainer>
-		<VBtnToggle v-model="tab" mandatory color="primary" :class="[$style.tabs, 'mb-4']">
-			<VBtn value="active">{{ t('entity.active') }}</VBtn>
-			<VBtn value="history">{{ t('entity.history') }}</VBtn>
-		</VBtnToggle>
+	<EntityTabs v-model="tab" />
 
+	<VContainer>
 		<EntityList
 			:groups="groups"
 			:ungrouped="ungrouped"
@@ -54,6 +41,7 @@ import { useGoalsStore } from '@/stores/goals';
 import { useSettingsStore } from '@/stores/settings';
 import { useToggleConfirm } from '@/composables/useToggleConfirm';
 import EntityList from '@/components/EntityList.vue';
+import EntityTabs from '@/components/EntityTabs.vue';
 import TaskDialog from '@/components/TaskDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
