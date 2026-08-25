@@ -1,6 +1,4 @@
 <template>
-	<EntityTabs v-model="tab" />
-
 	<VContainer>
 		<EntityList
 			:groups="groups"
@@ -35,13 +33,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { storeToRefs } from 'pinia';
 import { Status, type Task } from '@/types';
 import { useTasksStore, type TaskDraft } from '@/stores/tasks';
 import { useGoalsStore } from '@/stores/goals';
 import { useSettingsStore } from '@/stores/settings';
+import { useEntityTabsStore } from '@/stores/entityTabs';
 import { useToggleConfirm } from '@/composables/useToggleConfirm';
 import EntityList from '@/components/EntityList.vue';
-import EntityTabs from '@/components/EntityTabs.vue';
 import TaskDialog from '@/components/TaskDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
@@ -49,8 +48,7 @@ const { t } = useI18n();
 const tasks = useTasksStore();
 const goals = useGoalsStore();
 const settings = useSettingsStore();
-
-const tab = ref<'active' | 'history'>('active');
+const { tab } = storeToRefs(useEntityTabsStore());
 const showNote = computed(() => settings.tasks.rows === 2);
 
 function labelFor(goalId: string): string {

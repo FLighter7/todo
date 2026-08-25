@@ -1,4 +1,6 @@
+import { nextTick } from 'vue';
 import type { VueWrapper } from '@vue/test-utils';
+import { useEntityTabsStore } from '@/stores/entityTabs';
 
 /**
  * Vuetify renders clickable actions as either a native <button> (v-btn) or a
@@ -18,4 +20,16 @@ export function clickButtonByText(wrapper: VueWrapper, text: string): Promise<vo
 	}
 
 	return target.trigger('click');
+}
+
+/**
+ * The Active/History toggle lives in DefaultLayout, not in the page
+ * container, so tests that mount a page container directly can't click a
+ * "History" button that isn't rendered there — this flips the shared store
+ * the toggle and the page container both read from. One value for all three
+ * pages, so no page argument.
+ */
+export function setEntityTab(value: 'active' | 'history'): Promise<void> {
+	useEntityTabsStore().tab = value;
+	return nextTick();
 }

@@ -4,3 +4,4 @@ export * from './dreams';
 export * from './goals';
 export * from './tasks';
 export * from './settings';
+export * from './entityTabs';

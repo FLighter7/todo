@@ -1,11 +1,7 @@
 <style lang="scss" module>
 .tabs {
-	position: sticky;
-	top: 0;
-	z-index: 1;
 	display: flex;
 	width: 100%;
-	background-color: rgb(var(--v-theme-background));
 
 	:global(.v-btn) {
 		flex: 1 1 0%;

@@ -8,7 +8,16 @@
 }
 
 .appBar {
-	padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+	:global(.v-toolbar__content) {
+		padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+	}
+}
+
+.toolbarExtension {
+	display: flex;
+	align-items: flex-start;
+	width: 100%;
+	height: 100%;
 }
 
 .logo {
@@ -25,7 +34,7 @@
 
 <template>
 	<VApp>
-		<VAppBar :class="$style.appBar" density="comfortable">
+		<VAppBar :class="$style.appBar" density="comfortable" extension-height="56">
 			<template #prepend>
 				<VBtn
 					:icon="mdiCogOutline"
@@ -46,6 +55,12 @@
 			<template #append>
 				<ThemeMenu />
 				<LocaleMenu />
+			</template>
+
+			<template v-if="showPageToolbar" #extension>
+				<div :class="$style.toolbarExtension">
+					<EntityTabs v-model="entityTabs.tab" />
+				</div>
 			</template>
 		</VAppBar>
 
@@ -80,10 +95,15 @@ import LocaleMenu from '@/containers/LocaleMenu.vue';
 import ThemeMenu from '@/containers/ThemeMenu.vue';
 import { getStartPageOptions, readStoredStartPage, type StartPage } from '@/router';
 import { storagePersistence } from '@/repositories/StoragePersistence';
+import EntityTabs from '@/components/EntityTabs.vue';
 import { useStorageStore } from '@/stores/storage';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
+import { useEntityTabsStore } from '@/stores/entityTabs';
+
+/** Routes whose page container has an Active/History toggle to host in the app-bar extension. */
+const PAGES_WITH_TOOLBAR = ['tasks', 'goals', 'dreams'];
 
 const { t, locale } = useI18n();
 const vuetifyLocale = useLocale();
@@ -91,10 +111,13 @@ const store = useStorageStore();
 const dreams = useDreamsStore();
 const goals = useGoalsStore();
 const tasks = useTasksStore();
+const entityTabs = useEntityTabsStore();
 const route = useRoute();
 const router = useRouter();
 
 const notice = ref('');
+
+const showPageToolbar = computed(() => PAGES_WITH_TOOLBAR.includes(String(route.name)));
 
 // Prefer the route we actually landed on (e.g. a reload on /matrix) over the
 // stored start page — otherwise a deep-link toggles back to the wrong place.

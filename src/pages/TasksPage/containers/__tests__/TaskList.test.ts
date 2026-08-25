@@ -4,7 +4,7 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { clickButtonByText } from '@/vitestHelpers';
+import { clickButtonByText, setEntityTab } from '@/vitestHelpers';
 import { Status, type Goal, type Schedule, type Task } from '@/types';
 import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
 import { useGoalsStore } from '@/stores/goals';
@@ -166,7 +166,7 @@ describe('TaskList tabs', () => {
 		expect(wrapper.text()).toContain('Open task');
 		expect(wrapper.text()).not.toContain('Done task');
 
-		await clickButtonByText(wrapper, 'History');
+		await setEntityTab('history');
 
 		expect(wrapper.text()).not.toContain('Open task');
 		expect(wrapper.text()).toContain('Done task');

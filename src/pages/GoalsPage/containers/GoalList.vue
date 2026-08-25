@@ -1,6 +1,4 @@
 <template>
-	<EntityTabs v-model="tab" />
-
 	<VContainer>
 		<EntityList
 			:groups="groups"
@@ -42,15 +40,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { storeToRefs } from 'pinia';
 import { Status, type Goal } from '@/types';
 import { useGoalsStore, type GoalDraft } from '@/stores/goals';
 import { useDreamsStore } from '@/stores/dreams';
 import { useSettingsStore } from '@/stores/settings';
+import { useEntityTabsStore } from '@/stores/entityTabs';
 import { useCascadeCancel } from '@/composables/useCascadeCancel';
 import { useToggleConfirm } from '@/composables/useToggleConfirm';
 import { formatDeadline } from '@/utils/deadline';
 import EntityList from '@/components/EntityList.vue';
-import EntityTabs from '@/components/EntityTabs.vue';
 import GoalDialog from '@/components/GoalDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
@@ -58,9 +57,8 @@ const { t, locale } = useI18n();
 const goals = useGoalsStore();
 const dreams = useDreamsStore();
 const settings = useSettingsStore();
+const { tab } = storeToRefs(useEntityTabsStore());
 const cascade = useCascadeCancel();
-
-const tab = ref<'active' | 'history'>('active');
 const showNote = computed(() => settings.goals.rows === 2);
 
 function labelFor(dreamId: string): string {

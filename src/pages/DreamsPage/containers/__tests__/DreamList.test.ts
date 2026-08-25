@@ -4,7 +4,7 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { clickButtonByText } from '@/vitestHelpers';
+import { clickButtonByText, setEntityTab } from '@/vitestHelpers';
 import { Status, type Dream, type Goal } from '@/types';
 import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
 import { useDreamsStore } from '@/stores/dreams';
@@ -103,7 +103,7 @@ describe('DreamList done / reopen', () => {
 		const { wrapper, dreamsStore } = await mountWithDreams([makeDream({ status: Status.Done })]);
 		useSettingsStore().updatePageSettings('dreams', { confirmReopen: false });
 
-		await clickButtonByText(wrapper, 'History');
+		await setEntityTab('history');
 		await wrapper.get('input[type="checkbox"]').setValue(false);
 
 		expect(dreamsStore.records[0].status).toBe(Status.Opened);
@@ -115,7 +115,7 @@ describe('DreamList done / reopen', () => {
 		]);
 		useSettingsStore().updatePageSettings('dreams', { confirmReopen: false });
 
-		await clickButtonByText(wrapper, 'History');
+		await setEntityTab('history');
 		await wrapper.get('input[type="checkbox"]').setValue(true);
 
 		expect(dreamsStore.records[0].status).toBe(Status.Opened);
@@ -175,7 +175,7 @@ describe('DreamList tabs', () => {
 		expect(wrapper.text()).toContain('Open dream');
 		expect(wrapper.text()).not.toContain('Done dream');
 
-		await clickButtonByText(wrapper, 'History');
+		await setEntityTab('history');
 
 		expect(wrapper.text()).not.toContain('Open dream');
 		expect(wrapper.text()).toContain('Done dream');

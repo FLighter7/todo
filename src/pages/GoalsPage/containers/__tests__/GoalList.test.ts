@@ -4,7 +4,7 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { clickButtonByText } from '@/vitestHelpers';
+import { clickButtonByText, setEntityTab } from '@/vitestHelpers';
 import { Status, type Dream, type Goal, type Task } from '@/types';
 import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
 import { useDreamsStore } from '@/stores/dreams';
@@ -140,7 +140,7 @@ describe('GoalList done / reopen', () => {
 		);
 		useSettingsStore().updatePageSettings('goals', { confirmReopen: false });
 
-		await clickButtonByText(wrapper, 'History');
+		await setEntityTab('history');
 		await wrapper.get('input[type="checkbox"]').setValue(true);
 
 		expect(goalsStore.records[0].status).toBe(Status.Opened);
@@ -189,7 +189,7 @@ describe('GoalList tabs', () => {
 		expect(wrapper.text()).toContain('Open goal');
 		expect(wrapper.text()).not.toContain('Done goal');
 
-		await clickButtonByText(wrapper, 'History');
+		await setEntityTab('history');
 
 		expect(wrapper.text()).not.toContain('Open goal');
 		expect(wrapper.text()).toContain('Done goal');

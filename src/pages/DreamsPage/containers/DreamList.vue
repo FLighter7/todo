@@ -1,6 +1,4 @@
 <template>
-	<EntityTabs v-model="tab" />
-
 	<VContainer>
 		<DreamDialog
 			v-model="dialogOpen"
@@ -40,22 +38,23 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { storeToRefs } from 'pinia';
 import { Status, type Dream } from '@/types';
 import { useDreamsStore, type DreamDraft } from '@/stores/dreams';
 import { useSettingsStore } from '@/stores/settings';
+import { useEntityTabsStore } from '@/stores/entityTabs';
 import { useCascadeCancel } from '@/composables/useCascadeCancel';
 import { useToggleConfirm } from '@/composables/useToggleConfirm';
 import EntityList from '@/components/EntityList.vue';
-import EntityTabs from '@/components/EntityTabs.vue';
 import DreamDialog from '@/components/DreamDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
 const { t } = useI18n();
 const dreams = useDreamsStore();
 const settings = useSettingsStore();
+const { tab } = storeToRefs(useEntityTabsStore());
 const cascade = useCascadeCancel();
 
-const tab = ref<'active' | 'history'>('active');
 const visible = computed(() => (tab.value === 'active' ? dreams.active : dreams.closed));
 const showNote = computed(() => settings.dreams.rows === 2);
 
