@@ -1,0 +1,16 @@
+// Vuetify's shared hover styling (button/card/list-item/chip overlay
+// darkening etc.) is authored as plain `:hover` with no `@media (hover:
+// hover)` guard, so touch devices "fire" it on tap and only clear it on the
+// next tap elsewhere. This neutralizes it for devices that can't truly
+// hover, without touching Vuetify's own (unlayered-safe) rules.
+@media (hover: none) {
+	// Every themed Vuetify component applies its own theme class directly
+	// to itself (VBtn.js, VCard.js, etc. via `themeClasses`), and dialogs/
+	// menus/tooltips are teleported straight to `document.body` -- siblings
+	// of `.v-application`, not descendants. Targeting `.v-theme--*` reaches
+	// all of them; `.v-application` alone would miss every dialog and menu.
+	.v-theme--light,
+	.v-theme--dark {
+		--v-hover-opacity: 0;
+	}
+}
