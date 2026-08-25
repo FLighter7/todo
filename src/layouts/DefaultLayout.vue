@@ -7,6 +7,10 @@
 	}
 }
 
+.appBar {
+	padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+}
+
 .logo {
 	position: absolute;
 	left: 50%;
@@ -21,7 +25,7 @@
 
 <template>
 	<VApp>
-		<VAppBar density="comfortable">
+		<VAppBar :class="$style.appBar" density="comfortable">
 			<template #prepend>
 				<VBtn
 					:icon="mdiCogOutline"

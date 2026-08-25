@@ -15,7 +15,7 @@
 	align-items: center;
 	gap: 0.25rem;
 	height: 4rem;
-	padding-inline: 0.5rem;
+	padding-inline: calc(0.5rem + env(safe-area-inset-left)) calc(0.5rem + env(safe-area-inset-right));
 }
 
 .link {
