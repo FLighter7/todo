@@ -4,15 +4,18 @@
 	inset-inline: 0;
 	bottom: 0;
 	z-index: 1005;
+	padding-bottom: env(safe-area-inset-bottom);
+	background-color: rgb(var(--v-theme-surface));
+	border-top: 1px solid rgb(var(--v-theme-outline));
+}
+
+.row {
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	gap: 0.25rem;
 	height: 4rem;
 	padding-inline: 0.5rem;
-	padding-bottom: env(safe-area-inset-bottom);
-	background-color: rgb(var(--v-theme-surface));
-	border-top: 1px solid rgb(var(--v-theme-outline));
 }
 
 .link {
@@ -29,57 +32,59 @@
 
 <template>
 	<nav :class="$style.bar">
-		<VBtn
-			:to="{ name: 'dreams' }"
-			:class="$style.link"
-			variant="text"
-			stacked
-			size="small"
-			:prepend-icon="mdiShimmer"
-			:color="route.name === 'dreams' ? 'primary' : undefined"
-		>
-			{{ t('nav.dreams') }}
-		</VBtn>
+		<div :class="$style.row">
+			<VBtn
+				:to="{ name: 'dreams' }"
+				:class="$style.link"
+				variant="text"
+				stacked
+				size="small"
+				:prepend-icon="mdiShimmer"
+				:color="route.name === 'dreams' ? 'primary' : undefined"
+			>
+				{{ t('nav.dreams') }}
+			</VBtn>
 
-		<VBtn
-			:to="{ name: 'goals' }"
-			:class="$style.link"
-			variant="text"
-			stacked
-			size="small"
-			:prepend-icon="mdiBullseyeArrow"
-			:color="route.name === 'goals' ? 'primary' : undefined"
-		>
-			{{ t('nav.goals') }}
-		</VBtn>
+			<VBtn
+				:to="{ name: 'goals' }"
+				:class="$style.link"
+				variant="text"
+				stacked
+				size="small"
+				:prepend-icon="mdiBullseyeArrow"
+				:color="route.name === 'goals' ? 'primary' : undefined"
+			>
+				{{ t('nav.goals') }}
+			</VBtn>
 
-		<div :class="$style.fabWrap">
-			<QuickAddFab />
+			<div :class="$style.fabWrap">
+				<QuickAddFab />
+			</div>
+
+			<VBtn
+				:to="{ name: 'tasks' }"
+				:class="$style.link"
+				variant="text"
+				stacked
+				size="small"
+				:prepend-icon="mdiFormatListBulleted"
+				:color="route.name === 'tasks' ? 'primary' : undefined"
+			>
+				{{ t('nav.tasks') }}
+			</VBtn>
+
+			<VBtn
+				:to="{ name: 'matrix' }"
+				:class="$style.link"
+				variant="text"
+				stacked
+				size="small"
+				:prepend-icon="mdiViewGridOutline"
+				:color="route.name === 'matrix' ? 'primary' : undefined"
+			>
+				{{ t('nav.matrix') }}
+			</VBtn>
 		</div>
-
-		<VBtn
-			:to="{ name: 'tasks' }"
-			:class="$style.link"
-			variant="text"
-			stacked
-			size="small"
-			:prepend-icon="mdiFormatListBulleted"
-			:color="route.name === 'tasks' ? 'primary' : undefined"
-		>
-			{{ t('nav.tasks') }}
-		</VBtn>
-
-		<VBtn
-			:to="{ name: 'matrix' }"
-			:class="$style.link"
-			variant="text"
-			stacked
-			size="small"
-			:prepend-icon="mdiViewGridOutline"
-			:color="route.name === 'matrix' ? 'primary' : undefined"
-		>
-			{{ t('nav.matrix') }}
-		</VBtn>
 	</nav>
 </template>
 
