@@ -3,11 +3,45 @@
 	display: flex;
 	gap: 1.5rem;
 }
+
+.saveAndNewIcon {
+	display: inline-flex;
+	position: relative;
+}
+
+.saveAndNewBadge {
+	bottom: -4px;
+	position: absolute;
+	right: -4px;
+}
 </style>
 
 <template>
 	<VDialog v-model="open" max-width="480">
 		<VCard variant="elevated">
+			<VCardActions>
+				<VSpacer />
+				<VBtn
+					icon
+					variant="text"
+					density="comfortable"
+					:aria-label="t('form.saveAndNew')"
+					@click="onSaveAndNew"
+				>
+					<span :class="$style.saveAndNewIcon">
+						<VIcon :icon="mdiCheck" />
+						<VIcon :icon="mdiPlusThick" size="16" :class="$style.saveAndNewBadge" />
+					</span>
+				</VBtn>
+				<VBtn
+					:icon="mdiCheck"
+					variant="text"
+					density="comfortable"
+					:aria-label="t('form.save')"
+					@click="onSave"
+				/>
+			</VCardActions>
+
 			<VTabs v-model="activeTab" color="primary">
 				<VTab value="dream">{{ t('dream.title') }}</VTab>
 				<VTab value="goal">{{ t('goal.title') }}</VTab>
@@ -17,22 +51,22 @@
 			<VCardText>
 				<template v-if="activeTab === 'dream'">
 					<VTextField
+						ref="nameField"
 						v-model="dreamName"
 						:label="t('entity.name')"
 						:error-messages="dreamNameError"
 						autofocus
-						@keyup.enter="onSave"
 					/>
 					<VTextarea v-model="dreamNote" :label="t('entity.note')" rows="3" />
 				</template>
 
 				<template v-else-if="activeTab === 'goal'">
 					<VTextField
+						ref="nameField"
 						v-model="goalName"
 						:label="t('entity.name')"
 						:error-messages="goalNameError"
 						autofocus
-						@keyup.enter="onSave"
 					/>
 					<VTextarea v-model="goalNote" :label="t('entity.note')" rows="3" />
 					<VSelect
@@ -47,11 +81,11 @@
 
 				<template v-else>
 					<VTextField
+						ref="nameField"
 						v-model="taskName"
 						:label="t('entity.name')"
 						:error-messages="taskNameError"
 						autofocus
-						@keyup.enter="onSave"
 					/>
 					<VTextarea v-model="taskNote" :label="t('entity.note')" rows="3" />
 					<div :class="$style.flags">
@@ -73,18 +107,14 @@
 					<ScheduleField v-model="taskSchedule" />
 				</template>
 			</VCardText>
-
-			<VCardActions>
-				<VSpacer />
-				<VBtn color="primary" variant="flat" @click="onSave">{{ t('form.save') }}</VBtn>
-			</VCardActions>
 		</VCard>
 	</VDialog>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { mdiCheck, mdiPlusThick } from '@mdi/js';
 import type { DreamDraft } from '@/stores/dreams';
 import type { GoalDraft } from '@/stores/goals';
 import type { TaskDraft } from '@/stores/tasks';
@@ -110,6 +140,7 @@ const { t } = useI18n();
 
 const activeTab = ref<'dream' | 'goal' | 'task'>(props.defaultTab);
 const showErrors = ref(false);
+const nameField = useTemplateRef<{ focus: () => void }>('nameField');
 
 const dreamName = ref('');
 const dreamNote = ref('');
@@ -166,11 +197,11 @@ watch(open, (isOpen) => {
 	taskSchedule.value = undefined;
 });
 
-function onSave(): void {
+function trySave(): boolean {
 	if (activeTab.value === 'dream') {
 		if (dreamName.value.trim() === '') {
 			showErrors.value = true;
-			return;
+			return false;
 		}
 
 		const trimmedNote = dreamNote.value.trim();
@@ -178,14 +209,13 @@ function onSave(): void {
 			name: dreamName.value.trim(),
 			note: trimmedNote === '' ? undefined : trimmedNote,
 		});
-		open.value = false;
-		return;
+		return true;
 	}
 
 	if (activeTab.value === 'goal') {
 		if (goalName.value.trim() === '') {
 			showErrors.value = true;
-			return;
+			return false;
 		}
 
 		const trimmedNote = goalNote.value.trim();
@@ -195,13 +225,12 @@ function onSave(): void {
 			dreamId: goalDreamId.value === '' ? undefined : goalDreamId.value,
 			deadline: goalDeadline.value,
 		});
-		open.value = false;
-		return;
+		return true;
 	}
 
 	if (taskName.value.trim() === '') {
 		showErrors.value = true;
-		return;
+		return false;
 	}
 
 	const trimmedNote = taskNote.value.trim();
@@ -213,6 +242,32 @@ function onSave(): void {
 		goalId: taskGoalId.value === '' ? undefined : taskGoalId.value,
 		schedule: taskSchedule.value,
 	});
-	open.value = false;
+	return true;
+}
+
+function onSave(): void {
+	if (trySave()) {
+		open.value = false;
+	}
+}
+
+function onSaveAndNew(): void {
+	if (!trySave()) {
+		return;
+	}
+
+	showErrors.value = false;
+	if (activeTab.value === 'dream') {
+		dreamName.value = '';
+		dreamNote.value = '';
+	} else if (activeTab.value === 'goal') {
+		goalName.value = '';
+		goalNote.value = '';
+	} else {
+		taskName.value = '';
+		taskNote.value = '';
+	}
+
+	void nextTick(() => nameField.value?.focus());
 }
 </script>

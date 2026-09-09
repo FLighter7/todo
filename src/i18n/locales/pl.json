@@ -74,6 +74,7 @@
 		"add": "Nowe zadanie",
 		"edit": "Edytuj zadanie",
 		"save": "Zapisz",
+		"saveAndNew": "Zapisz i dodaj nowe",
 		"cancel": "Anuluj",
 		"nameRequired": "Nazwa jest wymagana"
 	},

@@ -74,6 +74,7 @@
 		"add": "Add task",
 		"edit": "Edit task",
 		"save": "Save",
+		"saveAndNew": "Save & New",
 		"cancel": "Cancel",
 		"nameRequired": "Name is required"
 	},

@@ -5,7 +5,6 @@ import { createPinia, setActivePinia } from 'pinia';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { clickButtonByText } from '@/vitestHelpers';
 import { Status, type Dream, type Goal, type Task } from '@/types';
 import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
 import { useDreamsStore } from '@/stores/dreams';
@@ -92,7 +91,7 @@ describe('QuickAddFab creating a dream', () => {
 
 		await wrapper.get('button[aria-label="Add task"]').trigger('click');
 		await wrapper.get('input').setValue('Visit Japan');
-		await clickButtonByText(wrapper, 'Save');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
 
 		expect(dreams.records).toHaveLength(1);
 		expect(dreams.records[0].name).toBe('Visit Japan');
@@ -108,7 +107,7 @@ describe('QuickAddFab creating a goal', () => {
 		await wrapper.get('input').setValue('Learn Japanese');
 		const [select] = wrapper.findAllComponents({ name: 'VSelect' });
 		await select.vm.$emit('update:modelValue', 'dream-1');
-		await clickButtonByText(wrapper, 'Save');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
 
 		expect(goals.records).toHaveLength(1);
 		expect(goals.records[0]).toMatchObject({ name: 'Learn Japanese', dreamId: 'dream-1' });
@@ -124,7 +123,7 @@ describe('QuickAddFab creating a task', () => {
 		await wrapper.get('input').setValue('Do Duolingo');
 		const [select] = wrapper.findAllComponents({ name: 'VSelect' });
 		await select.vm.$emit('update:modelValue', 'goal-1');
-		await clickButtonByText(wrapper, 'Save');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
 
 		expect(tasks.records).toHaveLength(1);
 		expect(tasks.records[0]).toMatchObject({ name: 'Do Duolingo', goalId: 'goal-1' });
