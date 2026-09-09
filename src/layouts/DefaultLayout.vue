@@ -29,6 +29,8 @@
 	font-size: 1.25rem;
 	font-weight: 600;
 	letter-spacing: 0.02em;
+	color: inherit;
+	text-decoration: none;
 }
 </style>
 
@@ -50,7 +52,7 @@
 				/>
 			</template>
 
-			<span :class="$style.logo">TODO</span>
+			<RouterLink to="/" :class="$style.logo">TODO</RouterLink>
 
 			<template #append>
 				<ThemeMenu />
