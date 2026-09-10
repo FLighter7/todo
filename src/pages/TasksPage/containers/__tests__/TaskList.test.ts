@@ -16,8 +16,8 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
 	return {
 		id: 'goal-1',
 		name: 'Learn Japanese',
-		created: '2026-08-06T10:00:00.000Z',
-		updated: '2026-08-06T10:00:00.000Z',
+		created: daysAgo(1),
+		updated: daysAgo(1),
 		status: Status.Opened,
 		...overrides,
 	};
@@ -27,13 +27,17 @@ function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
 		id: 'task-1',
 		name: 'Do Duolingo',
-		created: '2026-08-06T10:00:00.000Z',
-		updated: '2026-08-06T10:00:00.000Z',
+		created: daysAgo(1),
+		updated: daysAgo(1),
 		status: Status.Opened,
 		important: false,
 		urgent: false,
 		...overrides,
 	};
+}
+
+function daysAgo(days: number): string {
+	return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 }
 
 beforeEach(() => {

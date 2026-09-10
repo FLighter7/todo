@@ -10,8 +10,8 @@ function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
 		id: 'task-1',
 		name: 'File the report',
-		created: '2026-08-06T10:00:00.000Z',
-		updated: '2026-08-06T10:00:00.000Z',
+		created: daysAgo(1),
+		updated: daysAgo(1),
 		status: Status.Opened,
 		important: false,
 		urgent: false,

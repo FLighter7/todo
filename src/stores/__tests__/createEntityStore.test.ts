@@ -53,8 +53,8 @@ function makeDream(overrides: Partial<Dream> = {}): Dream {
 	return {
 		id: 'seeded',
 		name: 'Visit Japan',
-		created: '2026-08-06T10:00:00.000Z',
-		updated: '2026-08-06T10:00:00.000Z',
+		created: daysAgo(1),
+		updated: daysAgo(1),
 		status: Status.Opened,
 		...overrides,
 	};
@@ -64,8 +64,8 @@ function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
 		id: 'seeded-task',
 		name: 'Water the plants',
-		created: '2026-08-06T10:00:00.000Z',
-		updated: '2026-08-06T10:00:00.000Z',
+		created: daysAgo(1),
+		updated: daysAgo(1),
 		status: Status.Opened,
 		important: false,
 		urgent: false,
