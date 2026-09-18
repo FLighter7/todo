@@ -1,0 +1,23 @@
+import { computed, type ComputedRef } from 'vue';
+import { useI18n } from 'vue-i18n';
+import type { EntityBase } from '@/types';
+import { useSettingsStore, type SettingsEntity } from '@/stores/settings';
+import { sortEntityRows, type EntityGroup, type EntityRow } from '@/utils/sortEntities';
+
+/**
+ * Shared wiring for `TaskList.vue`/`GoalList.vue`/`DreamList.vue`: each reads
+ * its own page's `sortOrder` off `useSettingsStore()` and the active locale
+ * off `useI18n()`, then hands both to `sortEntityRows`.
+ */
+export function useSortedEntityRows<T extends EntityBase>(
+	groups: ComputedRef<EntityGroup<T>[]>,
+	ungrouped: ComputedRef<T[]>,
+	settingsEntity: SettingsEntity,
+): ComputedRef<EntityRow<T>[]> {
+	const settings = useSettingsStore();
+	const { locale } = useI18n();
+
+	return computed(() =>
+		sortEntityRows(groups.value, ungrouped.value, settings[settingsEntity].sortOrder, locale.value),
+	);
+}

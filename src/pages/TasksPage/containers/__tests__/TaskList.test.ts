@@ -191,6 +191,56 @@ describe('TaskList schedule', () => {
 	});
 });
 
+describe('TaskList sorting', () => {
+	function orderedTexts(wrapper: Awaited<ReturnType<typeof mountWithData>>['wrapper']): string[] {
+		const elements = wrapper.element.querySelectorAll('legend, .v-list-item-title');
+		return Array.from(elements).map((el) => (el as HTMLElement).textContent ?? '');
+	}
+
+	it('orders tasks newest-first by default', async () => {
+		const older = makeTask({ id: 'older', name: 'Older task', updated: daysAgo(10) });
+		const newer = makeTask({ id: 'newer', name: 'Newer task', updated: daysAgo(1) });
+		const { wrapper } = await mountWithData([], [older, newer]);
+
+		expect(orderedTexts(wrapper)).toEqual(['Newer task', 'Older task']);
+	});
+
+	it('respects a stored "oldest" sortOrder', async () => {
+		const older = makeTask({ id: 'older', name: 'Older task', updated: daysAgo(10) });
+		const newer = makeTask({ id: 'newer', name: 'Newer task', updated: daysAgo(1) });
+		const { wrapper } = await mountWithData([], [older, newer]);
+		useSettingsStore().updatePageSettings('tasks', { sortOrder: 'oldest' });
+		await wrapper.vm.$nextTick();
+
+		expect(orderedTexts(wrapper)).toEqual(['Older task', 'Newer task']);
+	});
+
+	it('lifts a task\'s goal group above a newer ungrouped task once a task inside the group is updated', async () => {
+		const goal = makeGoal({ id: 'goal-1', name: 'Learn Japanese' });
+		const groupedTask = makeTask({
+			id: 'grouped',
+			name: 'Grouped task',
+			goalId: 'goal-1',
+			updated: daysAgo(50),
+		});
+		const freshUngrouped = makeTask({
+			id: 'ungrouped',
+			name: 'Ungrouped task',
+			updated: daysAgo(5),
+		});
+		const { wrapper, tasksStore } = await mountWithData([goal], [groupedTask, freshUngrouped]);
+
+		const before = orderedTexts(wrapper);
+		expect(before.indexOf('Ungrouped task')).toBeLessThan(before.indexOf('Learn Japanese'));
+
+		await tasksStore.update('grouped', { name: 'Grouped task' });
+		await wrapper.vm.$nextTick();
+
+		const after = orderedTexts(wrapper);
+		expect(after.indexOf('Learn Japanese')).toBeLessThan(after.indexOf('Ungrouped task'));
+	});
+});
+
 describe('TaskList completions', () => {
 	it('marking an occurrence done from the open dialog calls the store action and updates the dialog live', async () => {
 		const schedule: Schedule = { start: '2020-01-03T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };

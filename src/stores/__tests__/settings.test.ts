@@ -129,9 +129,9 @@ describe('useSettingsStore replaceAll', () => {
 				startPage: 'matrix',
 				cleanupDays: 60 as const,
 			},
-			dreams: { rows: 2 as const, confirmDone: true, confirmReopen: true },
-			goals: { rows: 2 as const, confirmDone: true, confirmReopen: true },
-			tasks: { rows: 2 as const, confirmDone: true, confirmReopen: true },
+			dreams: { rows: 2 as const, confirmDone: true, confirmReopen: true, sortOrder: 'az' as const },
+			goals: { rows: 2 as const, confirmDone: true, confirmReopen: true, sortOrder: 'az' as const },
+			tasks: { rows: 2 as const, confirmDone: true, confirmReopen: true, sortOrder: 'az' as const },
 		};
 
 		store.replaceAll(incoming);

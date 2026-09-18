@@ -200,6 +200,56 @@ describe('GoalList tabs', () => {
 	});
 });
 
+describe('GoalList sorting', () => {
+	function orderedTexts(wrapper: Awaited<ReturnType<typeof mountWithData>>['wrapper']): string[] {
+		const elements = wrapper.element.querySelectorAll('legend, .v-list-item-title');
+		return Array.from(elements).map((el) => (el as HTMLElement).textContent ?? '');
+	}
+
+	it('orders goals newest-first by default', async () => {
+		const older = makeGoal({ id: 'older', name: 'Older goal', updated: daysAgo(10) });
+		const newer = makeGoal({ id: 'newer', name: 'Newer goal', updated: daysAgo(1) });
+		const { wrapper } = await mountWithData([], [older, newer]);
+
+		expect(orderedTexts(wrapper)).toEqual(['Newer goal', 'Older goal']);
+	});
+
+	it('respects a stored "oldest" sortOrder', async () => {
+		const older = makeGoal({ id: 'older', name: 'Older goal', updated: daysAgo(10) });
+		const newer = makeGoal({ id: 'newer', name: 'Newer goal', updated: daysAgo(1) });
+		const { wrapper } = await mountWithData([], [older, newer]);
+		useSettingsStore().updatePageSettings('goals', { sortOrder: 'oldest' });
+		await wrapper.vm.$nextTick();
+
+		expect(orderedTexts(wrapper)).toEqual(['Older goal', 'Newer goal']);
+	});
+
+	it('lifts a goal\'s dream group above a newer ungrouped goal once a goal inside the group is updated', async () => {
+		const dream = makeDream({ id: 'dream-1', name: 'Visit Japan' });
+		const groupedGoal = makeGoal({
+			id: 'grouped',
+			name: 'Grouped goal',
+			dreamId: 'dream-1',
+			updated: daysAgo(50),
+		});
+		const freshUngrouped = makeGoal({
+			id: 'ungrouped',
+			name: 'Ungrouped goal',
+			updated: daysAgo(5),
+		});
+		const { wrapper, goalsStore } = await mountWithData([dream], [groupedGoal, freshUngrouped]);
+
+		const before = orderedTexts(wrapper);
+		expect(before.indexOf('Ungrouped goal')).toBeLessThan(before.indexOf('Visit Japan'));
+
+		await goalsStore.update('grouped', { name: 'Grouped goal' });
+		await wrapper.vm.$nextTick();
+
+		const after = orderedTexts(wrapper);
+		expect(after.indexOf('Visit Japan')).toBeLessThan(after.indexOf('Ungrouped goal'));
+	});
+});
+
 describe('GoalList deadline', () => {
 	it('shows the formatted deadline next to the goal', async () => {
 		const { wrapper } = await mountWithData([], [makeGoal({ deadline: { year: 2027 } })]);

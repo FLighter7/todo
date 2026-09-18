@@ -7,8 +7,7 @@
 <template>
 	<VContainer :class="$style.container">
 		<EntityList
-			:groups="groups"
-			:ungrouped="ungrouped"
+			:rows="rows"
 			:empty-text="t('task.empty')"
 			:show-note="showNote"
 			@toggle="onToggle"
@@ -46,6 +45,7 @@ import { useGoalsStore } from '@/stores/goals';
 import { useSettingsStore } from '@/stores/settings';
 import { useEntityTabsStore } from '@/stores/entityTabs';
 import { useToggleConfirm } from '@/composables/useToggleConfirm';
+import { useSortedEntityRows } from '@/composables/useSortedEntityRows';
 import EntityList from '@/components/EntityList.vue';
 import TaskDialog from '@/components/TaskDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -75,6 +75,7 @@ const groups = computed(() => {
 const ungrouped = computed(
 	() => (tab.value === 'active' ? activeGrouped.value : closedGrouped.value).ungrouped,
 );
+const rows = useSortedEntityRows(groups, ungrouped, 'tasks');
 
 const {
 	toggleConfirmOpen,

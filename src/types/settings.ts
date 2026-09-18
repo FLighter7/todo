@@ -2,10 +2,14 @@ import { isRecordObject } from './entity';
 
 export type AppTheme = 'light' | 'dark' | 'system';
 
+const SORT_ORDERS = ['newest', 'oldest', 'az', 'za'] as const;
+export type SortOrder = (typeof SORT_ORDERS)[number];
+
 export interface PageSettings {
 	rows: 1 | 2;
 	confirmDone: boolean;
 	confirmReopen: boolean;
+	sortOrder: SortOrder;
 }
 
 export interface AppSettings {
@@ -17,9 +21,9 @@ export interface AppSettings {
 
 export const DEFAULT_SETTINGS: AppSettings = {
 	general: { theme: 'system', locale: 'en', startPage: 'tasks', cleanupDays: 30 },
-	dreams: { rows: 1, confirmDone: false, confirmReopen: false },
-	goals: { rows: 1, confirmDone: false, confirmReopen: false },
-	tasks: { rows: 1, confirmDone: false, confirmReopen: false },
+	dreams: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
+	goals: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
+	tasks: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
 };
 
 /**
@@ -81,6 +85,18 @@ function parseRows(value: unknown): 1 | 2 {
 	return value;
 }
 
+function parseSortOrder(value: unknown): SortOrder {
+	if (value === undefined) {
+		return 'newest';
+	}
+
+	if (typeof value !== 'string' || !(SORT_ORDERS as readonly string[]).includes(value)) {
+		fail('"sortOrder" must be "newest", "oldest", "az" or "za"');
+	}
+
+	return value as SortOrder;
+}
+
 function parsePageSettings(value: unknown, key: string): PageSettings {
 	if (!isRecordObject(value)) {
 		fail(`"${key}" must be an object`);
@@ -90,6 +106,7 @@ function parsePageSettings(value: unknown, key: string): PageSettings {
 		rows: parseRows(value.rows),
 		confirmDone: readBoolean(value, 'confirmDone'),
 		confirmReopen: readBoolean(value, 'confirmReopen'),
+		sortOrder: parseSortOrder(value.sortOrder),
 	};
 }
 

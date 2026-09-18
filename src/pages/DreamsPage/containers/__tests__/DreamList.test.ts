@@ -185,3 +185,27 @@ describe('DreamList tabs', () => {
 		expect(wrapper.text()).toContain('Done dream');
 	});
 });
+
+describe('DreamList sorting', () => {
+	it('orders dreams newest-first by default', async () => {
+		const older = makeDream({ id: 'older', name: 'Older dream', updated: daysAgo(10) });
+		const newer = makeDream({ id: 'newer', name: 'Newer dream', updated: daysAgo(1) });
+		const { wrapper } = await mountWithDreams([older, newer]);
+
+		const titles = wrapper.findAll('.v-list-item-title').map((title) => title.text());
+		expect(titles).toEqual(['Newer dream', 'Older dream']);
+	});
+
+	it('respects a stored "az" sortOrder', async () => {
+		const dreams = [
+			makeDream({ id: 'b', name: 'Banana trip' }),
+			makeDream({ id: 'a', name: 'Alpine trip' }),
+		];
+		const { wrapper } = await mountWithDreams(dreams);
+		useSettingsStore().updatePageSettings('dreams', { sortOrder: 'az' });
+		await wrapper.vm.$nextTick();
+
+		const titles = wrapper.findAll('.v-list-item-title').map((title) => title.text());
+		expect(titles).toEqual(['Alpine trip', 'Banana trip']);
+	});
+});

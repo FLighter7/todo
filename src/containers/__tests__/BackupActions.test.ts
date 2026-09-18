@@ -143,9 +143,9 @@ describe('BackupActions import', () => {
 
 		const incoming = backupService.create([], [], [], {
 			general: { theme: 'light', locale: 'ru', startPage: 'matrix', cleanupDays: 90 },
-			dreams: { rows: 2, confirmDone: true, confirmReopen: true },
-			goals: { rows: 2, confirmDone: true, confirmReopen: true },
-			tasks: { rows: 2, confirmDone: true, confirmReopen: true },
+			dreams: { rows: 2, confirmDone: true, confirmReopen: true, sortOrder: 'az' },
+			goals: { rows: 2, confirmDone: true, confirmReopen: true, sortOrder: 'az' },
+			tasks: { rows: 2, confirmDone: true, confirmReopen: true, sortOrder: 'az' },
 		});
 		readText.mockResolvedValue(JSON.stringify(incoming));
 

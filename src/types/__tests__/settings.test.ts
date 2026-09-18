@@ -10,6 +10,10 @@ function validRaw(): Record<string, unknown> {
 	};
 }
 
+function pageBlock(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+	return { rows: 1, confirmDone: false, confirmReopen: false, ...overrides };
+}
+
 const ENTITIES = ['dreams', 'goals', 'tasks'] as const;
 
 describe('parseSettings', () => {
@@ -95,5 +99,23 @@ describe('parseSettings', () => {
 		const raw = validRaw();
 		raw[key] = { rows: 1, confirmDone: false, confirmReopen: 'no' };
 		expect(() => parseSettings(raw)).toThrow(/confirmReopen/);
+	});
+
+	it.each(ENTITIES)('defaults "%s.sortOrder" to "newest" when absent', (key) => {
+		const raw = validRaw();
+		raw[key] = pageBlock();
+		expect(parseSettings(raw)[key].sortOrder).toBe('newest');
+	});
+
+	it.each(ENTITIES)('accepts a present valid "%s.sortOrder"', (key) => {
+		const raw = validRaw();
+		raw[key] = pageBlock({ sortOrder: 'za' });
+		expect(parseSettings(raw)[key].sortOrder).toBe('za');
+	});
+
+	it.each(ENTITIES)('rejects an invalid "%s.sortOrder"', (key) => {
+		const raw = validRaw();
+		raw[key] = pageBlock({ sortOrder: 'random' });
+		expect(() => parseSettings(raw)).toThrow(/sortOrder/);
 	});
 });

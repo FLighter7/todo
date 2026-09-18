@@ -15,7 +15,7 @@
 
 .toolbarExtension {
 	display: flex;
-	align-items: flex-start;
+	align-items: center;
 	width: 100%;
 	height: 100%;
 }
@@ -62,6 +62,7 @@
 			<template v-if="showPageToolbar" #extension>
 				<div :class="$style.toolbarExtension">
 					<EntityTabs v-model="entityTabs.tab" />
+					<SortMenu />
 				</div>
 			</template>
 		</VAppBar>
@@ -98,6 +99,7 @@ import ThemeMenu from '@/containers/ThemeMenu.vue';
 import { getStartPageOptions, readStoredStartPage, type StartPage } from '@/router';
 import { storagePersistence } from '@/repositories/StoragePersistence';
 import EntityTabs from '@/components/EntityTabs.vue';
+import SortMenu from '@/containers/SortMenu.vue';
 import { useStorageStore } from '@/stores/storage';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';

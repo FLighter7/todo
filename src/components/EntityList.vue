@@ -1,32 +1,33 @@
 <template>
-	<p v-if="groups.length === 0 && ungrouped.length === 0" class="text-medium-emphasis pa-4">
+	<p v-if="rows.length === 0" class="text-medium-emphasis pa-4">
 		{{ emptyText }}
 	</p>
 
 	<template v-else>
-		<EntityListGroup v-for="group in groups" :key="group.key" :label="group.label">
-			<EntityListItem
-				v-for="item in group.items"
-				:key="item.id"
-				:name="item.name"
-				:note="showNote ? item.note : undefined"
-				:done="item.status === Status.Done"
-				:date="dateLabel?.(item)"
-				@update:done="emit('toggle', item.id, $event)"
-				@click="emit('open', item)"
-			/>
-		</EntityListGroup>
+		<template v-for="row in rows" :key="row.type === 'group' ? `group:${row.group.key}` : `item:${row.item.id}`">
+			<EntityListGroup v-if="row.type === 'group'" :label="row.group.label">
+				<EntityListItem
+					v-for="item in row.group.items"
+					:key="item.id"
+					:name="item.name"
+					:note="showNote ? item.note : undefined"
+					:done="item.status === Status.Done"
+					:date="dateLabel?.(item)"
+					@update:done="emit('toggle', item.id, $event)"
+					@click="emit('open', item)"
+				/>
+			</EntityListGroup>
 
-		<EntityListItem
-			v-for="item in ungrouped"
-			:key="item.id"
-			:name="item.name"
-			:note="showNote ? item.note : undefined"
-			:done="item.status === Status.Done"
-			:date="dateLabel?.(item)"
-			@update:done="emit('toggle', item.id, $event)"
-			@click="emit('open', item)"
-		/>
+			<EntityListItem
+				v-else
+				:name="row.item.name"
+				:note="showNote ? row.item.note : undefined"
+				:done="row.item.status === Status.Done"
+				:date="dateLabel?.(row.item)"
+				@update:done="emit('toggle', row.item.id, $event)"
+				@click="emit('open', row.item)"
+			/>
+		</template>
 	</template>
 </template>
 
@@ -34,10 +35,10 @@
 import EntityListGroup from './EntityListGroup.vue';
 import EntityListItem from './EntityListItem.vue';
 import { Status, type EntityBase } from '@/types';
+import type { EntityRow } from '@/utils/sortEntities';
 
 defineProps<{
-	groups: Array<{ key: string; label: string; items: T[] }>;
-	ungrouped: T[];
+	rows: EntityRow<T>[];
 	emptyText: string;
 	showNote: boolean;
 	dateLabel?: (item: T) => string | undefined;

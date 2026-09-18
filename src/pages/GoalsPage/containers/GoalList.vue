@@ -7,8 +7,7 @@
 <template>
 	<VContainer :class="$style.container">
 		<EntityList
-			:groups="groups"
-			:ungrouped="ungrouped"
+			:rows="rows"
 			:empty-text="t('goal.empty')"
 			:show-note="showNote"
 			:date-label="dateLabel"
@@ -54,6 +53,7 @@ import { useSettingsStore } from '@/stores/settings';
 import { useEntityTabsStore } from '@/stores/entityTabs';
 import { useCascadeCancel } from '@/composables/useCascadeCancel';
 import { useToggleConfirm } from '@/composables/useToggleConfirm';
+import { useSortedEntityRows } from '@/composables/useSortedEntityRows';
 import { formatDeadline } from '@/utils/deadline';
 import EntityList from '@/components/EntityList.vue';
 import GoalDialog from '@/components/GoalDialog.vue';
@@ -89,6 +89,7 @@ const groups = computed(() => {
 const ungrouped = computed(
 	() => (tab.value === 'active' ? activeGrouped.value : closedGrouped.value).ungrouped,
 );
+const rows = useSortedEntityRows(groups, ungrouped, 'goals');
 
 const dialogOpen = ref(false);
 const editing = ref<Goal | null>(null);
