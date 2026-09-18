@@ -1,5 +1,11 @@
+<style lang="scss" module>
+.container {
+	padding-bottom: 32px;
+}
+</style>
+
 <template>
-	<VContainer>
+	<VContainer :class="$style.container">
 		<EntityList
 			:groups="groups"
 			:ungrouped="ungrouped"
