@@ -1,10 +1,9 @@
 <style lang="scss" module>
-// Row height comes from the title line plus this padding alone. Vuetify's own min-height
+// Row height comes from the title line plus Vuetify's own 4px padding alone. Its min-height
 // is dropped rather than lowered through the density prop, because VListItem hands its
 // density down to the prepend's VCheckboxBtn and would shrink its touch target with it.
 .item {
 	min-height: 0;
-	padding-block: 6px;
 
 	// The checkbox otherwise centers against the two-line title+note block;
 	// Vuetify only aligns prepend/append to the top for its own --three-line items.
