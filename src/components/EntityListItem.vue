@@ -1,19 +1,24 @@
 <style lang="scss" module>
+// Row height comes from the title line plus this padding alone. Vuetify's own min-height
+// is dropped rather than lowered through the density prop, because VListItem hands its
+// density down to the prepend's VCheckboxBtn and would shrink its touch target with it.
 .item {
+	min-height: 0;
+	padding-block: 6px;
+
 	// The checkbox otherwise centers against the two-line title+note block;
 	// Vuetify only aligns prepend/append to the top for its own --three-line items.
 	:global(.v-list-item__prepend) {
 		align-self: start;
 	}
-}
 
-// The checkbox's touch target (--v-selection-control-size, 40px by default) is taller
-// than the title's own line box (1.5rem), so top-aligning it still leaves it sitting
-// lower than the title text once a note pushes the item past one line. Pull it back up
-// by half that difference so it centers on the title line, same as a note-less item.
-.item:global(:has(.v-list-item-subtitle)) {
-	:global(.v-list-item__prepend) {
-		margin-top: calc((1.5rem - var(--v-selection-control-size, 40px)) / 2);
+	// The checkbox keeps its full touch target (--v-selection-control-size, 40px), but
+	// negative margins shrink its layout box to the title's own line box (1.5rem): it no
+	// longer dictates the row height, overflows into the row's padding instead, and stays
+	// centered on the title line with or without a note. The margin goes on the control,
+	// not the prepend, because only the control's own element carries the variable.
+	:global(.v-list-item__prepend > .v-selection-control) {
+		margin-block: calc((1.5rem - var(--v-selection-control-size)) / 2);
 	}
 }
 </style>
