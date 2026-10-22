@@ -1,7 +1,8 @@
 <style lang="scss" module></style>
 
 <template>
-	<VMenu>
+	<!-- The scrim takes the dismissing click, so it never reaches what lies beneath. -->
+	<VMenu scrim="transparent">
 		<template #activator="{ props: menuProps }">
 			<VBtn :icon="mdiSort" variant="text" :aria-label="t('entity.sortLabel')" v-bind="menuProps" />
 		</template>

@@ -88,3 +88,15 @@ describe('SortMenu selection', () => {
 		expect(wrapper.findComponent({ name: 'VOverlay' }).props('modelValue')).toBeFalsy();
 	});
 });
+
+describe('SortMenu dismissal', () => {
+	it('covers the page with a transparent scrim while open', async () => {
+		const { wrapper } = await mountAt('/tasks');
+
+		await openMenu(wrapper);
+
+		const scrim = wrapper.find('.v-overlay__scrim');
+		expect(scrim.exists()).toBe(true);
+		expect(scrim.classes()).toContain('bg-transparent');
+	});
+});
