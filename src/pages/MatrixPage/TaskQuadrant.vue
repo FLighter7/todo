@@ -30,7 +30,7 @@
 	>
 		<VCardTitle :class="$style.title">
 			<VIcon :icon="icon" size="small" />
-			<span class="text-body-large" :class="quadrant === 'eliminate' ? $style.muted : undefined">
+			<span :class="quadrant === 'eliminate' ? $style.muted : undefined">
 				{{ t(`quadrant.${quadrant}`) }}
 			</span>
 			<VSpacer />
