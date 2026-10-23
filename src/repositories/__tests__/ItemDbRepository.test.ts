@@ -2,9 +2,9 @@ import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it } from 'vitest';
 import { deleteDB, openDB } from 'idb';
 import { Status, parseDream, parseTask, type Dream, type Task } from '@/types';
-import { StorageUnavailableError } from '../EntityStorage';
+import { StorageUnavailableError } from '../ItemStorage';
 import { APP_DB_NAME } from '../AppDatabase';
-import { EntityDbRepository } from '../EntityDbRepository';
+import { ItemDbRepository } from '../ItemDbRepository';
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
 	return {
@@ -31,25 +31,25 @@ afterEach(async () => {
 	await deleteDB(APP_DB_NAME);
 });
 
-describe('EntityDbRepository', () => {
+describe('ItemDbRepository', () => {
 	it('starts empty', async () => {
-		const repository = await EntityDbRepository.create('dreams', parseDream);
+		const repository = await ItemDbRepository.create('dreams', parseDream);
 
 		await expect(repository.getAll()).resolves.toEqual([]);
 	});
 
 	it('persists a record across separate connections', async () => {
-		const first = await EntityDbRepository.create('dreams', parseDream);
+		const first = await ItemDbRepository.create('dreams', parseDream);
 		await first.put(makeDream());
 
-		const second = await EntityDbRepository.create('dreams', parseDream);
+		const second = await ItemDbRepository.create('dreams', parseDream);
 
 		await expect(second.getAll()).resolves.toEqual([makeDream()]);
 	});
 
 	it('keeps the three stores apart', async () => {
-		const dreams = await EntityDbRepository.create('dreams', parseDream);
-		const tasks = await EntityDbRepository.create('tasks', parseTask);
+		const dreams = await ItemDbRepository.create('dreams', parseDream);
+		const tasks = await ItemDbRepository.create('tasks', parseTask);
 
 		await dreams.put(makeDream());
 		await tasks.put(makeTask());
@@ -61,7 +61,7 @@ describe('EntityDbRepository', () => {
 	});
 
 	it('replaces a record with the same id', async () => {
-		const repository = await EntityDbRepository.create('dreams', parseDream);
+		const repository = await ItemDbRepository.create('dreams', parseDream);
 
 		await repository.put(makeDream());
 		await repository.put(makeDream({ status: Status.Done }));
@@ -72,7 +72,7 @@ describe('EntityDbRepository', () => {
 	});
 
 	it('removes a record and clears the store', async () => {
-		const repository = await EntityDbRepository.create('dreams', parseDream);
+		const repository = await ItemDbRepository.create('dreams', parseDream);
 		await repository.put(makeDream());
 		await repository.put(makeDream({ id: 'id-2' }));
 
@@ -84,7 +84,7 @@ describe('EntityDbRepository', () => {
 	});
 
 	it('skips and counts a row it cannot parse instead of failing the load', async () => {
-		const repository = await EntityDbRepository.create('dreams', parseDream);
+		const repository = await ItemDbRepository.create('dreams', parseDream);
 		await repository.put(makeDream());
 
 		// Write a broken row behind the repository's back, the way a future
@@ -101,7 +101,7 @@ describe('EntityDbRepository', () => {
 	});
 
 	it('resets the skipped count on each load', async () => {
-		const repository = await EntityDbRepository.create('dreams', parseDream);
+		const repository = await ItemDbRepository.create('dreams', parseDream);
 		await repository.put(makeDream());
 
 		const raw = await openDB(APP_DB_NAME, 3);
@@ -119,11 +119,11 @@ describe('EntityDbRepository', () => {
 		expect(repository.skipped).toBe(0);
 	});
 
-	it('propagates an error from parse that is not an EntityFormatError', async () => {
+	it('propagates an error from parse that is not an ItemFormatError', async () => {
 		const failingParse = (): Dream => {
 			throw new TypeError('boom');
 		};
-		const repository = await EntityDbRepository.create('dreams', failingParse);
+		const repository = await ItemDbRepository.create('dreams', failingParse);
 
 		const raw = await openDB(APP_DB_NAME, 3);
 		await raw.put('dreams', makeDream());
@@ -141,7 +141,7 @@ describe('EntityDbRepository', () => {
 		});
 		old.close();
 
-		await EntityDbRepository.create('dreams', parseDream);
+		await ItemDbRepository.create('dreams', parseDream);
 
 		const raw = await openDB(APP_DB_NAME, 3);
 		expect([...raw.objectStoreNames].sort()).toEqual(['dreams', 'goals', 'tasks']);
@@ -154,7 +154,7 @@ describe('EntityDbRepository', () => {
 		delete globalThis.indexedDB;
 
 		try {
-			await expect(EntityDbRepository.create('dreams', parseDream)).rejects.toBeInstanceOf(
+			await expect(ItemDbRepository.create('dreams', parseDream)).rejects.toBeInstanceOf(
 				StorageUnavailableError,
 			);
 		} finally {

@@ -1,13 +1,13 @@
 import { computed } from 'vue';
 import { defineStore, storeToRefs } from 'pinia';
 import { Status, parseGoal, type Goal, type GoalDraft } from '@/types';
-import { EntityDbRepository } from '@/repositories/EntityDbRepository';
+import { ItemDbRepository } from '@/repositories/ItemDbRepository';
 import { sectionByParent, type SectionedByParent } from '@/utils';
 import { defineEntityStore } from './createEntityStore';
 
 const useBaseGoalsStore = defineEntityStore<Goal, GoalDraft>({
 	id: 'goals',
-	createRepository: () => EntityDbRepository.create('goals', parseGoal),
+	createRepository: () => ItemDbRepository.create('goals', parseGoal),
 	build: (draft, id, now) => ({
 		id,
 		name: draft.name,

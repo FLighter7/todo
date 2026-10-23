@@ -88,7 +88,7 @@ import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SyncCode from '../SyncCode.vue';
 import SyncScanner from '../SyncScanner.vue';
-import type { AppSettings, EntityBase } from '@/types';
+import type { AppSettings, ItemBase } from '@/types';
 import {
 	SyncConnection,
 	SYNC_SCHEMA,
@@ -294,7 +294,7 @@ function declineSettings(): void {
  * record the other device still holds past our window would otherwise land on
  * disk and be swept only on the next load, one write too late.
  */
-function sweep<T extends EntityBase>(records: T[], now: Date): T[] {
+function sweep<T extends ItemBase>(records: T[], now: Date): T[] {
 	return collectGarbage(records, settings.general.cleanupDays, now).keep;
 }
 </script>

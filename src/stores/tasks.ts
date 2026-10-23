@@ -1,7 +1,7 @@
 import { computed } from 'vue';
 import { defineStore, storeToRefs } from 'pinia';
 import { Status, parseTask, type Task, type TaskDraft } from '@/types';
-import { EntityDbRepository } from '@/repositories/EntityDbRepository';
+import { ItemDbRepository } from '@/repositories/ItemDbRepository';
 import {
 	pruneTask,
 	quadrantOf,
@@ -14,7 +14,7 @@ import { defineEntityStore } from './createEntityStore';
 
 const useBaseTasksStore = defineEntityStore<Task, TaskDraft>({
 	id: 'tasks',
-	createRepository: () => EntityDbRepository.create('tasks', parseTask),
+	createRepository: () => ItemDbRepository.create('tasks', parseTask),
 	build: (draft, id, now) => ({
 		id,
 		name: draft.name,

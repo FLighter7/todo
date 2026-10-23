@@ -9,13 +9,13 @@ import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
 import { useSettingsStore } from '@/stores/settings';
-import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import MockDataActions from '../MockDataActions.vue';
 
 async function loadEmptyStores(): Promise<void> {
-	await useDreamsStore().load(async () => new EntityMemoryRepository([]));
-	await useGoalsStore().load(async () => new EntityMemoryRepository([]));
-	await useTasksStore().load(async () => new EntityMemoryRepository([]));
+	await useDreamsStore().load(async () => new ItemMemoryRepository([]));
+	await useGoalsStore().load(async () => new ItemMemoryRepository([]));
+	await useTasksStore().load(async () => new ItemMemoryRepository([]));
 }
 
 /**

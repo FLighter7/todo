@@ -5,7 +5,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { Status, type Task } from '@/types';
-import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useTasksStore } from '@/stores/tasks';
 import MatrixBoard from '../MatrixBoard.vue';
 
@@ -31,7 +31,7 @@ describe('MatrixBoard', () => {
 		const store = useTasksStore();
 		await store.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeTask({ id: 'a', name: 'Do task', important: true, urgent: true }),
 					makeTask({ id: 'b', name: 'Schedule task', important: true, urgent: false }),
 				]),
@@ -45,7 +45,7 @@ describe('MatrixBoard', () => {
 
 	it('opens the form pre-flagged for the quadrant whose add button was clicked', async () => {
 		const store = useTasksStore();
-		await store.load(async () => new EntityMemoryRepository<Task>());
+		await store.load(async () => new ItemMemoryRepository<Task>());
 
 		const wrapper = mount(MatrixBoard, { global: { plugins: [vuetify, i18n] } });
 
@@ -67,7 +67,7 @@ describe('MatrixBoard', () => {
 		const store = useTasksStore();
 		await store.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeTask({ id: 'a', name: 'Eliminate task', important: false, urgent: false }),
 				]),
 		);

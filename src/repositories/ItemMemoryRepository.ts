@@ -1,11 +1,11 @@
-import type { EntityBase } from '@/types';
-import type { EntityStorage } from './EntityStorage';
+import type { ItemBase } from '@/types';
+import type { ItemStorage } from './ItemStorage';
 
 /**
  * No singleton, deliberately: this holds independent, disposable state —
  * a fallback instance, or a seeded one in a test — and must never be shared.
  */
-export class EntityMemoryRepository<T extends EntityBase> implements EntityStorage<T> {
+export class ItemMemoryRepository<T extends ItemBase> implements ItemStorage<T> {
 	private readonly items: Map<string, T>;
 
 	constructor(seed: T[] = []) {

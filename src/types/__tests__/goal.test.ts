@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EntityFormatError, Status } from '../entity';
+import { ItemFormatError, Status } from '../item';
 import { Season, isSeason, parseGoal } from '../goal';
 
 function makeRaw(overrides: Record<string, unknown> = {}): Record<string, unknown> {
@@ -39,7 +39,7 @@ describe('parseGoal', () => {
 	});
 
 	it('rejects a non-string dreamId', () => {
-		expect(() => parseGoal(makeRaw({ dreamId: 42 }))).toThrow(EntityFormatError);
+		expect(() => parseGoal(makeRaw({ dreamId: 42 }))).toThrow(ItemFormatError);
 	});
 
 	it('accepts every valid deadline shape', () => {
@@ -59,30 +59,28 @@ describe('parseGoal', () => {
 
 	it('rejects a day without a month', () => {
 		expect(() => parseGoal(makeRaw({ deadline: { year: 2027, day: 15 } }))).toThrow(
-			EntityFormatError,
+			ItemFormatError,
 		);
 	});
 
 	it('rejects a month and a season together', () => {
 		expect(() =>
 			parseGoal(makeRaw({ deadline: { year: 2027, month: 3, season: Season.Summer } })),
-		).toThrow(EntityFormatError);
+		).toThrow(ItemFormatError);
 	});
 
 	it('rejects an empty deadline', () => {
-		expect(() => parseGoal(makeRaw({ deadline: {} }))).toThrow(EntityFormatError);
+		expect(() => parseGoal(makeRaw({ deadline: {} }))).toThrow(ItemFormatError);
 	});
 
 	it('rejects out-of-range months and days', () => {
-		expect(() => parseGoal(makeRaw({ deadline: { month: 0 } }))).toThrow(EntityFormatError);
-		expect(() => parseGoal(makeRaw({ deadline: { month: 13 } }))).toThrow(EntityFormatError);
-		expect(() => parseGoal(makeRaw({ deadline: { month: 3, day: 0 } }))).toThrow(EntityFormatError);
-		expect(() => parseGoal(makeRaw({ deadline: { month: 3, day: 32 } }))).toThrow(
-			EntityFormatError,
-		);
+		expect(() => parseGoal(makeRaw({ deadline: { month: 0 } }))).toThrow(ItemFormatError);
+		expect(() => parseGoal(makeRaw({ deadline: { month: 13 } }))).toThrow(ItemFormatError);
+		expect(() => parseGoal(makeRaw({ deadline: { month: 3, day: 0 } }))).toThrow(ItemFormatError);
+		expect(() => parseGoal(makeRaw({ deadline: { month: 3, day: 32 } }))).toThrow(ItemFormatError);
 	});
 
 	it('rejects a non-integer year', () => {
-		expect(() => parseGoal(makeRaw({ deadline: { year: 2027.5 } }))).toThrow(EntityFormatError);
+		expect(() => parseGoal(makeRaw({ deadline: { year: 2027.5 } }))).toThrow(ItemFormatError);
 	});
 });

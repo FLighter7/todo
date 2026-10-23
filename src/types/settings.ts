@@ -1,4 +1,4 @@
-import { isRecordObject } from './entity';
+import { isRecordObject } from './item';
 
 export type AppTheme = 'light' | 'dark' | 'system';
 
@@ -40,7 +40,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
 };
 
 /**
- * Its own error type, not `EntityFormatError`: settings have no `EntityBase`
+ * Its own error type, not `ItemFormatError`: settings have no `ItemBase`
  * and are not a record collection, so `BackupService` has to tell "one bad
  * record" apart from "the settings document is bad" when it addresses a
  * parse failure.

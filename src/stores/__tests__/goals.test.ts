@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { Status, type Goal } from '@/types';
-import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useGoalsStore } from '../goals';
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
@@ -27,7 +27,7 @@ beforeEach(() => {
 describe('useGoalsStore goalsByDream', () => {
 	it('puts a dreamless goal in the loose tail', async () => {
 		const store = useGoalsStore();
-		await store.load(async () => new EntityMemoryRepository([makeGoal({ id: 'a' })]));
+		await store.load(async () => new ItemMemoryRepository([makeGoal({ id: 'a' })]));
 
 		expect(store.goalsByDream.active.sections).toEqual([]);
 		expect(store.goalsByDream.active.loose.map((g) => g.id)).toEqual(['a']);
@@ -37,7 +37,7 @@ describe('useGoalsStore goalsByDream', () => {
 		const store = useGoalsStore();
 		await store.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeGoal({ id: 'a', dreamId: 'dream-1' }),
 					makeGoal({ id: 'b', dreamId: 'dream-1' }),
 					makeGoal({ id: 'c', dreamId: 'dream-2' }),
@@ -56,7 +56,7 @@ describe('useGoalsStore goalsByDream', () => {
 	it('groups a goal by dreamId regardless of the dream record itself -- the getter never reads Dream data', async () => {
 		const store = useGoalsStore();
 		await store.load(
-			async () => new EntityMemoryRepository([makeGoal({ id: 'a', dreamId: 'closed-dream' })]),
+			async () => new ItemMemoryRepository([makeGoal({ id: 'a', dreamId: 'closed-dream' })]),
 		);
 
 		expect(store.goalsByDream.active.sections).toEqual([
@@ -68,7 +68,7 @@ describe('useGoalsStore goalsByDream', () => {
 		const store = useGoalsStore();
 		await store.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeGoal({ id: 'a', dreamId: 'dream-1', status: Status.Opened }),
 					makeGoal({ id: 'b', dreamId: 'dream-1', status: Status.Done }),
 				]),

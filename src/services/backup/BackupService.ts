@@ -1,5 +1,5 @@
 import {
-	EntityFormatError,
+	ItemFormatError,
 	SettingsFormatError,
 	parseDream,
 	parseGoal,
@@ -47,7 +47,7 @@ function readAll<T>(raw: unknown, collection: string, parse: (value: unknown) =>
 		try {
 			return parse(value);
 		} catch (error) {
-			if (error instanceof EntityFormatError) {
+			if (error instanceof ItemFormatError) {
 				throw new BackupFormatError(`${collection}[${index}] is invalid: ${error.message}`);
 			}
 

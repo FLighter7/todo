@@ -6,7 +6,7 @@ import { createMemoryHistory, createRouter } from 'vue-router';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { Status, type Dream, type Goal, type Task } from '@/types';
-import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
@@ -36,9 +36,9 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
 
 async function mountAt(path: string, seed: { dreams?: Dream[]; goals?: Goal[] } = {}) {
 	setActivePinia(createPinia());
-	await useDreamsStore().load(async () => new EntityMemoryRepository<Dream>(seed.dreams ?? []));
-	await useGoalsStore().load(async () => new EntityMemoryRepository<Goal>(seed.goals ?? []));
-	await useTasksStore().load(async () => new EntityMemoryRepository<Task>());
+	await useDreamsStore().load(async () => new ItemMemoryRepository<Dream>(seed.dreams ?? []));
+	await useGoalsStore().load(async () => new ItemMemoryRepository<Goal>(seed.goals ?? []));
+	await useTasksStore().load(async () => new ItemMemoryRepository<Task>());
 
 	const testRouter = createRouter({
 		history: createMemoryHistory(),

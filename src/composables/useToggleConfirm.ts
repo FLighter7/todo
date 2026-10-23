@@ -1,9 +1,9 @@
 import { computed, ref, shallowRef, type ComputedRef, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Status, type EntityBase } from '@/types';
+import { Status, type ItemBase } from '@/types';
 import { useSettingsStore, type SettingsEntity } from '@/stores/settings';
 
-export interface ToggleableStore<T extends EntityBase> {
+export interface ToggleableStore<T extends ItemBase> {
 	records: T[];
 	close: (id: string, status: Status.Done | Status.Cancelled) => Promise<void>;
 	reopen: (id: string) => Promise<void>;
@@ -26,7 +26,7 @@ export interface UseToggleConfirm {
  * checking it while on the History tab must mean "reopen", never "mark
  * done" -- the bug commit 941ccc5 fixed for Dream/Goal.
  */
-export function useToggleConfirm<T extends EntityBase>(
+export function useToggleConfirm<T extends ItemBase>(
 	store: ToggleableStore<T>,
 	settingsEntity: SettingsEntity,
 	tab: Ref<'active' | 'history'>,

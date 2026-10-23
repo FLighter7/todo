@@ -1,4 +1,4 @@
-import { Status, type EntityBase, type Task } from '@/types';
+import { Status, type ItemBase, type Task } from '@/types';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -22,7 +22,7 @@ export interface CollectionResult<T> {
  * moved timestamp would hand the collecting device an unearned win in the
  * next merge simply for having started up.
  */
-export function collectGarbage<T extends EntityBase>(
+export function collectGarbage<T extends ItemBase>(
 	records: T[],
 	windowDays: number,
 	now: Date,

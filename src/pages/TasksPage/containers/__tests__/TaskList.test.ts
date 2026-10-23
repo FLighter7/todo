@@ -6,7 +6,7 @@ import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText, setEntityTab } from '@/vitestHelpers';
 import { Status, type Goal, type Schedule, type Task } from '@/types';
-import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
 import { useSettingsStore } from '@/stores/settings';
@@ -48,8 +48,8 @@ beforeEach(() => {
 async function mountWithData(goals: Goal[], tasks: Task[]) {
 	const goalsStore = useGoalsStore();
 	const tasksStore = useTasksStore();
-	await goalsStore.load(async () => new EntityMemoryRepository(goals));
-	await tasksStore.load(async () => new EntityMemoryRepository(tasks));
+	await goalsStore.load(async () => new ItemMemoryRepository(goals));
+	await tasksStore.load(async () => new ItemMemoryRepository(tasks));
 
 	const wrapper = mount(TaskList, { global: { plugins: [vuetify, i18n] } });
 	return { wrapper, goalsStore, tasksStore };
@@ -215,7 +215,7 @@ describe('TaskList sorting', () => {
 		expect(orderedTexts(wrapper)).toEqual(['Older task', 'Newer task']);
 	});
 
-	it('lifts a task\'s goal group above a newer ungrouped task once a task inside the group is updated', async () => {
+	it("lifts a task's goal group above a newer ungrouped task once a task inside the group is updated", async () => {
 		const goal = makeGoal({ id: 'goal-1', name: 'Learn Japanese' });
 		const groupedTask = makeTask({
 			id: 'grouped',

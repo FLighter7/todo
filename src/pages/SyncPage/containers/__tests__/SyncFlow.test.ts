@@ -14,7 +14,7 @@ import {
 	type Task,
 } from '@/types';
 import type { SyncDataPayload, SyncSettingsPayload } from '@/services/sync/SyncConnection';
-import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
@@ -86,9 +86,9 @@ function makeTask(overrides: Partial<Task> = {}): Task {
 }
 
 async function loadStores(dreams: Dream[], goals: Goal[], tasks: Task[]): Promise<void> {
-	await useDreamsStore().load(async () => new EntityMemoryRepository(dreams));
-	await useGoalsStore().load(async () => new EntityMemoryRepository(goals));
-	await useTasksStore().load(async () => new EntityMemoryRepository(tasks));
+	await useDreamsStore().load(async () => new ItemMemoryRepository(dreams));
+	await useGoalsStore().load(async () => new ItemMemoryRepository(goals));
+	await useTasksStore().load(async () => new ItemMemoryRepository(tasks));
 }
 
 function daysAgo(days: number): string {

@@ -1,9 +1,9 @@
 import type { IDBPDatabase } from 'idb';
-import { EntityFormatError, type EntityBase } from '@/types';
-import type { EntityStorage } from './EntityStorage';
+import { ItemFormatError, type ItemBase } from '@/types';
+import type { ItemStorage } from './ItemStorage';
 import { openAppDatabase, type AppDbSchema, type StoreName } from './AppDatabase';
 
-export class EntityDbRepository<T extends EntityBase> implements EntityStorage<T> {
+export class ItemDbRepository<T extends ItemBase> implements ItemStorage<T> {
 	/** How many rows the last `getAll` could not parse. */
 	skipped = 0;
 
@@ -14,13 +14,13 @@ export class EntityDbRepository<T extends EntityBase> implements EntityStorage<T
 	) {}
 
 	/** Opening the connection is async, so this replaces `new`. */
-	static async create<T extends EntityBase>(
+	static async create<T extends ItemBase>(
 		storeName: StoreName,
 		parse: (value: unknown) => T,
-	): Promise<EntityDbRepository<T>> {
+	): Promise<ItemDbRepository<T>> {
 		const database = await openAppDatabase();
 
-		return new EntityDbRepository(database, storeName, parse);
+		return new ItemDbRepository(database, storeName, parse);
 	}
 
 	/**
@@ -37,7 +37,7 @@ export class EntityDbRepository<T extends EntityBase> implements EntityStorage<T
 			try {
 				parsed.push(this.parse(row));
 			} catch (error) {
-				if (!(error instanceof EntityFormatError)) {
+				if (!(error instanceof ItemFormatError)) {
 					throw error;
 				}
 				skipped += 1;

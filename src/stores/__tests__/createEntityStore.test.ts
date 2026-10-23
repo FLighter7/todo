@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { isReactive, reactive } from 'vue';
 import { Status, type Dream, type Schedule, type Task } from '@/types';
-import { StorageUnavailableError, type EntityStorage } from '@/repositories/EntityStorage';
-import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import { StorageUnavailableError, type ItemStorage } from '@/repositories/ItemStorage';
+import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { defineEntityStore } from '../createEntityStore';
 import { useStorageStore } from '../storage';
 
@@ -15,7 +15,7 @@ interface DreamDraft {
 
 const useTestStore = defineEntityStore<Dream, DreamDraft>({
 	id: 'test-dreams',
-	createRepository: async () => new EntityMemoryRepository<Dream>(),
+	createRepository: async () => new ItemMemoryRepository<Dream>(),
 	build: (draft, id, now) => ({
 		id,
 		name: draft.name,
@@ -33,7 +33,7 @@ interface TaskDraft {
 
 const useTestTaskStore = defineEntityStore<Task, TaskDraft>({
 	id: 'test-tasks',
-	createRepository: async () => new EntityMemoryRepository<Task>(),
+	createRepository: async () => new ItemMemoryRepository<Task>(),
 	build: (draft, id, now) => ({
 		id,
 		name: draft.name,
@@ -87,7 +87,7 @@ describe('defineEntityStore load', () => {
 	it('loads existing records from storage', async () => {
 		const store = useTestStore();
 
-		await store.load(async () => new EntityMemoryRepository([makeDream()]));
+		await store.load(async () => new ItemMemoryRepository([makeDream()]));
 
 		expect(store.records).toHaveLength(1);
 		expect(store.loading).toBe(false);
@@ -106,7 +106,7 @@ describe('defineEntityStore load', () => {
 	});
 
 	it('collects closed records past the window on load', async () => {
-		const storage = new EntityMemoryRepository([
+		const storage = new ItemMemoryRepository([
 			makeDream({ id: 'open' }),
 			makeDream({ id: 'stale', status: Status.Done, updated: daysAgo(400) }),
 		]);
@@ -124,7 +124,7 @@ describe('defineEntityStore active and closed', () => {
 		const store = useTestStore();
 		await store.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeDream({ id: 'a' }),
 					makeDream({ id: 'b', status: Status.Done }),
 					makeDream({ id: 'c', status: Status.Cancelled }),
@@ -139,7 +139,7 @@ describe('defineEntityStore active and closed', () => {
 describe('defineEntityStore mutations', () => {
 	it('adds a record with a generated id and matching timestamps', async () => {
 		const store = useTestStore();
-		await store.load(async () => new EntityMemoryRepository<Dream>());
+		await store.load(async () => new ItemMemoryRepository<Dream>());
 
 		const created = await store.add({ name: 'Learn to sail' });
 
@@ -150,7 +150,7 @@ describe('defineEntityStore mutations', () => {
 	});
 
 	it('writes an added record through to storage', async () => {
-		const storage = new EntityMemoryRepository<Dream>();
+		const storage = new ItemMemoryRepository<Dream>();
 		const store = useTestStore();
 		await store.load(async () => storage);
 
@@ -161,7 +161,7 @@ describe('defineEntityStore mutations', () => {
 
 	it('updates a record and moves updated', async () => {
 		const store = useTestStore();
-		await store.load(async () => new EntityMemoryRepository([makeDream()]));
+		await store.load(async () => new ItemMemoryRepository([makeDream()]));
 		const before = store.records[0].updated;
 
 		await store.update('seeded', { name: 'Renamed' });
@@ -172,7 +172,7 @@ describe('defineEntityStore mutations', () => {
 
 	it('ignores an update for an unknown id', async () => {
 		const store = useTestStore();
-		await store.load(async () => new EntityMemoryRepository([makeDream()]));
+		await store.load(async () => new ItemMemoryRepository([makeDream()]));
 
 		await store.update('missing', { name: 'Renamed' });
 
@@ -181,7 +181,7 @@ describe('defineEntityStore mutations', () => {
 
 	it('closes a record as done and as cancelled', async () => {
 		const store = useTestStore();
-		await store.load(async () => new EntityMemoryRepository([makeDream()]));
+		await store.load(async () => new ItemMemoryRepository([makeDream()]));
 
 		await store.close('seeded', Status.Done);
 		expect(store.records[0].status).toBe(Status.Done);
@@ -192,7 +192,7 @@ describe('defineEntityStore mutations', () => {
 
 	it('reopens a closed record', async () => {
 		const store = useTestStore();
-		await store.load(async () => new EntityMemoryRepository([makeDream({ status: Status.Done })]));
+		await store.load(async () => new ItemMemoryRepository([makeDream({ status: Status.Done })]));
 
 		await store.reopen('seeded');
 
@@ -201,7 +201,7 @@ describe('defineEntityStore mutations', () => {
 	});
 
 	it('keeps a closed record in storage instead of erasing it', async () => {
-		const storage = new EntityMemoryRepository([makeDream()]);
+		const storage = new ItemMemoryRepository([makeDream()]);
 		const store = useTestStore();
 		await store.load(async () => storage);
 
@@ -213,7 +213,7 @@ describe('defineEntityStore mutations', () => {
 	});
 
 	it('reports a write failure without losing the in-memory change', async () => {
-		const failing: EntityStorage<Dream> = {
+		const failing: ItemStorage<Dream> = {
 			async getAll() {
 				return [];
 			},
@@ -235,7 +235,7 @@ describe('defineEntityStore mutations', () => {
 
 describe('defineEntityStore replaceAll', () => {
 	it('replaces the list in memory and in storage', async () => {
-		const storage = new EntityMemoryRepository([makeDream({ id: 'old' })]);
+		const storage = new ItemMemoryRepository([makeDream({ id: 'old' })]);
 		const store = useTestStore();
 		await store.load(async () => storage);
 
@@ -247,7 +247,7 @@ describe('defineEntityStore replaceAll', () => {
 	});
 
 	it('can replace the list with nothing', async () => {
-		const storage = new EntityMemoryRepository([makeDream()]);
+		const storage = new ItemMemoryRepository([makeDream()]);
 		const store = useTestStore();
 		await store.load(async () => storage);
 
@@ -262,13 +262,13 @@ describe('defineEntityStore replaceAll', () => {
  * Regression coverage for the `toRaw` correction: every test above uses
  * `Dream`, which has no nested fields, so it cannot detect a reactive proxy
  * leaking into storage. A `Task`'s `schedule` and `completions` can. These
- * tests capture the exact object handed to `EntityStorage.put` and assert
+ * tests capture the exact object handed to `ItemStorage.put` and assert
  * none of it — top level or nested — is still a Vue reactive proxy.
  */
 describe('defineEntityStore reactive proxy regression', () => {
-	function spyingStorage(seed: Task[]): { storage: EntityStorage<Task>; received: Task[] } {
+	function spyingStorage(seed: Task[]): { storage: ItemStorage<Task>; received: Task[] } {
 		const received: Task[] = [];
-		const storage: EntityStorage<Task> = {
+		const storage: ItemStorage<Task> = {
 			async getAll() {
 				return seed;
 			},
@@ -364,7 +364,7 @@ describe('defineEntityStore reactive proxy regression', () => {
 
 describe('defineEntityStore load skipped rows', () => {
 	it('surfaces a load error when storage reports skipped rows', async () => {
-		const storage: EntityStorage<Dream> = {
+		const storage: ItemStorage<Dream> = {
 			async getAll() {
 				return [];
 			},
@@ -383,13 +383,13 @@ describe('defineEntityStore load skipped rows', () => {
 	it('does not surface a load error when storage cannot report a skipped count', async () => {
 		const store = useTestStore();
 
-		await store.load(async () => new EntityMemoryRepository<Dream>());
+		await store.load(async () => new ItemMemoryRepository<Dream>());
 
 		expect(useStorageStore().lastError).toBeNull();
 	});
 
 	it('does not surface a load error when the skipped count is zero', async () => {
-		const storage: EntityStorage<Dream> = {
+		const storage: ItemStorage<Dream> = {
 			async getAll() {
 				return [];
 			},

@@ -4,11 +4,11 @@ import { defineComponent, ref } from 'vue';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { i18n } from '@/i18n';
-import { Status, type EntityBase } from '@/types';
+import { Status, type ItemBase } from '@/types';
 import { useSettingsStore } from '@/stores/settings';
 import { useToggleConfirm, type ToggleableStore } from '../useToggleConfirm';
 
-function makeRecord(overrides: Partial<EntityBase> = {}): EntityBase {
+function makeRecord(overrides: Partial<ItemBase> = {}): ItemBase {
 	return {
 		id: 'a',
 		name: 'Visit Japan',
@@ -19,7 +19,7 @@ function makeRecord(overrides: Partial<EntityBase> = {}): EntityBase {
 	};
 }
 
-function makeStore(records: EntityBase[]): ToggleableStore<EntityBase> {
+function makeStore(records: ItemBase[]): ToggleableStore<ItemBase> {
 	return {
 		records,
 		async close(id, status) {

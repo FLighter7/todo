@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EntityFormatError, Status } from '../entity';
+import { ItemFormatError, Status } from '../item';
 import { isPeriodic, parseTask } from '../task';
 
 function makeRaw(overrides: Record<string, unknown> = {}): Record<string, unknown> {
@@ -27,8 +27,8 @@ describe('parseTask', () => {
 	});
 
 	it('rejects non-boolean flags', () => {
-		expect(() => parseTask(makeRaw({ important: 'yes' }))).toThrow(EntityFormatError);
-		expect(() => parseTask(makeRaw({ urgent: 1 }))).toThrow(EntityFormatError);
+		expect(() => parseTask(makeRaw({ important: 'yes' }))).toThrow(ItemFormatError);
+		expect(() => parseTask(makeRaw({ urgent: 1 }))).toThrow(ItemFormatError);
 	});
 
 	it('keeps the goal link', () => {
@@ -53,13 +53,13 @@ describe('parseTask', () => {
 	it('rejects a recurrence rule the library cannot parse', () => {
 		expect(() =>
 			parseTask(makeRaw({ schedule: { start: '2026-08-07T09:00', rrule: 'NONSENSE' } })),
-		).toThrow(EntityFormatError);
+		).toThrow(ItemFormatError);
 	});
 
 	it('rejects an unknown timezone', () => {
 		expect(() =>
 			parseTask(makeRaw({ schedule: { start: '2026-08-07T09:00', tzid: 'Mars/Olympus' } })),
-		).toThrow(EntityFormatError);
+		).toThrow(ItemFormatError);
 	});
 
 	it('accepts a known timezone', () => {
@@ -70,19 +70,19 @@ describe('parseTask', () => {
 
 	it('rejects a start with a trailing Z', () => {
 		expect(() => parseTask(makeRaw({ schedule: { start: '2026-08-07T09:00:00.000Z' } }))).toThrow(
-			EntityFormatError,
+			ItemFormatError,
 		);
 	});
 
 	it('rejects a start with a numeric offset', () => {
 		expect(() => parseTask(makeRaw({ schedule: { start: '2026-08-07T09:00:00+03:00' } }))).toThrow(
-			EntityFormatError,
+			ItemFormatError,
 		);
 	});
 
 	it('rejects a start with seconds', () => {
 		expect(() => parseTask(makeRaw({ schedule: { start: '2026-08-07T09:00:00' } }))).toThrow(
-			EntityFormatError,
+			ItemFormatError,
 		);
 	});
 
@@ -102,7 +102,7 @@ describe('parseTask', () => {
 					},
 				}),
 			),
-		).toThrow(EntityFormatError);
+		).toThrow(ItemFormatError);
 	});
 
 	it('accepts a valid exdate and rdate pair', () => {
@@ -128,8 +128,8 @@ describe('parseTask', () => {
 	it('rejects a malformed completion', () => {
 		expect(() =>
 			parseTask(makeRaw({ completions: [{ occurrence: 1, done: true, at: 'x' }] })),
-		).toThrow(EntityFormatError);
-		expect(() => parseTask(makeRaw({ completions: 'nope' }))).toThrow(EntityFormatError);
+		).toThrow(ItemFormatError);
+		expect(() => parseTask(makeRaw({ completions: 'nope' }))).toThrow(ItemFormatError);
 	});
 
 	it('rejects a completion occurrence with a trailing Z', () => {
@@ -141,7 +141,7 @@ describe('parseTask', () => {
 					],
 				}),
 			),
-		).toThrow(EntityFormatError);
+		).toThrow(ItemFormatError);
 	});
 
 	it('rejects a completion occurrence with seconds', () => {
@@ -153,7 +153,7 @@ describe('parseTask', () => {
 					],
 				}),
 			),
-		).toThrow(EntityFormatError);
+		).toThrow(ItemFormatError);
 	});
 
 	it('accepts a valid wall-clock completion occurrence', () => {

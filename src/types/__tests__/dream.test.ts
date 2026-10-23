@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EntityFormatError, Status } from '../entity';
+import { ItemFormatError, Status } from '../item';
 import { parseDream } from '../dream';
 
 describe('parseDream', () => {
@@ -16,6 +16,6 @@ describe('parseDream', () => {
 	});
 
 	it('rejects a record with a broken base', () => {
-		expect(() => parseDream({ id: 'id-1' })).toThrow(EntityFormatError);
+		expect(() => parseDream({ id: 'id-1' })).toThrow(ItemFormatError);
 	});
 });

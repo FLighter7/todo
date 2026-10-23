@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { Status, type Goal, type Task } from '@/types';
-import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
 import { useCascadeCancel } from '../useCascadeCancel';
@@ -42,7 +42,7 @@ beforeEach(() => {
 describe('useCascadeCancel counting', () => {
 	it('counts zero when a goal has no active tasks', async () => {
 		const tasks = useTasksStore();
-		await tasks.load(async () => new EntityMemoryRepository<Task>());
+		await tasks.load(async () => new ItemMemoryRepository<Task>());
 		const cascade = useCascadeCancel();
 
 		expect(cascade.countGoalTasks('goal-1')).toBe(0);
@@ -52,7 +52,7 @@ describe('useCascadeCancel counting', () => {
 		const tasks = useTasksStore();
 		await tasks.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeTask({ id: 'a', goalId: 'goal-1' }),
 					makeTask({ id: 'b', goalId: 'goal-1' }),
 					makeTask({ id: 'c', goalId: 'goal-1', status: Status.Done }),
@@ -69,7 +69,7 @@ describe('useCascadeCancel counting', () => {
 		const tasks = useTasksStore();
 		await goals.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeGoal({ id: 'g1', dreamId: 'dream-1' }),
 					makeGoal({ id: 'g2', dreamId: 'dream-1' }),
 					makeGoal({ id: 'g3', dreamId: 'dream-1', status: Status.Done }),
@@ -78,7 +78,7 @@ describe('useCascadeCancel counting', () => {
 		);
 		await tasks.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeTask({ id: 't1', goalId: 'g1' }),
 					makeTask({ id: 't2', goalId: 'g2' }),
 					makeTask({ id: 't3', goalId: 'g2', status: Status.Cancelled }),
@@ -96,7 +96,7 @@ describe('useCascadeCancel execution', () => {
 		const tasks = useTasksStore();
 		await tasks.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeTask({ id: 'a', goalId: 'goal-1' }),
 					makeTask({ id: 'b', goalId: 'goal-1', status: Status.Done }),
 					makeTask({ id: 'c', goalId: 'other-goal' }),
@@ -116,7 +116,7 @@ describe('useCascadeCancel execution', () => {
 		const tasks = useTasksStore();
 		await goals.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeGoal({ id: 'g1', dreamId: 'dream-1' }),
 					makeGoal({ id: 'g2', dreamId: 'dream-1', status: Status.Cancelled }),
 					makeGoal({ id: 'g3', dreamId: 'other-dream' }),
@@ -124,7 +124,7 @@ describe('useCascadeCancel execution', () => {
 		);
 		await tasks.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeTask({ id: 't1', goalId: 'g1' }),
 					makeTask({ id: 't2', goalId: 'g2' }), // under an already-cancelled goal
 				]),

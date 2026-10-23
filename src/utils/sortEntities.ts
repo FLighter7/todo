@@ -1,17 +1,17 @@
-import type { EntityBase, SortOrder } from '@/types';
+import type { ItemBase, SortOrder } from '@/types';
 
 /**
  * A titled block of records inside a list -- the tasks under one goal, say.
  * Called a section rather than a group so it never reads as the Group record
  * type: a section is a way of laying out a list, not something stored.
  */
-export interface ListSection<T extends EntityBase> {
+export interface ListSection<T extends ItemBase> {
 	key: string;
 	label: string;
 	items: T[];
 }
 
-export type EntityRow<T extends EntityBase> =
+export type EntityRow<T extends ItemBase> =
 	{ kind: 'section'; section: ListSection<T> } | { kind: 'item'; item: T };
 
 interface SortKey {
@@ -33,11 +33,11 @@ function compareKeys(a: SortKey, b: SortKey, order: SortOrder, collator: Intl.Co
 	}
 }
 
-function recordKey<T extends EntityBase>(record: T): SortKey {
+function recordKey<T extends ItemBase>(record: T): SortKey {
 	return { date: Date.parse(record.updated), name: record.name, id: record.id };
 }
 
-function sectionKey<T extends EntityBase>(section: ListSection<T>): SortKey {
+function sectionKey<T extends ItemBase>(section: ListSection<T>): SortKey {
 	const newestDate = Math.max(...section.items.map((item) => Date.parse(item.updated)));
 	return { date: newestDate, name: section.label, id: section.key };
 }
@@ -49,7 +49,7 @@ function sectionKey<T extends EntityBase>(section: ListSection<T>): SortKey {
  * aggregating item names -- that is what makes adding a record to a section
  * lift the whole section. `loose` are the records that sit in no section.
  */
-export function sortEntityRows<T extends EntityBase>(
+export function sortEntityRows<T extends ItemBase>(
 	sections: ListSection<T>[],
 	loose: T[],
 	order: SortOrder,

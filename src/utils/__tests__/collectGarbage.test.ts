@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Status, type EntityBase, type Task } from '@/types';
+import { Status, type ItemBase, type Task } from '@/types';
 import { collectGarbage, pruneCompletions, pruneExdate, pruneTask } from '../collectGarbage';
 
 const NOW = new Date('2026-08-16T12:00:00.000Z');
@@ -8,7 +8,7 @@ function daysBefore(days: number): string {
 	return new Date(NOW.getTime() - days * 24 * 60 * 60 * 1000).toISOString();
 }
 
-function makeRecord(overrides: Partial<EntityBase> = {}): EntityBase {
+function makeRecord(overrides: Partial<ItemBase> = {}): ItemBase {
 	return {
 		id: 'id-1',
 		name: 'Buy milk',

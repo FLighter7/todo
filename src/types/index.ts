@@ -1,4 +1,4 @@
-export * from './entity';
+export * from './item';
 export * from './dream';
 export * from './goal';
 export * from './task';

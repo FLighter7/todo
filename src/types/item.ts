@@ -4,7 +4,7 @@ export enum Status {
 	Cancelled = 3,
 }
 
-export interface EntityBase {
+export interface ItemBase {
 	id: string;
 	name: string;
 	note?: string;
@@ -20,10 +20,10 @@ export interface EntityBase {
  * does not describe a valid record. A real `enum` lets the compiler wave
  * `value as Status` through, so the check has to happen at runtime.
  */
-export class EntityFormatError extends Error {
+export class ItemFormatError extends Error {
 	constructor(message: string) {
 		super(message);
-		this.name = 'EntityFormatError';
+		this.name = 'ItemFormatError';
 	}
 }
 
@@ -36,7 +36,7 @@ export function isRecordObject(value: unknown): value is Record<string, unknown>
 }
 
 export function fail(reason: string): never {
-	throw new EntityFormatError(reason);
+	throw new ItemFormatError(reason);
 }
 
 export function readString(entry: Record<string, unknown>, key: string): string {
@@ -73,7 +73,7 @@ export function readBoolean(entry: Record<string, unknown>, key: string): boolea
 	return value;
 }
 
-export function parseEntityBase(value: unknown): EntityBase {
+export function parseItemBase(value: unknown): ItemBase {
 	if (!isRecordObject(value)) {
 		fail('the record is not an object');
 	}

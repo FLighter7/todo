@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EntityFormatError, Status, isStatus, parseEntityBase } from '../entity';
+import { ItemFormatError, Status, isStatus, parseItemBase } from '../item';
 
 function makeRaw(overrides: Record<string, unknown> = {}): Record<string, unknown> {
 	return {
@@ -31,9 +31,9 @@ describe('isStatus', () => {
 	});
 });
 
-describe('parseEntityBase', () => {
+describe('parseItemBase', () => {
 	it('returns the base fields of a valid record', () => {
-		expect(parseEntityBase(makeRaw())).toEqual({
+		expect(parseItemBase(makeRaw())).toEqual({
 			id: 'id-1',
 			name: 'Buy milk',
 			note: undefined,
@@ -44,27 +44,27 @@ describe('parseEntityBase', () => {
 	});
 
 	it('keeps an optional note', () => {
-		expect(parseEntityBase(makeRaw({ note: 'semi-skimmed' })).note).toBe('semi-skimmed');
+		expect(parseItemBase(makeRaw({ note: 'semi-skimmed' })).note).toBe('semi-skimmed');
 	});
 
 	it('rejects a value that is not an object', () => {
-		expect(() => parseEntityBase('nope')).toThrow(EntityFormatError);
-		expect(() => parseEntityBase(null)).toThrow(EntityFormatError);
-		expect(() => parseEntityBase([])).toThrow(EntityFormatError);
+		expect(() => parseItemBase('nope')).toThrow(ItemFormatError);
+		expect(() => parseItemBase(null)).toThrow(ItemFormatError);
+		expect(() => parseItemBase([])).toThrow(ItemFormatError);
 	});
 
 	it('rejects a missing or non-string id, name, created or updated', () => {
 		for (const key of ['id', 'name', 'created', 'updated']) {
-			expect(() => parseEntityBase(makeRaw({ [key]: undefined }))).toThrow(EntityFormatError);
-			expect(() => parseEntityBase(makeRaw({ [key]: 42 }))).toThrow(EntityFormatError);
+			expect(() => parseItemBase(makeRaw({ [key]: undefined }))).toThrow(ItemFormatError);
+			expect(() => parseItemBase(makeRaw({ [key]: 42 }))).toThrow(ItemFormatError);
 		}
 	});
 
 	it('rejects a status outside the enum', () => {
-		expect(() => parseEntityBase(makeRaw({ status: 7 }))).toThrow(EntityFormatError);
+		expect(() => parseItemBase(makeRaw({ status: 7 }))).toThrow(ItemFormatError);
 	});
 
 	it('rejects a non-string note when present', () => {
-		expect(() => parseEntityBase(makeRaw({ note: 42 }))).toThrow(EntityFormatError);
+		expect(() => parseItemBase(makeRaw({ note: 42 }))).toThrow(ItemFormatError);
 	});
 });

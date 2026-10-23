@@ -1,6 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { Dream, Goal, Task } from '@/types';
-import { StorageUnavailableError } from './EntityStorage';
+import { StorageUnavailableError } from './ItemStorage';
 
 export const APP_DB_NAME = 'todo';
 export const APP_DB_VERSION = 3;

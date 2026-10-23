@@ -2,12 +2,12 @@ import { RRule } from 'rrule';
 import {
 	fail,
 	isRecordObject,
-	parseEntityBase,
+	parseItemBase,
 	readBoolean,
 	readOptionalString,
 	readString,
-	type EntityBase,
-} from './entity';
+	type ItemBase,
+} from './item';
 
 /**
  * A miniature VEVENT: exactly the RFC 5545 fields a task needs.
@@ -40,7 +40,7 @@ export interface Completion {
 	at: string;
 }
 
-export interface Task extends EntityBase {
+export interface Task extends ItemBase {
 	goalId?: string;
 	important: boolean;
 	urgent: boolean;
@@ -158,7 +158,7 @@ export function parseCompletion(value: unknown): Completion {
 }
 
 export function parseTask(value: unknown): Task {
-	const base = parseEntityBase(value);
+	const base = parseItemBase(value);
 	const entry = value as Record<string, unknown>;
 
 	const goalId = entry.goalId;

@@ -6,7 +6,7 @@ import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText, setEntityTab } from '@/vitestHelpers';
 import { Status, type Dream, type Goal, type Task } from '@/types';
-import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
@@ -61,9 +61,9 @@ async function mountWithData(dreams: Dream[], goals: Goal[], tasks: Task[] = [])
 	const dreamsStore = useDreamsStore();
 	const goalsStore = useGoalsStore();
 	const tasksStore = useTasksStore();
-	await dreamsStore.load(async () => new EntityMemoryRepository(dreams));
-	await goalsStore.load(async () => new EntityMemoryRepository(goals));
-	await tasksStore.load(async () => new EntityMemoryRepository(tasks));
+	await dreamsStore.load(async () => new ItemMemoryRepository(dreams));
+	await goalsStore.load(async () => new ItemMemoryRepository(goals));
+	await tasksStore.load(async () => new ItemMemoryRepository(tasks));
 
 	const wrapper = mount(GoalList, { global: { plugins: [vuetify, i18n] } });
 	return { wrapper, dreamsStore, goalsStore, tasksStore };
@@ -224,7 +224,7 @@ describe('GoalList sorting', () => {
 		expect(orderedTexts(wrapper)).toEqual(['Older goal', 'Newer goal']);
 	});
 
-	it('lifts a goal\'s dream group above a newer ungrouped goal once a goal inside the group is updated', async () => {
+	it("lifts a goal's dream group above a newer ungrouped goal once a goal inside the group is updated", async () => {
 		const dream = makeDream({ id: 'dream-1', name: 'Visit Japan' });
 		const groupedGoal = makeGoal({
 			id: 'grouped',

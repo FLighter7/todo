@@ -1,17 +1,17 @@
 import { computed, ref, toRaw, type Ref } from 'vue';
 import { defineStore } from 'pinia';
-import { Status, type EntityBase } from '@/types';
-import type { EntityStorage } from '@/repositories/EntityStorage';
-import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import { Status, type ItemBase } from '@/types';
+import type { ItemStorage } from '@/repositories/ItemStorage';
+import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { collectGarbage } from '@/utils';
 import { useSettingsStore } from './settings';
 import { useStorageStore } from './storage';
 
-export interface EntityStoreOptions<T extends EntityBase, D> {
+export interface EntityStoreOptions<T extends ItemBase, D> {
 	/** Pinia store id. */
 	id: string;
 	/** Opens the real repository. Tests pass their own to `load`. */
-	createRepository: () => Promise<EntityStorage<T>>;
+	createRepository: () => Promise<ItemStorage<T>>;
 	/** Turns a draft into a complete record. */
 	build: (draft: D, id: string, now: string) => T;
 	/**
@@ -59,7 +59,7 @@ function toStorable<T>(value: T): T {
  * tasks. Each store adds only what is genuinely its own — the task store's
  * quadrants, for instance.
  */
-export function defineEntityStore<T extends EntityBase, D>(options: EntityStoreOptions<T, D>) {
+export function defineEntityStore<T extends ItemBase, D>(options: EntityStoreOptions<T, D>) {
 	return defineStore(options.id, () => {
 		/** Everything in storage, closed records included. Sync needs those. */
 		const records = ref<T[]>([]) as Ref<T[]>;
@@ -75,7 +75,7 @@ export function defineEntityStore<T extends EntityBase, D>(options: EntityStoreO
 			records.value.filter((record) => record.status !== Status.Opened),
 		);
 
-		let storage: EntityStorage<T> = new EntityMemoryRepository<T>();
+		let storage: ItemStorage<T> = new ItemMemoryRepository<T>();
 
 		async function persist(write: () => Promise<void>): Promise<void> {
 			try {
@@ -86,7 +86,7 @@ export function defineEntityStore<T extends EntityBase, D>(options: EntityStoreO
 		}
 
 		async function load(
-			createRepository: () => Promise<EntityStorage<T>> = options.createRepository,
+			createRepository: () => Promise<ItemStorage<T>> = options.createRepository,
 		): Promise<void> {
 			loading.value = true;
 
@@ -94,7 +94,7 @@ export function defineEntityStore<T extends EntityBase, D>(options: EntityStoreO
 				storage = await createRepository();
 				storageState.noteAvailable();
 			} catch {
-				storage = new EntityMemoryRepository<T>();
+				storage = new ItemMemoryRepository<T>();
 				storageState.noteUnavailable();
 			}
 

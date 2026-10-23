@@ -34,10 +34,10 @@
 	</template>
 </template>
 
-<script setup lang="ts" generic="T extends EntityBase">
+<script setup lang="ts" generic="T extends ItemBase">
 import EntityListSection from './EntityListSection.vue';
 import EntityListItem from './EntityListItem.vue';
-import { Status, type EntityBase } from '@/types';
+import { Status, type ItemBase } from '@/types';
 import type { EntityRow } from '@/utils/sortEntities';
 
 defineProps<{

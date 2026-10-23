@@ -1,10 +1,10 @@
-import type { EntityBase } from '@/types';
+import type { ItemBase } from '@/types';
 
 /**
  * The seam that keeps the stores from knowing IndexedDB sits underneath —
  * which is what lets their tests run without a browser.
  */
-export interface EntityStorage<T extends EntityBase> {
+export interface ItemStorage<T extends ItemBase> {
 	getAll(): Promise<T[]>;
 	put(record: T): Promise<void>;
 	remove(id: string): Promise<void>;

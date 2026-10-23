@@ -2,8 +2,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { Status, type Task } from '@/types';
-import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
-import type { EntityStorage } from '@/repositories/EntityStorage';
+import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
+import type { ItemStorage } from '@/repositories/ItemStorage';
 import { useTasksStore } from '../tasks';
 
 function makeTask(overrides: Partial<Task> = {}): Task {
@@ -24,14 +24,14 @@ function daysAgo(days: number): string {
 }
 
 /**
- * Wraps a real `EntityMemoryRepository` so assertions can read back what
+ * Wraps a real `ItemMemoryRepository` so assertions can read back what
  * `load()` actually wrote (`getAll()` reflects it), while also recording
  * which ids were ever handed to `put`, to prove a record was *not* rewritten.
  */
-function spyingRepository(seed: Task[]): { storage: EntityStorage<Task>; putIds: string[] } {
-	const repo = new EntityMemoryRepository<Task>(seed);
+function spyingRepository(seed: Task[]): { storage: ItemStorage<Task>; putIds: string[] } {
+	const repo = new ItemMemoryRepository<Task>(seed);
 	const putIds: string[] = [];
-	const storage: EntityStorage<Task> = {
+	const storage: ItemStorage<Task> = {
 		getAll: () => repo.getAll(),
 		put: async (record) => {
 			putIds.push(record.id);
@@ -51,7 +51,7 @@ beforeEach(() => {
 describe('useTasksStore quadrants', () => {
 	it('exposes all four quadrants even when empty', async () => {
 		const store = useTasksStore();
-		await store.load(async () => new EntityMemoryRepository<Task>());
+		await store.load(async () => new ItemMemoryRepository<Task>());
 
 		expect(Object.keys(store.quadrants).sort()).toEqual([
 			'delegate',
@@ -65,7 +65,7 @@ describe('useTasksStore quadrants', () => {
 		const store = useTasksStore();
 		await store.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeTask({ id: 'a', important: true, urgent: true }),
 					makeTask({ id: 'b', important: true, urgent: false }),
 					makeTask({ id: 'c', important: false, urgent: true }),
@@ -84,7 +84,7 @@ describe('useTasksStore quadrants', () => {
 		const store = useTasksStore();
 		await store.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeTask({ id: 'open', important: true, urgent: true }),
 					makeTask({ id: 'done', important: true, urgent: true, status: Status.Done }),
 					makeTask({ id: 'gone', important: true, urgent: true, status: Status.Cancelled }),
@@ -98,7 +98,7 @@ describe('useTasksStore quadrants', () => {
 		const store = useTasksStore();
 		await store.load(
 			async () =>
-				new EntityMemoryRepository([makeTask({ id: 'a', important: false, urgent: false })]),
+				new ItemMemoryRepository([makeTask({ id: 'a', important: false, urgent: false })]),
 		);
 
 		await store.update('a', { important: true, urgent: true });
@@ -109,7 +109,7 @@ describe('useTasksStore quadrants', () => {
 
 	it('builds a task from a draft with both flags', async () => {
 		const store = useTasksStore();
-		await store.load(async () => new EntityMemoryRepository<Task>());
+		await store.load(async () => new ItemMemoryRepository<Task>());
 
 		const created = await store.add({
 			name: 'Ship the release',
@@ -139,7 +139,7 @@ describe('useTasksStore composition reactivity', () => {
 		const store = useTasksStore();
 		expect(store.loading).toBe(false);
 
-		const pending = store.load(async () => new EntityMemoryRepository<Task>());
+		const pending = store.load(async () => new ItemMemoryRepository<Task>());
 		expect(store.loading).toBe(true);
 
 		await pending;
@@ -148,7 +148,7 @@ describe('useTasksStore composition reactivity', () => {
 
 	it('keeps active live after an add()', async () => {
 		const store = useTasksStore();
-		await store.load(async () => new EntityMemoryRepository<Task>());
+		await store.load(async () => new ItemMemoryRepository<Task>());
 		expect(store.active).toEqual([]);
 
 		await store.add({ name: 'Ship the release', important: true, urgent: true });
@@ -263,7 +263,7 @@ describe('useTasksStore setOccurrenceDone / setOccurrenceSkipped', () => {
 			...overrides,
 		});
 		const store = useTasksStore();
-		await store.load(async () => new EntityMemoryRepository([task]));
+		await store.load(async () => new ItemMemoryRepository([task]));
 		return store;
 	}
 
@@ -376,7 +376,7 @@ describe('useTasksStore setOccurrenceDone / setOccurrenceSkipped', () => {
 describe('useTasksStore tasksByGoal', () => {
 	it('puts a goalless task in the loose tail', async () => {
 		const store = useTasksStore();
-		await store.load(async () => new EntityMemoryRepository([makeTask({ id: 'a' })]));
+		await store.load(async () => new ItemMemoryRepository([makeTask({ id: 'a' })]));
 
 		expect(store.tasksByGoal.active.sections).toEqual([]);
 		expect(store.tasksByGoal.active.loose.map((t) => t.id)).toEqual(['a']);
@@ -386,7 +386,7 @@ describe('useTasksStore tasksByGoal', () => {
 		const store = useTasksStore();
 		await store.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeTask({ id: 'a', goalId: 'goal-1' }),
 					makeTask({ id: 'b', goalId: 'goal-1' }),
 					makeTask({ id: 'c', goalId: 'goal-2' }),
@@ -402,7 +402,7 @@ describe('useTasksStore tasksByGoal', () => {
 	it('groups a task by goalId regardless of the goal record itself -- the getter never reads Goal data', async () => {
 		const store = useTasksStore();
 		await store.load(
-			async () => new EntityMemoryRepository([makeTask({ id: 'a', goalId: 'closed-goal' })]),
+			async () => new ItemMemoryRepository([makeTask({ id: 'a', goalId: 'closed-goal' })]),
 		);
 
 		expect(store.tasksByGoal.active.sections).toEqual([
@@ -414,7 +414,7 @@ describe('useTasksStore tasksByGoal', () => {
 		const store = useTasksStore();
 		await store.load(
 			async () =>
-				new EntityMemoryRepository([
+				new ItemMemoryRepository([
 					makeTask({ id: 'a', goalId: 'goal-1', status: Status.Opened }),
 					makeTask({ id: 'b', goalId: 'goal-1', status: Status.Done }),
 				]),

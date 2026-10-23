@@ -5,7 +5,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
-import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
@@ -27,9 +27,9 @@ vi.mock('@/services/sync/SyncConnection', () => ({
 }));
 
 async function loadEmptyStores(): Promise<void> {
-	await useDreamsStore().load(async () => new EntityMemoryRepository([]));
-	await useGoalsStore().load(async () => new EntityMemoryRepository([]));
-	await useTasksStore().load(async () => new EntityMemoryRepository([]));
+	await useDreamsStore().load(async () => new ItemMemoryRepository([]));
+	await useGoalsStore().load(async () => new ItemMemoryRepository([]));
+	await useTasksStore().load(async () => new ItemMemoryRepository([]));
 }
 
 beforeEach(() => {

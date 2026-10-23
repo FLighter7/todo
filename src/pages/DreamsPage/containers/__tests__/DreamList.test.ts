@@ -6,7 +6,7 @@ import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText, setEntityTab } from '@/vitestHelpers';
 import { Status, type Dream, type Goal } from '@/types';
-import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
+import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
@@ -48,9 +48,9 @@ async function mountWithDreams(dreams: Dream[], goals: Goal[] = []) {
 	const dreamsStore = useDreamsStore();
 	const goalsStore = useGoalsStore();
 	const tasksStore = useTasksStore();
-	await dreamsStore.load(async () => new EntityMemoryRepository(dreams));
-	await goalsStore.load(async () => new EntityMemoryRepository(goals));
-	await tasksStore.load(async () => new EntityMemoryRepository([]));
+	await dreamsStore.load(async () => new ItemMemoryRepository(dreams));
+	await goalsStore.load(async () => new ItemMemoryRepository(goals));
+	await tasksStore.load(async () => new ItemMemoryRepository([]));
 
 	const wrapper = mount(DreamList, { global: { plugins: [vuetify, i18n] } });
 	return { wrapper, dreamsStore, goalsStore };

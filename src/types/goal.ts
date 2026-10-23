@@ -1,4 +1,4 @@
-import { fail, isRecordObject, parseEntityBase, type EntityBase } from './entity';
+import { fail, isRecordObject, parseItemBase, type ItemBase } from './item';
 
 export enum Season {
 	Winter = 1,
@@ -22,7 +22,7 @@ export interface Deadline {
 	season?: Season;
 }
 
-export interface Goal extends EntityBase {
+export interface Goal extends ItemBase {
 	dreamId?: string;
 	deadline?: Deadline;
 }
@@ -94,7 +94,7 @@ export function parseDeadline(value: unknown): Deadline {
 }
 
 export function parseGoal(value: unknown): Goal {
-	const base = parseEntityBase(value);
+	const base = parseItemBase(value);
 	const entry = value as Record<string, unknown>;
 
 	const dreamId = entry.dreamId;
