@@ -46,25 +46,22 @@
 :root {
 	--font-display: 'Alegreya', 'Georgia', serif;
 	--font-body: 'Manrope', 'Segoe UI', sans-serif;
+	// Vuetify 4's own font hooks, read by the root element and by its text-*
+	// typography classes; unset, each of those falls back to Roboto. Heading
+	// covers the display, headline and title-large roles.
+	--v-font-body: var(--font-body);
+	--v-font-heading: var(--font-display);
 }
 
 // Vuetify's own stylesheet sets Roboto everywhere; these are deliberate,
 // narrowly-scoped overrides of a third-party design system's base typography,
-// not a general license to reach for !important elsewhere. The text-* roles
-// below are the MD3 ones Vuetify 4 maps the old MD2 h1–h6 onto.
+// not a general license to reach for !important elsewhere.
 .v-application {
 	font-family: var(--font-body) !important;
 }
 
 .v-app-bar-title,
 .v-card-title,
-.v-list-subheader,
-.text-display-large,
-.text-display-medium,
-.text-display-small,
-.text-headline-large,
-.text-headline-medium,
-.text-headline-small,
-.text-title-large {
+.v-list-subheader {
 	font-family: var(--font-display) !important;
 }
