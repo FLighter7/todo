@@ -37,7 +37,7 @@
 		<VListItemSubtitle v-if="note">{{ note }}</VListItemSubtitle>
 
 		<template v-if="date" #append>
-			<span class="text-caption text-medium-emphasis">{{ date }}</span>
+			<span class="text-body-small text-medium-emphasis">{{ date }}</span>
 		</template>
 	</VListItem>
 </template>

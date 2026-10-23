@@ -9,8 +9,8 @@
 
 <template>
 	<div>
-		<p class="text-subtitle-2 mt-4">{{ t('task.completions.label') }}</p>
-		<p v-if="doneCount > 0" class="text-caption text-medium-emphasis">
+		<p class="text-title-small mt-4">{{ t('task.completions.label') }}</p>
+		<p v-if="doneCount > 0" class="text-body-small text-medium-emphasis">
 			{{ t('task.completions.doneCount', { n: doneCount }, { plural: doneCount }) }}
 		</p>
 		<div v-for="entry in occurrences" :key="entry.start" :class="$style.row">

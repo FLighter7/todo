@@ -50,7 +50,8 @@
 
 // Vuetify's own stylesheet sets Roboto everywhere; these are deliberate,
 // narrowly-scoped overrides of a third-party design system's base typography,
-// not a general license to reach for !important elsewhere.
+// not a general license to reach for !important elsewhere. The text-* roles
+// below are the MD3 ones Vuetify 4 maps the old MD2 h1–h6 onto.
 .v-application {
 	font-family: var(--font-body) !important;
 }
@@ -58,11 +59,12 @@
 .v-app-bar-title,
 .v-card-title,
 .v-list-subheader,
-.text-h1,
-.text-h2,
-.text-h3,
-.text-h4,
-.text-h5,
-.text-h6 {
+.text-display-large,
+.text-display-medium,
+.text-display-small,
+.text-headline-large,
+.text-headline-medium,
+.text-headline-small,
+.text-title-large {
 	font-family: var(--font-display) !important;
 }

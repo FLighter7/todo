@@ -177,6 +177,6 @@ describe('EntityList date label', () => {
 			global: { plugins: [vuetify, i18n] },
 		});
 
-		expect(wrapper.find('.text-caption').exists()).toBe(false);
+		expect(wrapper.find('.text-body-small').exists()).toBe(false);
 	});
 });

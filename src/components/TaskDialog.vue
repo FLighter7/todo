@@ -44,12 +44,12 @@
 				<ScheduleField v-model="schedule" />
 			</template>
 			<template v-else>
-				<div class="text-h6">{{ name }}</div>
-				<p v-if="note" class="text-body-2 mt-2">{{ note }}</p>
-				<p v-if="goalName" class="text-body-2 mt-2 text-medium-emphasis">
+				<div class="text-title-large">{{ name }}</div>
+				<p v-if="note" class="text-body-medium mt-2">{{ note }}</p>
+				<p v-if="goalName" class="text-body-medium mt-2 text-medium-emphasis">
 					{{ t('task.goalLabel') }}: {{ goalName }}
 				</p>
-				<p v-if="schedule" class="text-body-2 mt-2 text-medium-emphasis">
+				<p v-if="schedule" class="text-body-medium mt-2 text-medium-emphasis">
 					{{ t('task.schedule.label') }}: {{ scheduleSummary }}
 				</p>
 				<TaskCompletions

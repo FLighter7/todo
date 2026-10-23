@@ -57,6 +57,6 @@ describe('EntityListItem date', () => {
 	it('omits the date element entirely when there is none', () => {
 		const wrapper = mountItem({ name: 'Visit Japan', done: false });
 
-		expect(wrapper.find('.text-caption').exists()).toBe(false);
+		expect(wrapper.find('.text-body-small').exists()).toBe(false);
 	});
 });

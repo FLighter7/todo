@@ -18,8 +18,8 @@
 				<VTextarea v-model="note" :label="t('entity.note')" rows="3" />
 			</template>
 			<template v-else>
-				<div class="text-h6">{{ name }}</div>
-				<p v-if="note" class="text-body-2 mt-2">{{ note }}</p>
+				<div class="text-title-large">{{ name }}</div>
+				<p v-if="note" class="text-body-medium mt-2">{{ note }}</p>
 			</template>
 		</template>
 	</EntityDialog>

@@ -85,10 +85,10 @@
 				:label="t('task.schedule.endUntilField')"
 			/>
 
-			<p class="text-caption text-medium-emphasis">{{ preview }}</p>
+			<p class="text-body-small text-medium-emphasis">{{ preview }}</p>
 		</template>
 
-		<p v-if="repeat === 'custom'" class="text-caption text-medium-emphasis">
+		<p v-if="repeat === 'custom'" class="text-body-small text-medium-emphasis">
 			{{ t('task.schedule.repeatCustom') }}: {{ customRRule }}
 		</p>
 	</template>

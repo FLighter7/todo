@@ -26,12 +26,12 @@
 				<DeadlineField v-model="deadline" />
 			</template>
 			<template v-else>
-				<div class="text-h6">{{ name }}</div>
-				<p v-if="note" class="text-body-2 mt-2">{{ note }}</p>
-				<p v-if="dreamName" class="text-body-2 mt-2 text-medium-emphasis">
+				<div class="text-title-large">{{ name }}</div>
+				<p v-if="note" class="text-body-medium mt-2">{{ note }}</p>
+				<p v-if="dreamName" class="text-body-medium mt-2 text-medium-emphasis">
 					{{ t('goal.dreamLabel') }}: {{ dreamName }}
 				</p>
-				<p v-if="deadline" class="text-body-2 mt-2 text-medium-emphasis">
+				<p v-if="deadline" class="text-body-medium mt-2 text-medium-emphasis">
 					{{ t('goal.deadline.label') }}: {{ formatDeadline(deadline, locale, t) }}
 				</p>
 			</template>
