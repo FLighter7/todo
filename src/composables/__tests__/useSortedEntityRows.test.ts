@@ -4,13 +4,14 @@ import { computed, defineComponent } from 'vue';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { i18n } from '@/i18n';
-import { Status, type Dream } from '@/types';
+import { ItemType, Status, type Dream } from '@/types';
 import { useSettingsStore } from '@/stores/settings';
 import type { EntityRow, ListSection } from '@/utils/sortEntities';
 import { useSortedEntityRows } from '../useSortedEntityRows';
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
 	return {
+		type: ItemType.Dream,
 		id: 'a',
 		name: 'Visit Japan',
 		created: '2026-08-06T10:00:00.000Z',

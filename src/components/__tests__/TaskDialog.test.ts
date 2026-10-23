@@ -4,7 +4,7 @@ import { mount } from '@vue/test-utils';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
-import { Status, type Task } from '@/types';
+import { ItemType, Status, type Task } from '@/types';
 import { listOccurrences } from '@/utils/schedule';
 import TaskCompletions from '../TaskCompletions.vue';
 import TaskDialog from '../TaskDialog.vue';
@@ -13,6 +13,7 @@ const goalOptions = [{ value: 'goal-1', title: 'Learn Japanese' }];
 
 function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
+		type: ItemType.Task,
 		id: 'task-1',
 		name: 'Buy milk',
 		created: '2026-08-06T10:00:00.000Z',

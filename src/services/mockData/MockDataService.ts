@@ -1,5 +1,6 @@
 import type { AppLocale } from '@/i18n';
 import {
+	ItemType,
 	Season,
 	type Completion,
 	type Deadline,
@@ -249,6 +250,7 @@ export class MockDataService {
 			const { created, updated } = buildTimestamps(now, random);
 			return {
 				id: crypto.randomUUID(),
+				type: ItemType.Dream,
 				name: dreamNames[index],
 				note: nextNote(template.hasNote),
 				created,
@@ -261,6 +263,7 @@ export class MockDataService {
 			const { created, updated } = buildTimestamps(now, random);
 			return {
 				id: crypto.randomUUID(),
+				type: ItemType.Goal,
 				name: goalNames[index],
 				note: nextNote(template.hasNote),
 				created,
@@ -283,6 +286,7 @@ export class MockDataService {
 
 			return {
 				id: crypto.randomUUID(),
+				type: ItemType.Task,
 				name: taskNames[index],
 				note: nextNote(template.hasNote),
 				created,

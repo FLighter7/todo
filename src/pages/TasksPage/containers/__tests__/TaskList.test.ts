@@ -5,7 +5,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText, setEntityTab } from '@/vitestHelpers';
-import { Status, type Goal, type Schedule, type Task } from '@/types';
+import { ItemType, Status, type Goal, type Schedule, type Task } from '@/types';
 import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
@@ -14,6 +14,7 @@ import TaskList from '../TaskList.vue';
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
 	return {
+		type: ItemType.Goal,
 		id: 'goal-1',
 		name: 'Learn Japanese',
 		created: daysAgo(1),
@@ -25,6 +26,7 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
 
 function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
+		type: ItemType.Task,
 		id: 'task-1',
 		name: 'Do Duolingo',
 		created: daysAgo(1),

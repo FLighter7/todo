@@ -1,5 +1,6 @@
 import { RRule } from 'rrule';
 import {
+	ItemType,
 	fail,
 	isRecordObject,
 	parseItemBase,
@@ -41,6 +42,7 @@ export interface Completion {
 }
 
 export interface Task extends ItemBase {
+	type: ItemType.Task;
 	goalId?: string;
 	important: boolean;
 	urgent: boolean;
@@ -158,7 +160,7 @@ export function parseCompletion(value: unknown): Completion {
 }
 
 export function parseTask(value: unknown): Task {
-	const base = parseItemBase(value);
+	const base = parseItemBase(value, ItemType.Task);
 	const entry = value as Record<string, unknown>;
 
 	const goalId = entry.goalId;

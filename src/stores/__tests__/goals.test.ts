@@ -1,12 +1,13 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import { Status, type Goal } from '@/types';
+import { ItemType, Status, type Goal } from '@/types';
 import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useGoalsStore } from '../goals';
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
 	return {
+		type: ItemType.Goal,
 		id: 'goal-1',
 		name: 'Learn Japanese',
 		created: daysAgo(1),

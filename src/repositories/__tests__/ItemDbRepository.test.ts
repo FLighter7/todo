@@ -1,13 +1,14 @@
 import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it } from 'vitest';
 import { deleteDB, openDB } from 'idb';
-import { Status, parseDream, parseTask, type Dream, type Task } from '@/types';
+import { ItemType, Status, parseDream, parseTask, type Dream, type Task } from '@/types';
 import { StorageUnavailableError } from '../ItemStorage';
 import { APP_DB_NAME } from '../AppDatabase';
 import { ItemDbRepository } from '../ItemDbRepository';
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
 	return {
+		type: ItemType.Dream,
 		id: 'id-1',
 		name: 'Visit Japan',
 		created: '2026-08-06T10:00:00.000Z',
@@ -20,6 +21,7 @@ function makeDream(overrides: Partial<Dream> = {}): Dream {
 function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
 		...makeDream(),
+		type: ItemType.Task,
 		id: 'task-1',
 		important: false,
 		urgent: false,

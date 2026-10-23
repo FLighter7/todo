@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { ItemFormatError, Status } from '../item';
+import { ItemFormatError, ItemType, Status } from '../item';
 import { Season, isSeason, parseGoal } from '../goal';
 
 function makeRaw(overrides: Record<string, unknown> = {}): Record<string, unknown> {
 	return {
 		id: 'goal-1',
+		type: ItemType.Goal,
 		name: 'Learn Japanese',
 		created: '2026-08-06T10:00:00.000Z',
 		updated: '2026-08-06T10:00:00.000Z',
@@ -32,6 +33,10 @@ describe('parseGoal', () => {
 
 		expect(goal.dreamId).toBeUndefined();
 		expect(goal.deadline).toBeUndefined();
+	});
+
+	it('rejects a record of another type', () => {
+		expect(() => parseGoal(makeRaw({ type: ItemType.Dream }))).toThrow(ItemFormatError);
 	});
 
 	it('keeps the dream link', () => {

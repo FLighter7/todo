@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { ItemFormatError, Status } from '../item';
+import { ItemFormatError, ItemType, Status } from '../item';
 import { isPeriodic, parseTask } from '../task';
 
 function makeRaw(overrides: Record<string, unknown> = {}): Record<string, unknown> {
 	return {
 		id: 'task-1',
+		type: ItemType.Task,
 		name: 'File the report',
 		created: '2026-08-06T10:00:00.000Z',
 		updated: '2026-08-06T10:00:00.000Z',
@@ -24,6 +25,10 @@ describe('parseTask', () => {
 		expect(task.goalId).toBeUndefined();
 		expect(task.schedule).toBeUndefined();
 		expect(task.completions).toBeUndefined();
+	});
+
+	it('rejects a record of another type', () => {
+		expect(() => parseTask(makeRaw({ type: ItemType.Goal }))).toThrow(ItemFormatError);
 	});
 
 	it('rejects non-boolean flags', () => {

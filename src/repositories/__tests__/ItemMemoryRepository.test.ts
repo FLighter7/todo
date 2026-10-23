@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { Status, type Dream } from '@/types';
+import { ItemType, Status, type Dream } from '@/types';
 import { ItemMemoryRepository } from '../ItemMemoryRepository';
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
 	return {
+		type: ItemType.Dream,
 		id: 'id-1',
 		name: 'Visit Japan',
 		created: '2026-08-06T10:00:00.000Z',

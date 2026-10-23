@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Status, type ItemBase, type Task } from '@/types';
+import { ItemType, Status, type ItemBase, type Task } from '@/types';
 import { collectGarbage, pruneCompletions, pruneExdate, pruneTask } from '../collectGarbage';
 
 const NOW = new Date('2026-08-16T12:00:00.000Z');
@@ -10,6 +10,7 @@ function daysBefore(days: number): string {
 
 function makeRecord(overrides: Partial<ItemBase> = {}): ItemBase {
 	return {
+		type: ItemType.Dream,
 		id: 'id-1',
 		name: 'Buy milk',
 		created: daysBefore(100),
@@ -22,6 +23,7 @@ function makeRecord(overrides: Partial<ItemBase> = {}): ItemBase {
 function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
 		...makeRecord(),
+		type: ItemType.Task,
 		important: false,
 		urgent: false,
 		...overrides,

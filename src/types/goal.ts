@@ -1,4 +1,4 @@
-import { fail, isRecordObject, parseItemBase, type ItemBase } from './item';
+import { ItemType, fail, isRecordObject, parseItemBase, type ItemBase } from './item';
 
 export enum Season {
 	Winter = 1,
@@ -23,6 +23,7 @@ export interface Deadline {
 }
 
 export interface Goal extends ItemBase {
+	type: ItemType.Goal;
 	dreamId?: string;
 	deadline?: Deadline;
 }
@@ -94,7 +95,7 @@ export function parseDeadline(value: unknown): Deadline {
 }
 
 export function parseGoal(value: unknown): Goal {
-	const base = parseItemBase(value);
+	const base = parseItemBase(value, ItemType.Goal);
 	const entry = value as Record<string, unknown>;
 
 	const dreamId = entry.dreamId;

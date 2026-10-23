@@ -6,6 +6,7 @@ import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
 import {
+	ItemType,
 	DEFAULT_SETTINGS,
 	Status,
 	type AppSettings,
@@ -52,6 +53,7 @@ vi.mock('@/services/sync/SyncConnection', () => ({
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
 	return {
+		type: ItemType.Dream,
 		id: 'dream-local',
 		name: 'Local dream',
 		created: '2026-08-06T10:00:00.000Z',
@@ -63,6 +65,7 @@ function makeDream(overrides: Partial<Dream> = {}): Dream {
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
 	return {
+		type: ItemType.Goal,
 		id: 'goal-local',
 		name: 'Local goal',
 		created: '2026-08-06T10:00:00.000Z',
@@ -74,6 +77,7 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
 
 function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
+		type: ItemType.Task,
 		id: 'task-local',
 		name: 'Local task',
 		created: '2026-08-06T10:00:00.000Z',

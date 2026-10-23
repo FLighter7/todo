@@ -5,7 +5,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { Status, type Dream, type Goal, type Task } from '@/types';
+import { ItemType, Status, type Dream, type Goal, type Task } from '@/types';
 import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
@@ -14,6 +14,7 @@ import QuickAddFab from '../QuickAddFab.vue';
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
 	return {
+		type: ItemType.Dream,
 		id: 'dream-1',
 		name: 'Visit Japan',
 		created: '2026-08-06T10:00:00.000Z',
@@ -25,6 +26,7 @@ function makeDream(overrides: Partial<Dream> = {}): Dream {
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
 	return {
+		type: ItemType.Goal,
 		id: 'goal-1',
 		name: 'Learn Japanese',
 		created: '2026-08-06T10:00:00.000Z',

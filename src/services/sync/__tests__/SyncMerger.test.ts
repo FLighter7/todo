@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Status, type Completion, type Task } from '@/types';
+import { ItemType, Status, type Completion, type Task } from '@/types';
 import { SyncMerger } from '../SyncMerger';
 
 /**
@@ -140,6 +140,7 @@ describe('SyncMerger.merge', () => {
 
 function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
+		type: ItemType.Task,
 		id: 'task-1',
 		name: 'File the report',
 		created: '2026-08-01T10:00:00.000Z',

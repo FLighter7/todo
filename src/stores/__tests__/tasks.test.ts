@@ -1,13 +1,14 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import { Status, type Task } from '@/types';
+import { ItemType, Status, type Task } from '@/types';
 import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import type { ItemStorage } from '@/repositories/ItemStorage';
 import { useTasksStore } from '../tasks';
 
 function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
+		type: ItemType.Task,
 		id: 'task-1',
 		name: 'File the report',
 		created: daysAgo(1),

@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { isReactive, reactive } from 'vue';
-import { Status, type Dream, type Schedule, type Task } from '@/types';
+import { ItemType, Status, type Dream, type Schedule, type Task } from '@/types';
 import { StorageUnavailableError, type ItemStorage } from '@/repositories/ItemStorage';
 import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { defineEntityStore } from '../createEntityStore';
@@ -18,6 +18,7 @@ const useTestStore = defineEntityStore<Dream, DreamDraft>({
 	createRepository: async () => new ItemMemoryRepository<Dream>(),
 	build: (draft, id, now) => ({
 		id,
+		type: ItemType.Dream,
 		name: draft.name,
 		note: draft.note,
 		created: now,
@@ -36,6 +37,7 @@ const useTestTaskStore = defineEntityStore<Task, TaskDraft>({
 	createRepository: async () => new ItemMemoryRepository<Task>(),
 	build: (draft, id, now) => ({
 		id,
+		type: ItemType.Task,
 		name: draft.name,
 		created: now,
 		updated: now,
@@ -51,6 +53,7 @@ const useTestTaskStore = defineEntityStore<Task, TaskDraft>({
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
 	return {
+		type: ItemType.Dream,
 		id: 'seeded',
 		name: 'Visit Japan',
 		created: daysAgo(1),
@@ -62,6 +65,7 @@ function makeDream(overrides: Partial<Dream> = {}): Dream {
 
 function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
+		type: ItemType.Task,
 		id: 'seeded-task',
 		name: 'Water the plants',
 		created: daysAgo(1),

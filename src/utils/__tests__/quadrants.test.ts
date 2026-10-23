@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { Status, type Task } from '@/types';
+import { ItemType, Status, type Task } from '@/types';
 import { QUADRANT_KEYS, quadrantFlags, quadrantOf } from '../quadrants';
 
 function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
+		type: ItemType.Task,
 		id: 'task-1',
 		name: 'File the report',
 		created: '2026-08-06T10:00:00.000Z',

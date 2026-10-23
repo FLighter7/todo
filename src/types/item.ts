@@ -4,8 +4,21 @@ export enum Status {
 	Cancelled = 3,
 }
 
+/**
+ * What kind of record an item is. The numbers are what IndexedDB, backups and
+ * sync payloads store, so the list is append-only: a value is never renumbered
+ * or reused, only added.
+ */
+export enum ItemType {
+	Task = 1,
+	Group = 2,
+	Goal = 3,
+	Dream = 4,
+}
+
 export interface ItemBase {
 	id: string;
+	type: ItemType;
 	name: string;
 	note?: string;
 	/** ISO 8601 timestamp in UTC. */
@@ -29,6 +42,19 @@ export class ItemFormatError extends Error {
 
 export function isStatus(value: unknown): value is Status {
 	return value === Status.Opened || value === Status.Done || value === Status.Cancelled;
+}
+
+/**
+ * An explicit check rather than `Object.values(ItemType)`: a numeric enum's
+ * values also hold the reverse-mapped names ('Task', 'Group', ...).
+ */
+export function isItemType(value: unknown): value is ItemType {
+	return (
+		value === ItemType.Task ||
+		value === ItemType.Group ||
+		value === ItemType.Goal ||
+		value === ItemType.Dream
+	);
 }
 
 export function isRecordObject(value: unknown): value is Record<string, unknown> {
@@ -73,9 +99,18 @@ export function readBoolean(entry: Record<string, unknown>, key: string): boolea
 	return value;
 }
 
-export function parseItemBase(value: unknown): ItemBase {
+/**
+ * Checks the shared fields and that the record is of the `type` the caller
+ * expects: each per-type parser passes its own, so a goal handed to
+ * `parseTask` is refused rather than read with a goal's fields missing.
+ */
+export function parseItemBase<K extends ItemType>(value: unknown, type: K): ItemBase & { type: K } {
 	if (!isRecordObject(value)) {
 		fail('the record is not an object');
+	}
+
+	if (value.type !== type) {
+		fail(`"type" must be ${type} (${ItemType[type]})`);
 	}
 
 	if (!isStatus(value.status)) {
@@ -84,6 +119,7 @@ export function parseItemBase(value: unknown): ItemBase {
 
 	return {
 		id: readString(value, 'id'),
+		type,
 		name: readString(value, 'name'),
 		note: readOptionalString(value, 'note'),
 		created: readString(value, 'created'),

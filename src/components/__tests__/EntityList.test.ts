@@ -3,12 +3,13 @@ import { describe, expect, it } from 'vitest';
 import { mount } from '@vue/test-utils';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { Status, type Dream } from '@/types';
+import { ItemType, Status, type Dream } from '@/types';
 import type { EntityRow } from '@/utils/sortEntities';
 import EntityList from '../EntityList.vue';
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
 	return {
+		type: ItemType.Dream,
 		id: 'a',
 		name: 'Visit Japan',
 		created: '2026-08-06T10:00:00.000Z',

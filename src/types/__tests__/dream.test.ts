@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { ItemFormatError, Status } from '../item';
+import { ItemFormatError, ItemType, Status } from '../item';
 import { parseDream } from '../dream';
 
 describe('parseDream', () => {
 	it('parses a valid dream', () => {
 		const raw = {
 			id: 'id-1',
+			type: ItemType.Dream,
 			name: 'Visit Japan',
 			created: '2026-08-06T10:00:00.000Z',
 			updated: '2026-08-06T10:00:00.000Z',
@@ -13,6 +14,19 @@ describe('parseDream', () => {
 		};
 
 		expect(parseDream(raw)).toEqual({ ...raw, note: undefined });
+	});
+
+	it('rejects a record of another type', () => {
+		expect(() =>
+			parseDream({
+				id: 'id-1',
+				type: ItemType.Group,
+				name: 'Visit Japan',
+				created: '2026-08-06T10:00:00.000Z',
+				updated: '2026-08-06T10:00:00.000Z',
+				status: Status.Opened,
+			}),
+		).toThrow(ItemFormatError);
 	});
 
 	it('rejects a record with a broken base', () => {

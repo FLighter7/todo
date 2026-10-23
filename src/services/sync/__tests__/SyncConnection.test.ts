@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_SETTINGS, Status, type Dream, type Goal, type Task } from '@/types';
+import { ItemType, DEFAULT_SETTINGS, Status, type Dream, type Goal, type Task } from '@/types';
 import {
 	SYNC_SCHEMA,
 	SyncConnection,
@@ -83,6 +83,7 @@ async function makeConnection(): Promise<{ connection: SyncConnection; channel: 
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
 	return {
+		type: ItemType.Dream,
 		id: 'dream-1',
 		name: 'Visit Japan',
 		created: '2026-08-06T10:00:00.000Z',
@@ -94,6 +95,7 @@ function makeDream(overrides: Partial<Dream> = {}): Dream {
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
 	return {
+		type: ItemType.Goal,
 		id: 'goal-1',
 		name: 'Save for the trip',
 		created: '2026-08-06T10:00:00.000Z',
@@ -105,6 +107,7 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
 
 function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
+		type: ItemType.Task,
 		id: 'task-1',
 		name: 'Book flights',
 		created: '2026-08-06T10:00:00.000Z',

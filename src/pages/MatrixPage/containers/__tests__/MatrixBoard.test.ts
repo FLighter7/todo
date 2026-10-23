@@ -4,13 +4,14 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { Status, type Task } from '@/types';
+import { ItemType, Status, type Task } from '@/types';
 import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useTasksStore } from '@/stores/tasks';
 import MatrixBoard from '../MatrixBoard.vue';
 
 function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
+		type: ItemType.Task,
 		id: 'id-1',
 		name: 'Buy milk',
 		created: '2026-08-06T10:00:00.000Z',

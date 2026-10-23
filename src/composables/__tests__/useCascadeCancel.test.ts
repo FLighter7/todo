@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import { Status, type Goal, type Task } from '@/types';
+import { ItemType, Status, type Goal, type Task } from '@/types';
 import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
@@ -9,6 +9,7 @@ import { useCascadeCancel } from '../useCascadeCancel';
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
 	return {
+		type: ItemType.Goal,
 		id: 'goal-1',
 		name: 'Learn Japanese',
 		created: daysAgo(1),
@@ -20,6 +21,7 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
 
 function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
+		type: ItemType.Task,
 		id: 'task-1',
 		name: 'Do Duolingo',
 		created: daysAgo(1),

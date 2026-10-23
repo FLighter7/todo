@@ -1,4 +1,4 @@
-import { Status, parseDream, type Dream, type DreamDraft } from '@/types';
+import { ItemType, Status, parseDream, type Dream, type DreamDraft } from '@/types';
 import { ItemDbRepository } from '@/repositories/ItemDbRepository';
 import { defineEntityStore } from './createEntityStore';
 
@@ -7,6 +7,7 @@ export const useDreamsStore = defineEntityStore<Dream, DreamDraft>({
 	createRepository: () => ItemDbRepository.create('dreams', parseDream),
 	build: (draft, id, now) => ({
 		id,
+		type: ItemType.Dream,
 		name: draft.name,
 		note: draft.note,
 		created: now,

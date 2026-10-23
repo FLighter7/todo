@@ -4,12 +4,13 @@ import { defineComponent, ref } from 'vue';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { i18n } from '@/i18n';
-import { Status, type ItemBase } from '@/types';
+import { ItemType, Status, type ItemBase } from '@/types';
 import { useSettingsStore } from '@/stores/settings';
 import { useToggleConfirm, type ToggleableStore } from '../useToggleConfirm';
 
 function makeRecord(overrides: Partial<ItemBase> = {}): ItemBase {
 	return {
+		type: ItemType.Dream,
 		id: 'a',
 		name: 'Visit Japan',
 		created: '2026-08-06T10:00:00.000Z',

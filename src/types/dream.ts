@@ -1,11 +1,12 @@
-import { parseItemBase, type ItemBase } from './item';
+import { ItemType, parseItemBase, type ItemBase } from './item';
 
 /**
- * A dream carries nothing beyond the shared base yet. The distinct type
- * still earns its place: it keeps stores and repositories for the three
- * entities from being interchangeable by accident.
+ * A dream carries nothing beyond the shared base yet. Its `type` is what tells
+ * it apart from a group, which has the same shape.
  */
-export type Dream = ItemBase;
+export interface Dream extends ItemBase {
+	type: ItemType.Dream;
+}
 
 export interface DreamDraft {
 	name: string;
@@ -13,5 +14,5 @@ export interface DreamDraft {
 }
 
 export function parseDream(value: unknown): Dream {
-	return parseItemBase(value);
+	return parseItemBase(value, ItemType.Dream);
 }

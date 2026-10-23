@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Status, type Dream } from '@/types';
+import { ItemType, Status, type Dream } from '@/types';
 import { sortEntityRows, type ListSection } from '../sortEntities';
 
 const NOW = new Date('2026-08-16T12:00:00.000Z');
@@ -10,6 +10,7 @@ function daysBefore(days: number): string {
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
 	return {
+		type: ItemType.Dream,
 		id: 'id-1',
 		name: 'Visit Japan',
 		created: daysBefore(100),

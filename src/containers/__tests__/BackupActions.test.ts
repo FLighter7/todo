@@ -5,7 +5,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
-import { Status } from '@/types';
+import { ItemType, Status } from '@/types';
 import { backupService } from '@/services/backup/BackupService';
 import { backupFile } from '@/services/backup/BackupFile';
 import { useDreamsStore } from '@/stores/dreams';
@@ -85,6 +85,7 @@ describe('BackupActions import', () => {
 			[
 				{
 					id: 'dream-1',
+					type: ItemType.Dream,
 					name: 'Imported dream',
 					created: '2026-08-06T10:00:00.000Z',
 					updated: '2026-08-06T10:00:00.000Z',
@@ -94,6 +95,7 @@ describe('BackupActions import', () => {
 			[
 				{
 					id: 'goal-1',
+					type: ItemType.Goal,
 					name: 'Imported goal',
 					created: '2026-08-06T10:00:00.000Z',
 					updated: '2026-08-06T10:00:00.000Z',
@@ -103,6 +105,7 @@ describe('BackupActions import', () => {
 			[
 				{
 					id: 'task-1',
+					type: ItemType.Task,
 					name: 'Imported task',
 					created: '2026-08-06T10:00:00.000Z',
 					updated: '2026-08-06T10:00:00.000Z',
@@ -207,6 +210,7 @@ describe('BackupActions import', () => {
 			[
 				{
 					id: 'dream-1',
+					type: ItemType.Dream,
 					name: 'Imported dream',
 					created: '2026-08-06T10:00:00.000Z',
 					updated: '2026-08-06T10:00:00.000Z',
