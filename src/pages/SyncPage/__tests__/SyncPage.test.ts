@@ -4,11 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { clickButtonByText } from '@/vitestHelpers';
-import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
-import { useDreamsStore } from '@/stores/dreams';
-import { useGoalsStore } from '@/stores/goals';
-import { useTasksStore } from '@/stores/tasks';
+import { clickButtonByText, loadItems } from '@/vitestHelpers';
 import SyncScanner from '../SyncScanner.vue';
 import SyncPage from '../SyncPage.vue';
 
@@ -27,9 +23,7 @@ vi.mock('@/services/sync/SyncConnection', () => ({
 }));
 
 async function loadEmptyStores(): Promise<void> {
-	await useDreamsStore().load(async () => new ItemMemoryRepository([]));
-	await useGoalsStore().load(async () => new ItemMemoryRepository([]));
-	await useTasksStore().load(async () => new ItemMemoryRepository([]));
+	await loadItems();
 }
 
 beforeEach(() => {

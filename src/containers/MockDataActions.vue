@@ -16,23 +16,17 @@ import { useI18n } from 'vue-i18n';
 import { mdiAutoFix } from '@mdi/js';
 import { SUPPORTED_LOCALES, type AppLocale } from '@/i18n';
 import { mockDataService } from '@/services/mockData/MockDataService';
-import { useDreamsStore } from '@/stores/dreams';
-import { useGoalsStore } from '@/stores/goals';
-import { useTasksStore } from '@/stores/tasks';
+import { useItemsStore } from '@/stores/items';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
 const emit = defineEmits<{ notify: [message: string] }>();
 
 const { t, locale } = useI18n();
-const dreams = useDreamsStore();
-const goals = useGoalsStore();
-const tasks = useTasksStore();
+const items = useItemsStore();
 
 const confirmOpen = ref(false);
 
-const currentCount = computed(
-	() => dreams.records.length + goals.records.length + tasks.records.length,
-);
+const currentCount = computed(() => items.records.length);
 
 const confirmActions = computed(() => [
 	{ key: 'no', label: t('form.cancel') },
@@ -60,23 +54,16 @@ function resolveLocale(): AppLocale {
 }
 
 /**
- * Not atomic across the three `replaceAll` calls -- the same accepted
- * limitation `BackupActions.vue`'s `confirmImport` already lives with. Never
- * touches `useSettingsStore()`: sample data replaces dreams/goals/tasks only,
- * the user's `AppSettings` are out of scope for this feature entirely.
+ * One `replaceAll`, so the sample set swaps in as a single IndexedDB
+ * transaction. Never touches `useSettingsStore()`: sample data replaces the
+ * items only, the user's `AppSettings` are out of scope for this feature.
  */
 async function generateAndReplace(): Promise<void> {
 	try {
 		const result = mockDataService.generate(resolveLocale());
-		await dreams.replaceAll(result.dreams);
-		await goals.replaceAll(result.goals);
-		await tasks.replaceAll(result.tasks);
-		emit(
-			'notify',
-			t('mockData.generated', {
-				count: result.dreams.length + result.goals.length + result.tasks.length,
-			}),
-		);
+		const generated = [...result.dreams, ...result.goals, ...result.tasks];
+		await items.replaceAll(generated);
+		emit('notify', t('mockData.generated', { count: generated.length }));
 	} catch (error) {
 		const reason = error instanceof Error ? error.message : String(error);
 		emit('notify', t('mockData.failed', { reason }));

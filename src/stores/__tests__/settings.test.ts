@@ -182,7 +182,7 @@ describe('useSettingsStore persist error handling', () => {
 });
 
 /**
- * Regression coverage for the composition trap `stores/tasks.ts` documents:
+ * Regression coverage for the composition trap docs/decisions.md records:
  * a plain `{ ...store }` spread only copies each property's current value
  * out once, so nothing behind it stays connected to the source afterwards.
  * These assertions read the derived value *after* mutating, so a broken

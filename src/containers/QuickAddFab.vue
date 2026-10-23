@@ -32,16 +32,12 @@ import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { mdiPlus } from '@mdi/js';
 import AddEntityDialog from '@/components/AddEntityDialog.vue';
-import type { DreamDraft, GoalDraft, TaskDraft } from '@/types';
-import { useTasksStore } from '@/stores/tasks';
-import { useDreamsStore } from '@/stores/dreams';
-import { useGoalsStore } from '@/stores/goals';
+import { ItemType, type DreamDraft, type GoalDraft, type TaskDraft } from '@/types';
+import { useItemsStore } from '@/stores/items';
 
 const { t } = useI18n();
 const route = useRoute();
-const tasksStore = useTasksStore();
-const dreamsStore = useDreamsStore();
-const goalsStore = useGoalsStore();
+const items = useItemsStore();
 
 const dialogOpen = ref(false);
 
@@ -58,21 +54,21 @@ const defaultTab = computed<'dream' | 'goal' | 'task'>(() => {
 });
 
 const dreamOptions = computed(() =>
-	dreamsStore.active.map((dream) => ({ value: dream.id, title: dream.name })),
+	items.dreams.active.map((dream) => ({ value: dream.id, title: dream.name })),
 );
 const goalOptions = computed(() =>
-	goalsStore.active.map((goal) => ({ value: goal.id, title: goal.name })),
+	items.goals.active.map((goal) => ({ value: goal.id, title: goal.name })),
 );
 
 async function handleTaskSubmit(draft: TaskDraft): Promise<void> {
-	await tasksStore.add(draft);
+	await items.add(ItemType.Task, draft);
 }
 
 async function handleDreamSave(draft: DreamDraft): Promise<void> {
-	await dreamsStore.add(draft);
+	await items.add(ItemType.Dream, draft);
 }
 
 async function handleGoalSave(draft: GoalDraft): Promise<void> {
-	await goalsStore.add(draft);
+	await items.add(ItemType.Goal, draft);
 }
 </script>

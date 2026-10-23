@@ -1,26 +1,25 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { Dream, Goal, Task } from '@/types';
+import type { Item } from '@/types';
 import { StorageUnavailableError } from './ItemStorage';
 
 export const APP_DB_NAME = 'todo';
-export const APP_DB_VERSION = 3;
+export const APP_DB_VERSION = 4;
 
-export const STORE_NAMES = ['dreams', 'goals', 'tasks'] as const;
-export type StoreName = (typeof STORE_NAMES)[number];
+export const ITEMS_STORE = 'items';
 
+/**
+ * Every record lives in the one object store, told apart by its `type`. No
+ * indexes: the whole collection is read into memory and filtered there, so a
+ * new type needs no schema change at all.
+ */
 export interface AppDbSchema extends DBSchema {
-	dreams: { key: string; value: Dream };
-	goals: { key: string; value: Goal };
-	tasks: { key: string; value: Task };
+	items: { key: string; value: Item };
 }
 
 /**
- * One shared schema for all three stores, and one place that attaches the
- * `versionchange` handler. Each caller gets its own connection — nothing is
- * pooled — so the handler has to live here: three hand-rolled `openDB` calls
- * would mean three copies of it, and forgetting one is the documented trap
- * where a second tab carrying a new schema hangs forever waiting for the
- * first to let go.
+ * The one place that attaches the `versionchange` handler. Forgetting it is
+ * the documented trap where a second tab carrying a new schema hangs forever
+ * waiting for the first to let go.
  */
 export async function openAppDatabase(): Promise<IDBPDatabase<AppDbSchema>> {
 	if (typeof indexedDB === 'undefined') {
@@ -30,18 +29,18 @@ export async function openAppDatabase(): Promise<IDBPDatabase<AppDbSchema>> {
 	try {
 		const database = await openDB<AppDbSchema>(APP_DB_NAME, APP_DB_VERSION, {
 			upgrade(db) {
-				// Version 3 starts clean. The old single-entity store is dropped
-				// rather than migrated: there is no data worth carrying over, and
-				// a migration would have to invent a shape for fields that never
-				// existed.
-				if (db.objectStoreNames.contains('todos' as never)) {
-					db.deleteObjectStore('todos' as never);
+				// Version 4 starts clean, the way version 3 did before it. Whatever
+				// stores an older version left behind — `todos`, or `dreams`/
+				// `goals`/`tasks` — are dropped rather than migrated: their records
+				// carry no `type`, and starting over was a deliberate choice.
+				for (const name of Array.from(db.objectStoreNames)) {
+					if (name !== ITEMS_STORE) {
+						db.deleteObjectStore(name);
+					}
 				}
 
-				for (const name of STORE_NAMES) {
-					if (!db.objectStoreNames.contains(name)) {
-						db.createObjectStore(name, { keyPath: 'id' });
-					}
+				if (!db.objectStoreNames.contains(ITEMS_STORE)) {
+					db.createObjectStore(ITEMS_STORE, { keyPath: 'id' });
 				}
 			},
 		});

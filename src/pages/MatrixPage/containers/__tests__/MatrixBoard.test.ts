@@ -5,8 +5,8 @@ import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { ItemType, Status, type Task } from '@/types';
-import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
-import { useTasksStore } from '@/stores/tasks';
+import { useItemsStore } from '@/stores/items';
+import { loadItems } from '@/vitestHelpers';
 import MatrixBoard from '../MatrixBoard.vue';
 
 function makeTask(overrides: Partial<Task> = {}): Task {
@@ -29,14 +29,10 @@ beforeEach(() => {
 
 describe('MatrixBoard', () => {
 	it('places each seeded task in its own quadrant', async () => {
-		const store = useTasksStore();
-		await store.load(
-			async () =>
-				new ItemMemoryRepository([
-					makeTask({ id: 'a', name: 'Do task', important: true, urgent: true }),
-					makeTask({ id: 'b', name: 'Schedule task', important: true, urgent: false }),
-				]),
-		);
+		await loadItems([
+			makeTask({ id: 'a', name: 'Do task', important: true, urgent: true }),
+			makeTask({ id: 'b', name: 'Schedule task', important: true, urgent: false }),
+		]);
 
 		const wrapper = mount(MatrixBoard, { global: { plugins: [vuetify, i18n] } });
 
@@ -45,8 +41,8 @@ describe('MatrixBoard', () => {
 	});
 
 	it('opens the form pre-flagged for the quadrant whose add button was clicked', async () => {
-		const store = useTasksStore();
-		await store.load(async () => new ItemMemoryRepository<Task>());
+		await loadItems();
+		const store = useItemsStore();
 
 		const wrapper = mount(MatrixBoard, { global: { plugins: [vuetify, i18n] } });
 
@@ -57,7 +53,7 @@ describe('MatrixBoard', () => {
 		await wrapper.get('input').setValue('Call the bank');
 		await wrapper.get('button[aria-label="Save"]').trigger('click');
 
-		expect(store.records[0]).toMatchObject({
+		expect(store.tasks.all[0]).toMatchObject({
 			name: 'Call the bank',
 			important: false,
 			urgent: true,
@@ -65,13 +61,10 @@ describe('MatrixBoard', () => {
 	});
 
 	it('closes a task with Status.Done when its checkbox is checked, and it leaves the quadrant', async () => {
-		const store = useTasksStore();
-		await store.load(
-			async () =>
-				new ItemMemoryRepository([
-					makeTask({ id: 'a', name: 'Eliminate task', important: false, urgent: false }),
-				]),
-		);
+		await loadItems([
+			makeTask({ id: 'a', name: 'Eliminate task', important: false, urgent: false }),
+		]);
+		const store = useItemsStore();
 
 		const wrapper = mount(MatrixBoard, { global: { plugins: [vuetify, i18n] } });
 		expect(wrapper.text()).toContain('Eliminate task');
@@ -79,7 +72,7 @@ describe('MatrixBoard', () => {
 		await wrapper.get('input[type="checkbox"]').setValue(true);
 		await wrapper.vm.$nextTick();
 
-		expect(store.records.find((task) => task.id === 'a')?.status).toBe(Status.Done);
+		expect(store.tasks.all.find((task) => task.id === 'a')?.status).toBe(Status.Done);
 		expect(wrapper.text()).not.toContain('Eliminate task');
 	});
 });

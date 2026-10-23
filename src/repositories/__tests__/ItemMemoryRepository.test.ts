@@ -45,6 +45,15 @@ describe('ItemMemoryRepository', () => {
 		await expect(repository.getAll()).resolves.toEqual([]);
 	});
 
+	it('replaceAll swaps the whole contents for the given list', async () => {
+		const repository = new ItemMemoryRepository([makeDream()]);
+
+		await repository.replaceAll([makeDream({ id: 'id-2' }), makeDream({ id: 'id-3' })]);
+
+		const ids = (await repository.getAll()).map((record) => record.id);
+		expect(ids).toEqual(['id-2', 'id-3']);
+	});
+
 	it('hands out copies so callers cannot mutate its state', async () => {
 		const repository = new ItemMemoryRepository([makeDream()]);
 

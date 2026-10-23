@@ -4,12 +4,9 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { clickButtonByText, setEntityTab } from '@/vitestHelpers';
+import { clickButtonByText, loadItems, setEntityTab } from '@/vitestHelpers';
 import { ItemType, Status, type Dream, type Goal, type Task } from '@/types';
-import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
-import { useDreamsStore } from '@/stores/dreams';
-import { useGoalsStore } from '@/stores/goals';
-import { useTasksStore } from '@/stores/tasks';
+import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
 import GoalList from '../GoalList.vue';
 
@@ -61,15 +58,10 @@ beforeEach(() => {
 });
 
 async function mountWithData(dreams: Dream[], goals: Goal[], tasks: Task[] = []) {
-	const dreamsStore = useDreamsStore();
-	const goalsStore = useGoalsStore();
-	const tasksStore = useTasksStore();
-	await dreamsStore.load(async () => new ItemMemoryRepository(dreams));
-	await goalsStore.load(async () => new ItemMemoryRepository(goals));
-	await tasksStore.load(async () => new ItemMemoryRepository(tasks));
+	await loadItems([...dreams, ...goals, ...tasks]);
 
 	const wrapper = mount(GoalList, { global: { plugins: [vuetify, i18n] } });
-	return { wrapper, dreamsStore, goalsStore, tasksStore };
+	return { wrapper, items: useItemsStore() };
 }
 
 describe('GoalList empty state', () => {
@@ -141,31 +133,28 @@ describe('GoalList dream picker options', () => {
 
 describe('GoalList done / reopen', () => {
 	it('reopens a cancelled goal from the History tab when its checkbox is checked, not marks it done', async () => {
-		const { wrapper, goalsStore } = await mountWithData(
-			[],
-			[makeGoal({ status: Status.Cancelled })],
-		);
+		const { wrapper, items } = await mountWithData([], [makeGoal({ status: Status.Cancelled })]);
 		useSettingsStore().updatePageSettings('goals', { confirmReopen: false });
 
 		await setEntityTab('history');
 		await wrapper.get('input[type="checkbox"]').setValue(true);
 
-		expect(goalsStore.records[0].status).toBe(Status.Opened);
+		expect(items.goals.all[0].status).toBe(Status.Opened);
 	});
 });
 
 describe('GoalList cancel', () => {
 	it('cancels immediately when the goal has no active tasks', async () => {
-		const { wrapper, goalsStore } = await mountWithData([], [makeGoal()]);
+		const { wrapper, items } = await mountWithData([], [makeGoal()]);
 
 		await wrapper.get('.v-list-item').trigger('click');
 		await clickButtonByText(wrapper, 'Cancel this record');
 
-		expect(goalsStore.records[0].status).toBe(Status.Cancelled);
+		expect(items.goals.all[0].status).toBe(Status.Cancelled);
 	});
 
 	it('shows the cascade choice and cancels tasks when the whole branch is chosen', async () => {
-		const { wrapper, goalsStore, tasksStore } = await mountWithData(
+		const { wrapper, items } = await mountWithData(
 			[],
 			[makeGoal()],
 			[makeTask({ goalId: 'goal-1' })],
@@ -178,8 +167,8 @@ describe('GoalList cancel', () => {
 
 		await clickButtonByText(wrapper, 'Cancel the whole branch');
 
-		expect(goalsStore.records[0].status).toBe(Status.Cancelled);
-		expect(tasksStore.records[0].status).toBe(Status.Cancelled);
+		expect(items.goals.all[0].status).toBe(Status.Cancelled);
+		expect(items.tasks.all[0].status).toBe(Status.Cancelled);
 	});
 });
 
@@ -240,12 +229,12 @@ describe('GoalList sorting', () => {
 			name: 'Ungrouped goal',
 			updated: daysAgo(5),
 		});
-		const { wrapper, goalsStore } = await mountWithData([dream], [groupedGoal, freshUngrouped]);
+		const { wrapper, items } = await mountWithData([dream], [groupedGoal, freshUngrouped]);
 
 		const before = orderedTexts(wrapper);
 		expect(before.indexOf('Ungrouped goal')).toBeLessThan(before.indexOf('Visit Japan'));
 
-		await goalsStore.update('grouped', { name: 'Grouped goal' });
+		await items.update(ItemType.Goal, 'grouped', { name: 'Grouped goal' });
 		await wrapper.vm.$nextTick();
 
 		const after = orderedTexts(wrapper);
@@ -261,16 +250,13 @@ describe('GoalList deadline', () => {
 	});
 
 	it('preserves an existing deadline when an unrelated field is edited', async () => {
-		const { wrapper, goalsStore } = await mountWithData(
-			[],
-			[makeGoal({ deadline: { year: 2027 } })],
-		);
+		const { wrapper, items } = await mountWithData([], [makeGoal({ deadline: { year: 2027 } })]);
 
 		await wrapper.get('.v-list-item').trigger('click');
 		await wrapper.get('button[aria-label="Edit"]').trigger('click');
 		await wrapper.get('input').setValue('Learn Japanese (updated)');
 		await wrapper.get('button[aria-label="Save"]').trigger('click');
 
-		expect(goalsStore.records[0].deadline).toEqual({ year: 2027 });
+		expect(items.goals.all[0].deadline).toEqual({ year: 2027 });
 	});
 });

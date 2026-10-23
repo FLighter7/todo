@@ -45,18 +45,13 @@ import { mdiDownloadOutline, mdiUploadOutline } from '@mdi/js';
 import type { Backup } from '@/services/backup/BackupService';
 import { BackupFormatError, backupService } from '@/services/backup/BackupService';
 import { backupFile } from '@/services/backup/BackupFile';
-import { isDream, isGoal, isTask } from '@/types';
-import { useDreamsStore } from '@/stores/dreams';
-import { useGoalsStore } from '@/stores/goals';
-import { useTasksStore } from '@/stores/tasks';
+import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
 
 const emit = defineEmits<{ notify: [message: string] }>();
 
 const { t, locale } = useI18n();
-const dreams = useDreamsStore();
-const goals = useGoalsStore();
-const tasks = useTasksStore();
+const items = useItemsStore();
 const settings = useSettingsStore();
 
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput');
@@ -69,9 +64,7 @@ const incomingCount = computed(() => {
 	return backup === null ? 0 : backup.items.length;
 });
 
-const currentCount = computed(
-	() => dreams.records.length + goals.records.length + tasks.records.length,
-);
+const currentCount = computed(() => items.records.length);
 
 const exportedAt = computed(() => {
 	const raw = pending.value?.exportedAt;
@@ -86,7 +79,7 @@ function exportFile(): void {
 	// records, not active: a backup that omitted closed records would resurrect
 	// everything ever finished or abandoned on the next restore.
 	backupFile.download(
-		backupService.create([...dreams.records, ...goals.records, ...tasks.records], {
+		backupService.create(items.records, {
 			general: settings.general,
 			dreams: settings.dreams,
 			goals: settings.goals,
@@ -133,22 +126,17 @@ async function confirmImport(): Promise<void> {
 	confirmOpen.value = false;
 	pending.value = null;
 
-	// Not atomic: three separate stores, each behind its own object store, and
-	// the repository contract offers no single transaction spanning all three
-	// (a known limitation carried over from the previous stage). A failure
-	// partway through can leave some collections replaced and others not, and
-	// no rollback is attempted here - the goal is only that the user is told
-	// the restore failed rather than being told, wrongly, that it succeeded.
-	// Note what this catch actually reaches: createEntityStore's persist()
-	// already swallows ordinary IndexedDB write failures itself and reports
-	// them through storageState.noteWriteFailure() rather than throwing, so
-	// replaceAll() resolves normally even when the underlying write failed.
-	// This only catches something that throws before persist() gets involved
-	// - a genuine bug, since parse() has already validated the backup.
+	// The items swap in as one IndexedDB transaction, so a failed write leaves
+	// the old list on disk rather than a mix. Settings are a separate document
+	// in localStorage and follow only once the items are in. Note what this
+	// catch actually reaches: the items store's persist() already swallows
+	// ordinary IndexedDB write failures itself and reports them through
+	// storageState.noteWriteFailure() rather than throwing, so replaceAll()
+	// resolves normally even when the underlying write failed. This only
+	// catches something that throws before persist() gets involved - a genuine
+	// bug, since parse() has already validated the backup.
 	try {
-		await dreams.replaceAll(backup.items.filter(isDream));
-		await goals.replaceAll(backup.items.filter(isGoal));
-		await tasks.replaceAll(backup.items.filter(isTask));
+		await items.replaceAll(backup.items);
 		if (backup.settings) {
 			settings.replaceAll(backup.settings);
 		}

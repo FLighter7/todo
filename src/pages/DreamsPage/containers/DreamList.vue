@@ -44,8 +44,8 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
-import { Status, type Dream, type DreamDraft } from '@/types';
-import { useDreamsStore } from '@/stores/dreams';
+import { ItemType, Status, type Dream, type DreamDraft } from '@/types';
+import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
 import { useEntityTabsStore } from '@/stores/entityTabs';
 import { useCascadeCancel } from '@/composables/useCascadeCancel';
@@ -57,12 +57,14 @@ import DreamDialog from '@/components/DreamDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
 const { t } = useI18n();
-const dreams = useDreamsStore();
+const items = useItemsStore();
 const settings = useSettingsStore();
 const { tab } = storeToRefs(useEntityTabsStore());
 const cascade = useCascadeCancel();
 
-const visible = computed(() => (tab.value === 'active' ? dreams.active : dreams.closed));
+const visible = computed(() =>
+	tab.value === 'active' ? items.dreams.active : items.dreams.closed,
+);
 const showNote = computed(() => settings.dreams.rows === 2);
 const sections = computed<ListSection<Dream>[]>(() => []);
 const rows = useSortedEntityRows(sections, visible, 'dreams');
@@ -88,7 +90,7 @@ async function handleSave(draft: DreamDraft): Promise<void> {
 		return;
 	}
 
-	await dreams.update(editing.value.id, draft);
+	await items.update(ItemType.Dream, editing.value.id, draft);
 	editing.value = null;
 }
 
@@ -99,7 +101,7 @@ const {
 	toggleConfirmActions,
 	onToggle,
 	onToggleChoice,
-} = useToggleConfirm(dreams, 'dreams', tab);
+} = useToggleConfirm(items, 'dreams', tab);
 
 const pendingCancel = ref<Dream | null>(null);
 const cascadeCounts = ref({ goals: 0, tasks: 0 });
@@ -124,7 +126,7 @@ function onCancel(): void {
 
 	const counts = cascade.countDreamDescendants(dream.id);
 	if (counts.goals === 0 && counts.tasks === 0) {
-		void dreams.close(dream.id, Status.Cancelled);
+		void items.close(dream.id, Status.Cancelled);
 		dialogOpen.value = false;
 		editing.value = null;
 		return;
@@ -146,11 +148,11 @@ async function onCascadeChoice(key: string): Promise<void> {
 
 	if (key === 'branch') {
 		await Promise.all([
-			dreams.close(dream.id, Status.Cancelled),
+			items.close(dream.id, Status.Cancelled),
 			cascade.cancelDreamGoals(dream.id),
 		]);
 	} else {
-		await dreams.close(dream.id, Status.Cancelled);
+		await items.close(dream.id, Status.Cancelled);
 	}
 }
 </script>

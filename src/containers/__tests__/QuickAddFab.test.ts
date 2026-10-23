@@ -5,11 +5,9 @@ import { createPinia, setActivePinia } from 'pinia';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { ItemType, Status, type Dream, type Goal, type Task } from '@/types';
-import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
-import { useDreamsStore } from '@/stores/dreams';
-import { useGoalsStore } from '@/stores/goals';
-import { useTasksStore } from '@/stores/tasks';
+import { ItemType, Status, type Dream, type Goal } from '@/types';
+import { useItemsStore } from '@/stores/items';
+import { loadItems } from '@/vitestHelpers';
 import QuickAddFab from '../QuickAddFab.vue';
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
@@ -38,9 +36,7 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
 
 async function mountAt(path: string, seed: { dreams?: Dream[]; goals?: Goal[] } = {}) {
 	setActivePinia(createPinia());
-	await useDreamsStore().load(async () => new ItemMemoryRepository<Dream>(seed.dreams ?? []));
-	await useGoalsStore().load(async () => new ItemMemoryRepository<Goal>(seed.goals ?? []));
-	await useTasksStore().load(async () => new ItemMemoryRepository<Task>());
+	await loadItems([...(seed.dreams ?? []), ...(seed.goals ?? [])]);
 
 	const testRouter = createRouter({
 		history: createMemoryHistory(),
@@ -87,23 +83,23 @@ describe('QuickAddFab default tab', () => {
 });
 
 describe('QuickAddFab creating a dream', () => {
-	it('adds a dream through the dreams store', async () => {
+	it('adds a dream through the items store', async () => {
 		const wrapper = await mountAt('/dreams');
-		const dreams = useDreamsStore();
+		const items = useItemsStore();
 
 		await wrapper.get('button[aria-label="Add task"]').trigger('click');
 		await wrapper.get('input').setValue('Visit Japan');
 		await wrapper.get('button[aria-label="Save"]').trigger('click');
 
-		expect(dreams.records).toHaveLength(1);
-		expect(dreams.records[0].name).toBe('Visit Japan');
+		expect(items.dreams.all).toHaveLength(1);
+		expect(items.dreams.all[0].name).toBe('Visit Japan');
 	});
 });
 
 describe('QuickAddFab creating a goal', () => {
-	it('adds a goal through the goals store, offering only active dreams', async () => {
+	it('adds a goal through the items store, offering only active dreams', async () => {
 		const wrapper = await mountAt('/goals', { dreams: [makeDream({ name: 'Visit Japan' })] });
-		const goals = useGoalsStore();
+		const items = useItemsStore();
 
 		await wrapper.get('button[aria-label="Add task"]').trigger('click');
 		await wrapper.get('input').setValue('Learn Japanese');
@@ -111,15 +107,15 @@ describe('QuickAddFab creating a goal', () => {
 		await select.vm.$emit('update:modelValue', 'dream-1');
 		await wrapper.get('button[aria-label="Save"]').trigger('click');
 
-		expect(goals.records).toHaveLength(1);
-		expect(goals.records[0]).toMatchObject({ name: 'Learn Japanese', dreamId: 'dream-1' });
+		expect(items.goals.all).toHaveLength(1);
+		expect(items.goals.all[0]).toMatchObject({ name: 'Learn Japanese', dreamId: 'dream-1' });
 	});
 });
 
 describe('QuickAddFab creating a task', () => {
-	it('adds a task through the tasks store, offering only active goals', async () => {
+	it('adds a task through the items store, offering only active goals', async () => {
 		const wrapper = await mountAt('/tasks', { goals: [makeGoal({ name: 'Learn Japanese' })] });
-		const tasks = useTasksStore();
+		const items = useItemsStore();
 
 		await wrapper.get('button[aria-label="Add task"]').trigger('click');
 		await wrapper.get('input').setValue('Do Duolingo');
@@ -127,7 +123,7 @@ describe('QuickAddFab creating a task', () => {
 		await select.vm.$emit('update:modelValue', 'goal-1');
 		await wrapper.get('button[aria-label="Save"]').trigger('click');
 
-		expect(tasks.records).toHaveLength(1);
-		expect(tasks.records[0]).toMatchObject({ name: 'Do Duolingo', goalId: 'goal-1' });
+		expect(items.tasks.all).toHaveLength(1);
+		expect(items.tasks.all[0]).toMatchObject({ name: 'Do Duolingo', goalId: 'goal-1' });
 	});
 });

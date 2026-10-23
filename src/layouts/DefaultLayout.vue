@@ -99,9 +99,7 @@ import { getStartPageOptions, readStoredStartPage, type StartPage } from '@/rout
 import { storagePersistence } from '@/repositories/StoragePersistence';
 import EntityTabs from '@/components/EntityTabs.vue';
 import { useStorageStore } from '@/stores/storage';
-import { useDreamsStore } from '@/stores/dreams';
-import { useGoalsStore } from '@/stores/goals';
-import { useTasksStore } from '@/stores/tasks';
+import { useItemsStore } from '@/stores/items';
 import { useEntityTabsStore } from '@/stores/entityTabs';
 
 /** Routes whose page container has an Active/History toggle to host in the app-bar extension. */
@@ -110,9 +108,7 @@ const PAGES_WITH_TOOLBAR = ['tasks', 'goals', 'dreams'];
 const { t, locale } = useI18n();
 const vuetifyLocale = useLocale();
 const store = useStorageStore();
-const dreams = useDreamsStore();
-const goals = useGoalsStore();
-const tasks = useTasksStore();
+const items = useItemsStore();
 const entityTabs = useEntityTabsStore();
 const route = useRoute();
 const router = useRouter();
@@ -136,9 +132,7 @@ watch(
 );
 
 onMounted(() => {
-	void dreams.load();
-	void goals.load();
-	void tasks.load();
+	void items.load();
 	void storagePersistence.request();
 });
 

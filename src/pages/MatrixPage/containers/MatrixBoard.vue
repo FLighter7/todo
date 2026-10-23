@@ -19,11 +19,11 @@
 				v-for="key in QUADRANT_KEYS"
 				:key="key"
 				:quadrant="key"
-				:items="store.quadrants[key]"
+				:items="items.quadrants[key]"
 				:icon="quadrantMeta[key].icon"
 				:accent="quadrantMeta[key].accent"
 				@add="openFor"
-				@done="store.close($event, Status.Done)"
+				@done="items.close($event, Status.Done)"
 			/>
 		</div>
 
@@ -32,7 +32,7 @@
 			mode="add"
 			:initial-flags="initialFlags"
 			:goal-options="goalOptions"
-			@save="store.add($event)"
+			@save="items.add(ItemType.Task, $event)"
 		/>
 	</VContainer>
 </template>
@@ -46,20 +46,18 @@ import {
 	mdiTrashCanOutline,
 } from '@mdi/js';
 import TaskDialog from '@/components/TaskDialog.vue';
-import { useGoalsStore } from '@/stores/goals';
 import TaskQuadrant from '../TaskQuadrant.vue';
-import { Status } from '@/types';
-import { useTasksStore } from '@/stores/tasks';
+import { ItemType, Status } from '@/types';
+import { useItemsStore } from '@/stores/items';
 import { QUADRANT_KEYS, quadrantFlags, type QuadrantKey } from '@/utils/quadrants';
 
-const store = useTasksStore();
-const goals = useGoalsStore();
+const items = useItemsStore();
 
 const dialogOpen = ref(false);
 const initialFlags = ref<{ important: boolean; urgent: boolean } | undefined>(undefined);
 
 const goalOptions = computed(() =>
-	goals.active.map((goal) => ({ value: goal.id, title: goal.name })),
+	items.goals.active.map((goal) => ({ value: goal.id, title: goal.name })),
 );
 
 const quadrantMeta: Record<QuadrantKey, { icon: string; accent?: boolean }> = {

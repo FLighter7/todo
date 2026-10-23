@@ -4,12 +4,9 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { clickButtonByText, setEntityTab } from '@/vitestHelpers';
+import { clickButtonByText, loadItems, setEntityTab } from '@/vitestHelpers';
 import { ItemType, Status, type Dream, type Goal } from '@/types';
-import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
-import { useDreamsStore } from '@/stores/dreams';
-import { useGoalsStore } from '@/stores/goals';
-import { useTasksStore } from '@/stores/tasks';
+import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
 import DreamList from '../DreamList.vue';
 
@@ -47,15 +44,10 @@ beforeEach(() => {
 });
 
 async function mountWithDreams(dreams: Dream[], goals: Goal[] = []) {
-	const dreamsStore = useDreamsStore();
-	const goalsStore = useGoalsStore();
-	const tasksStore = useTasksStore();
-	await dreamsStore.load(async () => new ItemMemoryRepository(dreams));
-	await goalsStore.load(async () => new ItemMemoryRepository(goals));
-	await tasksStore.load(async () => new ItemMemoryRepository([]));
+	await loadItems([...dreams, ...goals]);
 
 	const wrapper = mount(DreamList, { global: { plugins: [vuetify, i18n] } });
-	return { wrapper, dreamsStore, goalsStore };
+	return { wrapper, items: useItemsStore() };
 }
 
 describe('DreamList empty state', () => {
@@ -68,7 +60,7 @@ describe('DreamList empty state', () => {
 
 describe('DreamList editing', () => {
 	it('opens a dream read-only on click and saves an edit', async () => {
-		const { wrapper, dreamsStore } = await mountWithDreams([makeDream()]);
+		const { wrapper, items } = await mountWithDreams([makeDream()]);
 
 		await wrapper.get('.v-list-item').trigger('click');
 		expect(wrapper.text()).toContain('Visit Japan');
@@ -77,70 +69,68 @@ describe('DreamList editing', () => {
 		await wrapper.get('input').setValue('Visit Japan and Korea');
 		await wrapper.get('button[aria-label="Save"]').trigger('click');
 
-		expect(dreamsStore.records[0].name).toBe('Visit Japan and Korea');
+		expect(items.dreams.all[0].name).toBe('Visit Japan and Korea');
 	});
 });
 
 describe('DreamList done / reopen', () => {
 	it('marks a dream done immediately when confirmDone is off', async () => {
-		const { wrapper, dreamsStore } = await mountWithDreams([makeDream()]);
+		const { wrapper, items } = await mountWithDreams([makeDream()]);
 		useSettingsStore().updatePageSettings('dreams', { confirmDone: false });
 
 		await wrapper.get('input[type="checkbox"]').setValue(true);
 
-		expect(dreamsStore.records[0].status).toBe(Status.Done);
+		expect(items.dreams.all[0].status).toBe(Status.Done);
 	});
 
 	it('asks for confirmation before marking done when confirmDone is on', async () => {
-		const { wrapper, dreamsStore } = await mountWithDreams([makeDream()]);
+		const { wrapper, items } = await mountWithDreams([makeDream()]);
 		useSettingsStore().updatePageSettings('dreams', { confirmDone: true });
 
 		await wrapper.get('input[type="checkbox"]').setValue(true);
 
-		expect(dreamsStore.records[0].status).toBe(Status.Opened);
+		expect(items.dreams.all[0].status).toBe(Status.Opened);
 		expect(wrapper.text()).toContain('Mark "Visit Japan" as done?');
 
 		await clickButtonByText(wrapper, 'Confirm');
 
-		expect(dreamsStore.records[0].status).toBe(Status.Done);
+		expect(items.dreams.all[0].status).toBe(Status.Done);
 	});
 
 	it('reopens a closed dream from the History tab, gated by confirmReopen', async () => {
-		const { wrapper, dreamsStore } = await mountWithDreams([makeDream({ status: Status.Done })]);
+		const { wrapper, items } = await mountWithDreams([makeDream({ status: Status.Done })]);
 		useSettingsStore().updatePageSettings('dreams', { confirmReopen: false });
 
 		await setEntityTab('history');
 		await wrapper.get('input[type="checkbox"]').setValue(false);
 
-		expect(dreamsStore.records[0].status).toBe(Status.Opened);
+		expect(items.dreams.all[0].status).toBe(Status.Opened);
 	});
 
 	it('reopens a cancelled dream from the History tab when its checkbox is checked, not marks it done', async () => {
-		const { wrapper, dreamsStore } = await mountWithDreams([
-			makeDream({ status: Status.Cancelled }),
-		]);
+		const { wrapper, items } = await mountWithDreams([makeDream({ status: Status.Cancelled })]);
 		useSettingsStore().updatePageSettings('dreams', { confirmReopen: false });
 
 		await setEntityTab('history');
 		await wrapper.get('input[type="checkbox"]').setValue(true);
 
-		expect(dreamsStore.records[0].status).toBe(Status.Opened);
+		expect(items.dreams.all[0].status).toBe(Status.Opened);
 	});
 });
 
 describe('DreamList cancel', () => {
 	it('cancels immediately when the dream has no active goals', async () => {
-		const { wrapper, dreamsStore } = await mountWithDreams([makeDream()]);
+		const { wrapper, items } = await mountWithDreams([makeDream()]);
 
 		await wrapper.get('.v-list-item').trigger('click');
 		await clickButtonByText(wrapper, 'Cancel this record');
 
-		expect(dreamsStore.records[0].status).toBe(Status.Cancelled);
+		expect(items.dreams.all[0].status).toBe(Status.Cancelled);
 		expect(wrapper.text()).not.toContain('Cancel the whole branch');
 	});
 
 	it('shows the cascade choice when the dream has active goals, and "only this" leaves them alone', async () => {
-		const { wrapper, dreamsStore, goalsStore } = await mountWithDreams(
+		const { wrapper, items } = await mountWithDreams(
 			[makeDream()],
 			[makeGoal({ dreamId: 'dream-1' })],
 		);
@@ -152,12 +142,12 @@ describe('DreamList cancel', () => {
 
 		await clickButtonByText(wrapper, 'Cancel only this');
 
-		expect(dreamsStore.records[0].status).toBe(Status.Cancelled);
-		expect(goalsStore.records[0].status).toBe(Status.Opened);
+		expect(items.dreams.all[0].status).toBe(Status.Cancelled);
+		expect(items.goals.all[0].status).toBe(Status.Opened);
 	});
 
 	it('cancels the whole branch, including active goals, when chosen', async () => {
-		const { wrapper, dreamsStore, goalsStore } = await mountWithDreams(
+		const { wrapper, items } = await mountWithDreams(
 			[makeDream()],
 			[makeGoal({ dreamId: 'dream-1' })],
 		);
@@ -166,8 +156,8 @@ describe('DreamList cancel', () => {
 		await clickButtonByText(wrapper, 'Cancel this record');
 		await clickButtonByText(wrapper, 'Cancel the whole branch');
 
-		expect(dreamsStore.records[0].status).toBe(Status.Cancelled);
-		expect(goalsStore.records[0].status).toBe(Status.Cancelled);
+		expect(items.dreams.all[0].status).toBe(Status.Cancelled);
+		expect(items.goals.all[0].status).toBe(Status.Cancelled);
 	});
 });
 

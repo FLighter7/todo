@@ -1,6 +1,9 @@
 import { nextTick } from 'vue';
 import type { VueWrapper } from '@vue/test-utils';
+import type { Item } from '@/types';
+import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { useEntityTabsStore } from '@/stores/entityTabs';
+import { useItemsStore } from '@/stores/items';
 
 /**
  * Vuetify renders clickable actions as either a native <button> (v-btn) or a
@@ -32,4 +35,13 @@ export function clickButtonByText(wrapper: VueWrapper, text: string): Promise<vo
 export function setEntityTab(value: 'active' | 'history'): Promise<void> {
 	useEntityTabsStore().tab = value;
 	return nextTick();
+}
+
+/**
+ * Seeds the items store from memory, the way `DefaultLayout` loads it from
+ * IndexedDB in the app. Goes through `load()`, so closed fixtures need a
+ * recent `updated` or garbage collection drops them.
+ */
+export async function loadItems(records: Item[] = []): Promise<void> {
+	await useItemsStore().load(async () => new ItemMemoryRepository<Item>(records));
 }

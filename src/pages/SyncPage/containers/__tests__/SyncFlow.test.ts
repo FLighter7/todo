@@ -4,21 +4,19 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { clickButtonByText } from '@/vitestHelpers';
+import { clickButtonByText, loadItems } from '@/vitestHelpers';
 import {
 	ItemType,
 	DEFAULT_SETTINGS,
 	Status,
+	isTask,
 	type AppSettings,
 	type Dream,
 	type Goal,
 	type Task,
 } from '@/types';
 import type { SyncDataPayload, SyncSettingsPayload } from '@/services/sync/SyncConnection';
-import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
-import { useDreamsStore } from '@/stores/dreams';
-import { useGoalsStore } from '@/stores/goals';
-import { useTasksStore } from '@/stores/tasks';
+import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
 import SyncCode from '../../SyncCode.vue';
 import SyncScanner from '../../SyncScanner.vue';
@@ -90,9 +88,7 @@ function makeTask(overrides: Partial<Task> = {}): Task {
 }
 
 async function loadStores(dreams: Dream[], goals: Goal[], tasks: Task[]): Promise<void> {
-	await useDreamsStore().load(async () => new ItemMemoryRepository(dreams));
-	await useGoalsStore().load(async () => new ItemMemoryRepository(goals));
-	await useTasksStore().load(async () => new ItemMemoryRepository(tasks));
+	await loadItems([...dreams, ...goals, ...tasks]);
 }
 
 function daysAgo(days: number): string {
@@ -134,15 +130,13 @@ beforeEach(() => {
 });
 
 describe('SyncFlow as initiator', () => {
-	it('walks offer -> answer -> merged and updates all three stores', async () => {
+	it('walks offer -> answer -> merged and updates every type', async () => {
 		createOffer.mockResolvedValue('1oc.offer');
 		acceptAnswer.mockResolvedValue(undefined);
 		exchange.mockResolvedValue(remotePayload());
 
 		await loadStores([makeDream()], [makeGoal()], [makeTask()]);
-		const dreams = useDreamsStore();
-		const goals = useGoalsStore();
-		const tasks = useTasksStore();
+		const items = useItemsStore();
 
 		const wrapper = mount(SyncFlow, {
 			global: { plugins: [vuetify, i18n], stubs: { SyncCode: true, SyncScanner: true } },
@@ -162,9 +156,9 @@ describe('SyncFlow as initiator', () => {
 			items: [makeDream(), makeGoal(), makeTask()],
 		});
 
-		expect(dreams.records.map((r) => r.id).sort()).toEqual(['dream-local', 'dream-remote']);
-		expect(goals.records.map((r) => r.id).sort()).toEqual(['goal-local', 'goal-remote']);
-		expect(tasks.records.map((r) => r.id).sort()).toEqual(['task-local', 'task-remote']);
+		expect(items.dreams.all.map((r) => r.id).sort()).toEqual(['dream-local', 'dream-remote']);
+		expect(items.goals.all.map((r) => r.id).sort()).toEqual(['goal-local', 'goal-remote']);
+		expect(items.tasks.all.map((r) => r.id).sort()).toEqual(['task-local', 'task-remote']);
 
 		// One added and one updated per collection: three of each in total.
 		expect(wrapper.text()).toContain('Sync finished. Added: 3. Updated: 3.');
@@ -195,9 +189,7 @@ describe('SyncFlow as initiator', () => {
 		);
 
 		await loadStores([makeDream()], [makeGoal()], [makeTask()]);
-		const dreams = useDreamsStore();
-		const goals = useGoalsStore();
-		const tasks = useTasksStore();
+		const items = useItemsStore();
 
 		const wrapper = mount(SyncFlow, {
 			global: { plugins: [vuetify, i18n], stubs: { SyncCode: true, SyncScanner: true } },
@@ -210,21 +202,19 @@ describe('SyncFlow as initiator', () => {
 		expect(wrapper.text()).toContain(
 			'Sync failed: The other device runs a different version. Update it and retry.',
 		);
-		expect(dreams.records.map((r) => r.id)).toEqual(['dream-local']);
-		expect(goals.records.map((r) => r.id)).toEqual(['goal-local']);
-		expect(tasks.records.map((r) => r.id)).toEqual(['task-local']);
+		expect(items.dreams.all.map((r) => r.id)).toEqual(['dream-local']);
+		expect(items.goals.all.map((r) => r.id)).toEqual(['goal-local']);
+		expect(items.tasks.all.map((r) => r.id)).toEqual(['task-local']);
 	});
 });
 
 describe('SyncFlow as responder', () => {
-	it('walks scan offer -> show answer -> merged and updates all three stores', async () => {
+	it('walks scan offer -> show answer -> merged and updates every type', async () => {
 		acceptOffer.mockResolvedValue('1oa.answer');
 		exchange.mockResolvedValue(remotePayload());
 
 		await loadStores([makeDream()], [makeGoal()], [makeTask()]);
-		const dreams = useDreamsStore();
-		const goals = useGoalsStore();
-		const tasks = useTasksStore();
+		const items = useItemsStore();
 
 		const wrapper = mount(SyncFlow, {
 			global: { plugins: [vuetify, i18n], stubs: { SyncCode: true, SyncScanner: true } },
@@ -235,9 +225,9 @@ describe('SyncFlow as responder', () => {
 		await flushPromises();
 
 		expect(acceptOffer).toHaveBeenCalledWith('1oc.offer');
-		expect(dreams.records.map((r) => r.id).sort()).toEqual(['dream-local', 'dream-remote']);
-		expect(goals.records.map((r) => r.id).sort()).toEqual(['goal-local', 'goal-remote']);
-		expect(tasks.records.map((r) => r.id).sort()).toEqual(['task-local', 'task-remote']);
+		expect(items.dreams.all.map((r) => r.id).sort()).toEqual(['dream-local', 'dream-remote']);
+		expect(items.goals.all.map((r) => r.id).sort()).toEqual(['goal-local', 'goal-remote']);
+		expect(items.tasks.all.map((r) => r.id).sort()).toEqual(['task-local', 'task-remote']);
 		expect(wrapper.text()).toContain('Sync finished');
 	});
 });
@@ -271,8 +261,7 @@ describe('SyncFlow task completions', () => {
 		});
 
 		await loadStores([], [], [localTask]);
-		const tasks = useTasksStore();
-		const replaceAll = vi.spyOn(tasks, 'replaceAll');
+		const replaceAll = vi.spyOn(useItemsStore(), 'replaceAll');
 
 		const wrapper = mount(SyncFlow, {
 			global: { plugins: [vuetify, i18n], stubs: { SyncCode: true, SyncScanner: true } },
@@ -283,7 +272,7 @@ describe('SyncFlow task completions', () => {
 		await flushPromises();
 
 		expect(replaceAll).toHaveBeenCalledTimes(1);
-		const synced = replaceAll.mock.calls[0][0];
+		const synced = replaceAll.mock.calls[0][0].filter(isTask);
 		expect(synced).toHaveLength(1);
 
 		// mergeCompletions documents that its output order carries no meaning,

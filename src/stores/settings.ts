@@ -11,7 +11,7 @@ export type SettingsEntity = 'dreams' | 'goals' | 'tasks';
  * `reactive()` + `toRefs()`, not a plain object spread: a spread only
  * copies each property's value out once, so nothing behind it stays
  * connected to `state` afterwards — the same composition trap
- * `stores/tasks.ts` documents for composing one store from another.
+ * docs/decisions.md records for composing one Pinia store from another.
  */
 export const useSettingsStore = defineStore('settings', () => {
 	const state = reactive(settingsService.load());

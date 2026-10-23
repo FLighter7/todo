@@ -4,15 +4,12 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { clickButtonByText } from '@/vitestHelpers';
+import { clickButtonByText, loadItems } from '@/vitestHelpers';
 import { ItemType, Status } from '@/types';
 import { backupService } from '@/services/backup/BackupService';
 import { backupFile } from '@/services/backup/BackupFile';
-import { useDreamsStore } from '@/stores/dreams';
-import { useGoalsStore } from '@/stores/goals';
-import { useTasksStore } from '@/stores/tasks';
+import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
-import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import BackupActions from '../BackupActions.vue';
 
 vi.mock('@/services/backup/BackupFile', () => ({
@@ -23,9 +20,7 @@ const download = vi.mocked(backupFile.download);
 const readText = vi.mocked(backupFile.readText);
 
 async function loadEmptyStores(): Promise<void> {
-	await useDreamsStore().load(async () => new ItemMemoryRepository([]));
-	await useGoalsStore().load(async () => new ItemMemoryRepository([]));
-	await useTasksStore().load(async () => new ItemMemoryRepository([]));
+	await loadItems();
 }
 
 beforeEach(() => {
@@ -35,14 +30,12 @@ beforeEach(() => {
 });
 
 describe('BackupActions export', () => {
-	it('downloads a backup built from all three collections and notifies', async () => {
+	it('downloads a backup built from every item and notifies', async () => {
 		await loadEmptyStores();
-		const dreams = useDreamsStore();
-		const goals = useGoalsStore();
-		const tasks = useTasksStore();
-		await dreams.add({ name: 'Visit Japan' });
-		await goals.add({ name: 'Save for the trip' });
-		await tasks.add({ name: 'Buy milk', important: false, urgent: false });
+		const items = useItemsStore();
+		await items.add(ItemType.Dream, { name: 'Visit Japan' });
+		await items.add(ItemType.Goal, { name: 'Save for the trip' });
+		await items.add(ItemType.Task, { name: 'Buy milk', important: false, urgent: false });
 
 		const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
 
@@ -74,14 +67,12 @@ describe('BackupActions export', () => {
 });
 
 describe('BackupActions import', () => {
-	it('shows a confirmation with counts and replaces all three collections on confirm', async () => {
+	it('shows a confirmation with counts and replaces every item on confirm', async () => {
 		await loadEmptyStores();
-		const dreams = useDreamsStore();
-		const goals = useGoalsStore();
-		const tasks = useTasksStore();
-		await dreams.add({ name: 'Old dream' });
-		await goals.add({ name: 'Old goal' });
-		await tasks.add({ name: 'Old task', important: false, urgent: false });
+		const items = useItemsStore();
+		await items.add(ItemType.Dream, { name: 'Old dream' });
+		await items.add(ItemType.Goal, { name: 'Old goal' });
+		await items.add(ItemType.Task, { name: 'Old task', important: false, urgent: false });
 
 		const incoming = backupService.create([
 			{
@@ -129,9 +120,7 @@ describe('BackupActions import', () => {
 		await clickButtonByText(wrapper, 'Replace');
 		await flushPromises();
 
-		expect(dreams.records.map((r) => r.id)).toEqual(['dream-1']);
-		expect(goals.records.map((r) => r.id)).toEqual(['goal-1']);
-		expect(tasks.records.map((r) => r.id)).toEqual(['task-1']);
+		expect(items.records.map((r) => r.id)).toEqual(['dream-1', 'goal-1', 'task-1']);
 		expect(wrapper.emitted('notify')?.at(-1)).toEqual(['Restored from the file. Records: 3.']);
 	});
 
@@ -195,12 +184,10 @@ describe('BackupActions import', () => {
 		expect(settings.general.theme).toBe('dark');
 	});
 
-	it('notifies restoreFailed and stops instead of continuing when a replaceAll call rejects', async () => {
+	it('notifies restoreFailed and keeps the old list when replaceAll rejects', async () => {
 		await loadEmptyStores();
-		const dreams = useDreamsStore();
-		const goals = useGoalsStore();
-		const tasks = useTasksStore();
-		await tasks.add({ name: 'Old task', important: false, urgent: false });
+		const items = useItemsStore();
+		await items.add(ItemType.Task, { name: 'Old task', important: false, urgent: false });
 
 		const incoming = backupService.create([
 			{
@@ -214,11 +201,7 @@ describe('BackupActions import', () => {
 		]);
 		readText.mockResolvedValue(JSON.stringify(incoming));
 
-		// dreams.replaceAll runs first and is left to succeed for real; goals is
-		// the second of the three calls, and rejecting it is what proves the
-		// third (tasks) never runs and the user hears about the failure.
-		vi.spyOn(goals, 'replaceAll').mockRejectedValue(new Error('quota exceeded'));
-		const tasksReplaceAll = vi.spyOn(tasks, 'replaceAll');
+		vi.spyOn(items, 'replaceAll').mockRejectedValue(new Error('quota exceeded'));
 
 		const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
 
@@ -233,9 +216,7 @@ describe('BackupActions import', () => {
 		await clickButtonByText(wrapper, 'Replace');
 		await flushPromises();
 
-		expect(dreams.records.map((r) => r.id)).toEqual(['dream-1']);
-		expect(tasksReplaceAll).not.toHaveBeenCalled();
-		expect(tasks.records.map((t) => t.name)).toEqual(['Old task']);
+		expect(items.records.map((t) => t.name)).toEqual(['Old task']);
 		expect(wrapper.emitted('notify')?.at(-1)).toEqual([
 			'Could not restore from the file: quota exceeded',
 		]);
@@ -243,8 +224,8 @@ describe('BackupActions import', () => {
 
 	it('notifies with the reason and does not touch the stores when the file is invalid', async () => {
 		await loadEmptyStores();
-		const tasks = useTasksStore();
-		await tasks.add({ name: 'Untouched', important: false, urgent: false });
+		const items = useItemsStore();
+		await items.add(ItemType.Task, { name: 'Untouched', important: false, urgent: false });
 
 		readText.mockResolvedValue('not json at all');
 
@@ -258,7 +239,7 @@ describe('BackupActions import', () => {
 		await fileInput.trigger('change');
 		await wrapper.vm.$nextTick();
 
-		expect(tasks.records.map((t) => t.name)).toEqual(['Untouched']);
+		expect(items.records.map((t) => t.name)).toEqual(['Untouched']);
 		expect(wrapper.emitted('notify')?.[0][0]).toContain('Could not read the file');
 	});
 });

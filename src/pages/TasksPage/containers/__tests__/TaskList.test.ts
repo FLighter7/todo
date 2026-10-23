@@ -4,11 +4,9 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { clickButtonByText, setEntityTab } from '@/vitestHelpers';
+import { clickButtonByText, loadItems, setEntityTab } from '@/vitestHelpers';
 import { ItemType, Status, type Goal, type Schedule, type Task } from '@/types';
-import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
-import { useGoalsStore } from '@/stores/goals';
-import { useTasksStore } from '@/stores/tasks';
+import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
 import TaskList from '../TaskList.vue';
 
@@ -48,13 +46,10 @@ beforeEach(() => {
 });
 
 async function mountWithData(goals: Goal[], tasks: Task[]) {
-	const goalsStore = useGoalsStore();
-	const tasksStore = useTasksStore();
-	await goalsStore.load(async () => new ItemMemoryRepository(goals));
-	await tasksStore.load(async () => new ItemMemoryRepository(tasks));
+	await loadItems([...goals, ...tasks]);
 
 	const wrapper = mount(TaskList, { global: { plugins: [vuetify, i18n] } });
-	return { wrapper, goalsStore, tasksStore };
+	return { wrapper, items: useItemsStore() };
 }
 
 describe('TaskList empty state', () => {
@@ -126,36 +121,36 @@ describe('TaskList goal picker options', () => {
 
 describe('TaskList cancel', () => {
 	it('cancels immediately with no confirm dialog, since tasks have no descendants', async () => {
-		const { wrapper, tasksStore } = await mountWithData([], [makeTask()]);
+		const { wrapper, items } = await mountWithData([], [makeTask()]);
 
 		await wrapper.get('.v-list-item').trigger('click');
 		await clickButtonByText(wrapper, 'Cancel this record');
 
-		expect(tasksStore.records[0].status).toBe(Status.Cancelled);
+		expect(items.tasks.all[0].status).toBe(Status.Cancelled);
 	});
 });
 
 describe('TaskList done / reopen', () => {
 	it('marks a task done immediately when confirmDone is off', async () => {
-		const { wrapper, tasksStore } = await mountWithData([], [makeTask()]);
+		const { wrapper, items } = await mountWithData([], [makeTask()]);
 		useSettingsStore().updatePageSettings('tasks', { confirmDone: false });
 
 		await wrapper.get('input[type="checkbox"]').setValue(true);
 
-		expect(tasksStore.records[0].status).toBe(Status.Done);
+		expect(items.tasks.all[0].status).toBe(Status.Done);
 	});
 
 	it('asks for confirmation before marking done when confirmDone is on', async () => {
-		const { wrapper, tasksStore } = await mountWithData([], [makeTask()]);
+		const { wrapper, items } = await mountWithData([], [makeTask()]);
 		useSettingsStore().updatePageSettings('tasks', { confirmDone: true });
 
 		await wrapper.get('input[type="checkbox"]').setValue(true);
 
-		expect(tasksStore.records[0].status).toBe(Status.Opened);
+		expect(items.tasks.all[0].status).toBe(Status.Opened);
 
 		await clickButtonByText(wrapper, 'Confirm');
 
-		expect(tasksStore.records[0].status).toBe(Status.Done);
+		expect(items.tasks.all[0].status).toBe(Status.Done);
 	});
 });
 
@@ -182,14 +177,14 @@ describe('TaskList tabs', () => {
 describe('TaskList schedule', () => {
 	it('preserves an existing schedule when an unrelated field is edited', async () => {
 		const schedule: Schedule = { start: '2026-08-21T09:00' };
-		const { wrapper, tasksStore } = await mountWithData([], [makeTask({ schedule })]);
+		const { wrapper, items } = await mountWithData([], [makeTask({ schedule })]);
 
 		await wrapper.get('.v-list-item').trigger('click');
 		await wrapper.get('button[aria-label="Edit"]').trigger('click');
 		await wrapper.get('input').setValue('Do Duolingo (updated)');
 		await wrapper.get('button[aria-label="Save"]').trigger('click');
 
-		expect(tasksStore.records[0].schedule).toEqual(schedule);
+		expect(items.tasks.all[0].schedule).toEqual(schedule);
 	});
 });
 
@@ -230,12 +225,12 @@ describe('TaskList sorting', () => {
 			name: 'Ungrouped task',
 			updated: daysAgo(5),
 		});
-		const { wrapper, tasksStore } = await mountWithData([goal], [groupedTask, freshUngrouped]);
+		const { wrapper, items } = await mountWithData([goal], [groupedTask, freshUngrouped]);
 
 		const before = orderedTexts(wrapper);
 		expect(before.indexOf('Ungrouped task')).toBeLessThan(before.indexOf('Learn Japanese'));
 
-		await tasksStore.update('grouped', { name: 'Grouped task' });
+		await items.update(ItemType.Task, 'grouped', { name: 'Grouped task' });
 		await wrapper.vm.$nextTick();
 
 		const after = orderedTexts(wrapper);
@@ -246,25 +241,25 @@ describe('TaskList sorting', () => {
 describe('TaskList completions', () => {
 	it('marking an occurrence done from the open dialog calls the store action and updates the dialog live', async () => {
 		const schedule: Schedule = { start: '2020-01-03T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
-		const { wrapper, tasksStore } = await mountWithData([], [makeTask({ schedule })]);
+		const { wrapper, items } = await mountWithData([], [makeTask({ schedule })]);
 
 		await wrapper.get('.v-list-item').trigger('click');
 		expect(wrapper.text()).not.toContain('time done');
 
 		await wrapper.get('button[aria-label="Mark done"]').trigger('click');
 
-		expect(tasksStore.records[0].completions).toHaveLength(1);
-		expect(tasksStore.records[0].completions?.[0].done).toBe(true);
+		expect(items.tasks.all[0].completions).toHaveLength(1);
+		expect(items.tasks.all[0].completions?.[0].done).toBe(true);
 		expect(wrapper.text()).toContain('1 time done');
 	});
 
 	it('skipping an occurrence from the open dialog calls the store action', async () => {
 		const schedule: Schedule = { start: '2020-01-03T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
-		const { wrapper, tasksStore } = await mountWithData([], [makeTask({ schedule })]);
+		const { wrapper, items } = await mountWithData([], [makeTask({ schedule })]);
 
 		await wrapper.get('.v-list-item').trigger('click');
 		await wrapper.get('button[aria-label="Skip"]').trigger('click');
 
-		expect(tasksStore.records[0].schedule?.exdate).toHaveLength(1);
+		expect(items.tasks.all[0].schedule?.exdate).toHaveLength(1);
 	});
 });

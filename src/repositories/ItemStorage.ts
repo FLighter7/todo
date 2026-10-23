@@ -10,6 +10,11 @@ export interface ItemStorage<T extends ItemBase> {
 	remove(id: string): Promise<void>;
 	clear(): Promise<void>;
 	/**
+	 * Swaps the whole contents for `records` as one unit: a failure partway
+	 * leaves the previous contents in place, never a half-written mix.
+	 */
+	replaceAll(records: T[]): Promise<void>;
+	/**
 	 * Rows the last `getAll()` rejected as unparseable. Absent when the
 	 * storage has no way to tell — an in-memory repository, for instance,
 	 * never holds anything it didn't already accept.

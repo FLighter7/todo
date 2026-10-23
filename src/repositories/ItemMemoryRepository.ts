@@ -27,4 +27,11 @@ export class ItemMemoryRepository<T extends ItemBase> implements ItemStorage<T> 
 	async clear(): Promise<void> {
 		this.items.clear();
 	}
+
+	async replaceAll(records: T[]): Promise<void> {
+		this.items.clear();
+		for (const record of records) {
+			this.items.set(record.id, { ...record });
+		}
+	}
 }
