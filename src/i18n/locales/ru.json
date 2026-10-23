@@ -132,6 +132,9 @@
 		"serverStub": "Здесь скоро появятся варианты подключения к серверу."
 	},
 	"settings": {
+		"fontScale": "Размер текста",
+		"fontScaleDecrease": "Уменьшить текст",
+		"fontScaleIncrease": "Увеличить текст",
 		"startPage": "Стартовая страница",
 		"startPageDreams": "Мечты",
 		"startPageGoals": "Цели",

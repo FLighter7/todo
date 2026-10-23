@@ -64,6 +64,16 @@ describe('useSettingsStore setters', () => {
 		expect(save).toHaveBeenCalled();
 	});
 
+	it('setFontScale updates state and persists', () => {
+		const save = vi.spyOn(settingsService, 'save');
+		const store = useSettingsStore();
+
+		store.setFontScale(1.5);
+
+		expect(store.general.fontScale).toBe(1.5);
+		expect(save).toHaveBeenCalled();
+	});
+
 	it('updatePageSettings patches only the named entity and persists', () => {
 		const save = vi.spyOn(settingsService, 'save');
 		const store = useSettingsStore();
@@ -128,8 +138,14 @@ describe('useSettingsStore replaceAll', () => {
 				locale: 'pl',
 				startPage: 'matrix',
 				cleanupDays: 60 as const,
+				fontScale: 1.25 as const,
 			},
-			dreams: { rows: 2 as const, confirmDone: true, confirmReopen: true, sortOrder: 'az' as const },
+			dreams: {
+				rows: 2 as const,
+				confirmDone: true,
+				confirmReopen: true,
+				sortOrder: 'az' as const,
+			},
 			goals: { rows: 2 as const, confirmDone: true, confirmReopen: true, sortOrder: 'az' as const },
 			tasks: { rows: 2 as const, confirmDone: true, confirmReopen: true, sortOrder: 'az' as const },
 		};

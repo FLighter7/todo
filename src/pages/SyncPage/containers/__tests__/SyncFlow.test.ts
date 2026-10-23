@@ -422,6 +422,31 @@ describe('SyncFlow settings mode', () => {
 		expect(wrapper.text()).toContain('Settings synced');
 	});
 
+	it("keeps this device's own text size when the incoming settings are accepted", async () => {
+		createOffer.mockResolvedValue('1oc.offer');
+		acceptAnswer.mockResolvedValue(undefined);
+		exchange.mockResolvedValue(remoteSettingsPayload({ theme: 'dark', fontScale: 0.875 }));
+
+		await loadStores([], [], []);
+		const settings = useSettingsStore();
+		settings.setFontScale(1.25);
+
+		const wrapper = mount(SyncFlow, {
+			global: { plugins: [vuetify, i18n], stubs: { SyncCode: true, SyncScanner: true } },
+		});
+
+		await clickButtonByText(wrapper, 'Settings');
+		await clickButtonByText(wrapper, 'This device starts');
+		await wrapper.findComponent(SyncScanner).vm.$emit('code', '1oa.answer');
+		await flushPromises();
+
+		await clickButtonByText(wrapper, 'Replace');
+		await flushPromises();
+
+		expect(settings.general.theme).toBe('dark');
+		expect(settings.general.fontScale).toBe(1.25);
+	});
+
 	it('leaves local settings untouched when the incoming ones are declined', async () => {
 		createOffer.mockResolvedValue('1oc.offer');
 		acceptAnswer.mockResolvedValue(undefined);

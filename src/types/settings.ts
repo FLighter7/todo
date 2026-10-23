@@ -5,6 +5,13 @@ export type AppTheme = 'light' | 'dark' | 'system';
 const SORT_ORDERS = ['newest', 'oldest', 'az', 'za'] as const;
 export type SortOrder = (typeof SORT_ORDERS)[number];
 
+/**
+ * Multipliers of the root font size, smallest first; 1 is the browser's own
+ * default. At a 16px base they land on whole pixels: 14, 16, 18, 20, 24.
+ */
+export const FONT_SCALES = [0.875, 1, 1.125, 1.25, 1.5] as const;
+export type FontScale = (typeof FONT_SCALES)[number];
+
 export interface PageSettings {
 	rows: 1 | 2;
 	confirmDone: boolean;
@@ -13,14 +20,20 @@ export interface PageSettings {
 }
 
 export interface AppSettings {
-	general: { theme: AppTheme; locale: string; startPage: string; cleanupDays: 30 | 60 | 90 };
+	general: {
+		theme: AppTheme;
+		locale: string;
+		startPage: string;
+		cleanupDays: 30 | 60 | 90;
+		fontScale: FontScale;
+	};
 	dreams: PageSettings;
 	goals: PageSettings;
 	tasks: PageSettings;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
-	general: { theme: 'system', locale: 'en', startPage: 'tasks', cleanupDays: 30 },
+	general: { theme: 'system', locale: 'en', startPage: 'tasks', cleanupDays: 30, fontScale: 1 },
 	dreams: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
 	goals: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
 	tasks: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
@@ -77,6 +90,24 @@ function parseCleanupDays(value: unknown): 30 | 60 | 90 {
 	return value;
 }
 
+/**
+ * Defaults when absent rather than failing: a settings document saved before
+ * this field existed -- in localStorage, a backup or a sync peer -- would
+ * otherwise fail as a whole, and `loadRaw()` would silently reset every
+ * other setting along with it.
+ */
+function parseFontScale(value: unknown): FontScale {
+	if (value === undefined) {
+		return 1;
+	}
+
+	if (typeof value !== 'number' || !(FONT_SCALES as readonly number[]).includes(value)) {
+		fail(`"fontScale" must be one of ${FONT_SCALES.join(', ')}`);
+	}
+
+	return value as FontScale;
+}
+
 function parseRows(value: unknown): 1 | 2 {
 	if (value !== 1 && value !== 2) {
 		fail('"rows" must be 1 or 2');
@@ -126,6 +157,7 @@ export function parseSettings(value: unknown): AppSettings {
 			locale: readNonEmptyString(general, 'locale'),
 			startPage: readNonEmptyString(general, 'startPage'),
 			cleanupDays: parseCleanupDays(general.cleanupDays),
+			fontScale: parseFontScale(general.fontScale),
 		},
 		dreams: parsePageSettings(value.dreams, 'dreams'),
 		goals: parsePageSettings(value.goals, 'goals'),

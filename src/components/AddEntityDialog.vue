@@ -1,7 +1,10 @@
 <style lang="scss" module>
+// Wraps rather than squeezing a label mid-word when large text leaves no room
+// for both switches on one line.
 .flags {
 	display: flex;
-	gap: 1.5rem;
+	flex-wrap: wrap;
+	column-gap: 1.5rem;
 }
 
 .saveAndNewIcon {

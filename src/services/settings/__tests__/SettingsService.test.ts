@@ -69,6 +69,16 @@ describe('SettingsService.load', () => {
 		service.save(custom);
 		expect(service.load()).toEqual(custom);
 	});
+
+	it('keeps every other setting of a document saved before fontScale existed', () => {
+		const general = { theme: 'dark', locale: 'en', startPage: 'tasks', cleanupDays: 30 };
+		localStorage.setItem('todo.settings', JSON.stringify({ ...DEFAULT_SETTINGS, general }));
+
+		const loaded = new SettingsService().load();
+
+		expect(loaded.general.theme).toBe('dark');
+		expect(loaded.general.fontScale).toBe(1);
+	});
 });
 
 describe('SettingsService.save', () => {

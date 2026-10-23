@@ -129,6 +129,9 @@
 		"settingsDone": "Ustawienia zsynchronizowane."
 	},
 	"settings": {
+		"fontScale": "Rozmiar tekstu",
+		"fontScaleDecrease": "Mniejszy tekst",
+		"fontScaleIncrease": "Większy tekst",
 		"startPage": "Strona początkowa",
 		"startPageDreams": "Marzenia",
 		"startPageGoals": "Cele",

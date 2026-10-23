@@ -1,0 +1,51 @@
+// The text size setting scales the root font size, and with it every rem in
+// the app: Vuetify's whole type scale is in rem and its icons are in em.
+// App.vue writes the chosen multiplier to --app-font-scale on <html>. The base
+// is 100%, not 16px, so a larger default text size set in the browser or OS
+// is still honoured. Vuetify puts every rule in a cascade layer, so these
+// unlayered rules win over it without !important.
+:root {
+	--app-font-scale: 1;
+}
+
+html {
+	font-size: calc(100% * var(--app-font-scale));
+}
+
+// The few Vuetify rules that hardcode px for text, rewritten in rem so they
+// follow the scale too. A field never drops below 16px: iOS Safari zooms the
+// page into any input whose text is smaller than that.
+.v-field {
+	font-size: max(1rem, 16px);
+}
+
+.v-messages {
+	font-size: 0.75rem;
+	min-height: 0.875rem;
+}
+
+.v-messages__message {
+	line-height: 0.75rem;
+}
+
+.v-counter {
+	font-size: 0.75rem;
+	line-height: 0.75rem;
+}
+
+// A checkbox's icon is 1.5em and grows with the text, but Vuetify sizes the
+// box around it in px; a compact one (28px) would let the icon spill onto its
+// label from 125% up. The box keeps Vuetify's size and only grows to fit.
+.v-checkbox-btn {
+	&.v-selection-control--density-default {
+		--v-selection-control-size: max(40px, 1.5em);
+	}
+
+	&.v-selection-control--density-comfortable {
+		--v-selection-control-size: max(36px, 1.5em);
+	}
+
+	&.v-selection-control--density-compact {
+		--v-selection-control-size: max(28px, 1.5em);
+	}
+}

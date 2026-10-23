@@ -1,6 +1,6 @@
 import { reactive, toRefs } from 'vue';
 import { defineStore } from 'pinia';
-import type { AppSettings, AppTheme, PageSettings } from '@/types';
+import type { AppSettings, AppTheme, FontScale, PageSettings } from '@/types';
 import { settingsService } from '@/services/settings/SettingsService';
 import { initialLocale } from '@/i18n';
 import { useStorageStore } from './storage';
@@ -61,6 +61,11 @@ export const useSettingsStore = defineStore('settings', () => {
 		persist();
 	}
 
+	function setFontScale(fontScale: FontScale): void {
+		state.general.fontScale = fontScale;
+		persist();
+	}
+
 	function updatePageSettings(entity: SettingsEntity, patch: Partial<PageSettings>): void {
 		Object.assign(state[entity], patch);
 		persist();
@@ -80,6 +85,7 @@ export const useSettingsStore = defineStore('settings', () => {
 		setLocale,
 		setStartPage,
 		setCleanupDays,
+		setFontScale,
 		updatePageSettings,
 		replaceAll,
 	};

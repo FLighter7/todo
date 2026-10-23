@@ -16,6 +16,41 @@ function mountPage() {
 	return mount(SettingsPage, { global: { plugins: [vuetify, i18n] } });
 }
 
+describe('SettingsPage text size', () => {
+	function stepButton(wrapper: ReturnType<typeof mountPage>, label: string) {
+		return wrapper.get(`button[aria-label="${label}"]`);
+	}
+
+	it('steps the text size up and down through the settings store', async () => {
+		const settings = useSettingsStore();
+		const wrapper = mountPage();
+
+		await stepButton(wrapper, 'Larger text').trigger('click');
+		expect(settings.general.fontScale).toBe(1.125);
+		expect(wrapper.text()).toContain('112.5%');
+
+		await stepButton(wrapper, 'Smaller text').trigger('click');
+		await stepButton(wrapper, 'Smaller text').trigger('click');
+		expect(settings.general.fontScale).toBe(0.875);
+		expect(wrapper.text()).toContain('87.5%');
+	});
+
+	it('disables the step that would leave the range', async () => {
+		const settings = useSettingsStore();
+		settings.setFontScale(0.875);
+		const wrapper = mountPage();
+
+		expect(stepButton(wrapper, 'Smaller text').attributes('disabled')).toBeDefined();
+		expect(stepButton(wrapper, 'Larger text').attributes('disabled')).toBeUndefined();
+
+		settings.setFontScale(1.5);
+		await wrapper.vm.$nextTick();
+
+		expect(stepButton(wrapper, 'Larger text').attributes('disabled')).toBeDefined();
+		expect(stepButton(wrapper, 'Smaller text').attributes('disabled')).toBeUndefined();
+	});
+});
+
 describe('SettingsPage start page', () => {
 	it('changes the start page through the settings store', async () => {
 		const settings = useSettingsStore();

@@ -3,11 +3,39 @@
 	max-width: 520px;
 	margin-inline: auto;
 }
+
+.fontScale {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.fontScaleValue {
+	min-width: 4rem;
+	text-align: center;
+}
 </style>
 
 <template>
 	<VContainer :class="$style.page">
 		<VList>
+			<VListSubheader>{{ t('settings.fontScale') }}</VListSubheader>
+			<div :class="$style.fontScale" class="mx-4 mb-4">
+				<VBtn
+					:icon="mdiFormatFontSizeDecrease"
+					:aria-label="t('settings.fontScaleDecrease')"
+					:disabled="fontScaleIndex === 0"
+					@click="stepFontScale(-1)"
+				/>
+				<span :class="$style.fontScaleValue" aria-live="polite">{{ fontScaleLabel }}</span>
+				<VBtn
+					:icon="mdiFormatFontSizeIncrease"
+					:aria-label="t('settings.fontScaleIncrease')"
+					:disabled="fontScaleIndex === FONT_SCALES.length - 1"
+					@click="stepFontScale(1)"
+				/>
+			</div>
+
 			<VListSubheader>{{ t('settings.startPage') }}</VListSubheader>
 			<VSelect
 				v-model="startPage"
@@ -85,17 +113,34 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { mdiFormatFontSizeDecrease, mdiFormatFontSizeIncrease } from '@mdi/js';
 import BackupActions from '@/containers/BackupActions.vue';
 import MockDataActions from '@/containers/MockDataActions.vue';
 import { getStartPageOptions, type StartPage } from '@/router';
 import { useSettingsStore, type SettingsEntity } from '@/stores/settings';
+import { FONT_SCALES } from '@/types';
 
 const emit = defineEmits<{ notify: [message: string] }>();
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const settings = useSettingsStore();
 
 const ENTITIES: SettingsEntity[] = ['dreams', 'goals', 'tasks'];
+
+const fontScaleIndex = computed(() => FONT_SCALES.indexOf(settings.general.fontScale));
+
+const fontScaleLabel = computed(() =>
+	new Intl.NumberFormat(locale.value, { style: 'percent', maximumFractionDigits: 1 }).format(
+		settings.general.fontScale,
+	),
+);
+
+function stepFontScale(step: -1 | 1): void {
+	const next = FONT_SCALES[fontScaleIndex.value + step];
+	if (next !== undefined) {
+		settings.setFontScale(next);
+	}
+}
 
 const startPage = computed({
 	get: () => settings.general.startPage,

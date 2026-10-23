@@ -142,7 +142,13 @@ describe('BackupActions import', () => {
 		settings.setTheme('dark');
 
 		const incoming = backupService.create([], [], [], {
-			general: { theme: 'light', locale: 'ru', startPage: 'matrix', cleanupDays: 90 },
+			general: {
+				theme: 'light',
+				locale: 'ru',
+				startPage: 'matrix',
+				cleanupDays: 90,
+				fontScale: 1.25,
+			},
 			dreams: { rows: 2, confirmDone: true, confirmReopen: true, sortOrder: 'az' },
 			goals: { rows: 2, confirmDone: true, confirmReopen: true, sortOrder: 'az' },
 			tasks: { rows: 2, confirmDone: true, confirmReopen: true, sortOrder: 'az' },
@@ -163,6 +169,7 @@ describe('BackupActions import', () => {
 
 		expect(settings.general.theme).toBe('light');
 		expect(settings.general.locale).toBe('ru');
+		expect(settings.general.fontScale).toBe(1.25);
 		expect(settings.dreams.rows).toBe(2);
 	});
 

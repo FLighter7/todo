@@ -44,7 +44,7 @@ Three entities — `Dream`, `Goal`, `Task` — share an `EntityBase`: `id`, `nam
 
 `Status` is a real enum shared by all three: `Opened | Done | Cancelled`.
 
-A fourth document, `AppSettings`, lives beside the three entities but is not itself an entity: `general: {theme, locale, startPage, cleanupDays}` plus per-page `dreams/goals/tasks: {rows, confirmDone, confirmReopen}`. It persists to `localStorage['todo.settings']` via `SettingsService` (see Traps), not IndexedDB, and is wrapped in `useSettingsStore()`. It rides along in backup/restore (`Backup.settings?`, optional so pre-existing backups still validate) and in sync, but — unlike dreams/goals/tasks — sync does not merge it: each side sends its whole document and the receiving side chooses Accept (replace) or Decline (keep), because two devices' preferences have no natural merge.
+A fourth document, `AppSettings`, lives beside the three entities but is not itself an entity: `general: {theme, locale, startPage, cleanupDays, fontScale}` plus per-page `dreams/goals/tasks: {rows, confirmDone, confirmReopen}`. It persists to `localStorage['todo.settings']` via `SettingsService` (see Traps), not IndexedDB, and is wrapped in `useSettingsStore()`. It rides along in backup/restore (`Backup.settings?`, optional so pre-existing backups still validate) and in sync, but — unlike dreams/goals/tasks — sync does not merge it: each side sends its whole document and the receiving side chooses Accept (replace) or Decline (keep), because two devices' preferences have no natural merge. The one exception is `general.fontScale`: Accept keeps this device's own text size, since what reads well depends on the screen; a backup restore still replaces it.
 
 Several things are easy to break without knowing them:
 
@@ -60,6 +60,10 @@ The IndexedDB schema is at version 3: three stores (`dreams`, `goals`, `tasks`) 
 **Anything new that writes data has to be exercised at least once in a real browser.** Unit tests do not catch this: the in-memory storage silently accepts Vue's reactive proxies while IndexedDB rejects them — structured clone throws. The symptom is data that renders correctly and vanishes on reload. Write only plain copies (`{ ...record }`) to storage.
 
 **Chrome on this machine cannot verify the PWA.** Build 150.0.7871.189 has a broken Cache API: `caches.open(...).put(...)` fails with `InvalidAccessError: Entry already exists` even on a clean profile. Use Edge. The diagnostic snippet is in the [README](../README.md#testing-the-pwa-locally).
+
+**Vuetify 4 has no MD2 typography classes.** `text-h6`, `text-body-2`, `text-caption`, `text-subtitle-*` match nothing and fail silently; use the MD3 names (`text-title-large`, `text-body-medium`, `text-body-small`, …). Those classes set their own `font-family` from `--v-font-body`/`--v-font-heading`, which [fonts.scss](../src/assets/fonts/fonts.scss) points at Manrope/Alegreya — unset, they fall back to Roboto.
+
+**Text size scales the root font size, so size new styles in rem.** The setting writes one multiplier to `--app-font-scale` on `<html>`; a px font size will not follow it, and a px box around em-sized content (Vuetify's icons) overflows at 150%. Vuetify's own px exceptions — fields, field messages, counters, checkbox boxes — are patched in [font-scale.scss](../src/assets/styles/font-scale.scss), and fields deliberately never drop below 16px: iOS Safari zooms into any input with smaller text. Check new screens at 87.5% and 150%.
 
 **Vuetify's own strings** (pagination, "Items per page") are localized through Vuetify's locale system in [src/plugins/vuetify.ts](../src/plugins/vuetify.ts), not vue-i18n: the adapter would need the runtime message compiler that precompilation removes.
 

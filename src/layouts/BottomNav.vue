@@ -22,6 +22,9 @@
 	flex: 1 1 0;
 	min-width: 0;
 	max-width: 4rem;
+	// Vuetify fixes a small stacked button at 64px, which matches the 4rem row only
+	// at the default text size; filling the row keeps it inside the bar at every size.
+	height: 100%;
 }
 
 .fabWrap {

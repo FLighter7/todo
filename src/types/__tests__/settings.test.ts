@@ -77,6 +77,32 @@ describe('parseSettings', () => {
 		expect(() => parseSettings(raw)).toThrow(/cleanupDays/);
 	});
 
+	it('defaults fontScale to 1 when absent', () => {
+		expect(parseSettings(validRaw()).general.fontScale).toBe(1);
+	});
+
+	it('accepts a present valid fontScale', () => {
+		const raw = {
+			...validRaw(),
+			general: {
+				theme: 'system',
+				locale: 'en',
+				startPage: 'tasks',
+				cleanupDays: 30,
+				fontScale: 1.25,
+			},
+		};
+		expect(parseSettings(raw).general.fontScale).toBe(1.25);
+	});
+
+	it.each([1.3, 0, '1.25', null])('rejects a fontScale of %s', (fontScale) => {
+		const raw = {
+			...validRaw(),
+			general: { theme: 'system', locale: 'en', startPage: 'tasks', cleanupDays: 30, fontScale },
+		};
+		expect(() => parseSettings(raw)).toThrow(/fontScale/);
+	});
+
 	it.each(ENTITIES)('rejects a missing "%s" block', (key) => {
 		const raw = validRaw();
 		delete raw[key];

@@ -132,6 +132,9 @@
 		"serverStub": "Server connection options will appear here soon."
 	},
 	"settings": {
+		"fontScale": "Text size",
+		"fontScaleDecrease": "Smaller text",
+		"fontScaleIncrease": "Larger text",
 		"startPage": "Start page",
 		"startPageDreams": "Dreams",
 		"startPageGoals": "Goals",
