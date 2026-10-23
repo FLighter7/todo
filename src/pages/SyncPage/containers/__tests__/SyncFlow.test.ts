@@ -48,7 +48,7 @@ vi.mock('@/services/sync/SyncConnection', () => ({
 			close,
 		};
 	}),
-	SYNC_SCHEMA: 3,
+	SYNC_SCHEMA: 4,
 }));
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
@@ -100,25 +100,20 @@ function daysAgo(days: number): string {
 }
 
 /**
- * Local has one record per collection; remote sends back a newer copy of
- * that same record (an "updated") plus a brand-new one (an "added"), for all
- * three collections at once — the shape a whole-envelope exchange actually
- * produces, and the only way to prove the added/updated counters are not
- * silently reading from a single collection.
+ * Local has one record of each type; remote sends back a newer copy of that
+ * same record (an "updated") plus a brand-new one (an "added"), for all three
+ * types at once — the only way to prove the added/updated counters are not
+ * silently reading from a single type.
  */
 function remotePayload(): SyncDataPayload {
 	return {
-		schema: 3,
+		schema: 4,
 		kind: 'data',
-		dreams: [
+		items: [
 			makeDream({ updated: '2026-08-07T10:00:00.000Z' }),
 			makeDream({ id: 'dream-remote', name: 'Remote dream' }),
-		],
-		goals: [
 			makeGoal({ updated: '2026-08-07T10:00:00.000Z' }),
 			makeGoal({ id: 'goal-remote', name: 'Remote goal' }),
-		],
-		tasks: [
 			makeTask({ updated: '2026-08-07T10:00:00.000Z' }),
 			makeTask({ id: 'task-remote', name: 'Remote task' }),
 		],
@@ -127,7 +122,7 @@ function remotePayload(): SyncDataPayload {
 
 function remoteSettingsPayload(general: Partial<AppSettings['general']> = {}): SyncSettingsPayload {
 	return {
-		schema: 3,
+		schema: 4,
 		kind: 'settings',
 		settings: { ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, ...general } },
 	};
@@ -162,11 +157,9 @@ describe('SyncFlow as initiator', () => {
 
 		expect(acceptAnswer).toHaveBeenCalledWith('1oa.answer');
 		expect(exchange).toHaveBeenCalledWith({
-			schema: 3,
+			schema: 4,
 			kind: 'data',
-			dreams: [makeDream()],
-			goals: [makeGoal()],
-			tasks: [makeTask()],
+			items: [makeDream(), makeGoal(), makeTask()],
 		});
 
 		expect(dreams.records.map((r) => r.id).sort()).toEqual(['dream-local', 'dream-remote']);
@@ -255,14 +248,14 @@ describe('SyncFlow task completions', () => {
 		acceptAnswer.mockResolvedValue(undefined);
 
 		// Two devices out of contact, one marking a different occurrence than
-		// the other: mergeTasks has to preserve both marks no matter which
+		// the other: mergeItems has to preserve both marks no matter which
 		// whole record wins the last-write-wins tie-break. Giving the remote
 		// task a strictly newer `updated` makes it win that tie-break outright,
 		// so a plain merge() would return exactly the remote object -
 		// completions and all - and the local mark would vanish with nothing in
 		// the UI saying so. That silent loss is exactly what this test exists
 		// to catch: it fails if and only if SyncFlow.vue calls merge() instead
-		// of mergeTasks() for the task collection.
+		// of mergeItems().
 		const localTask = makeTask({
 			completions: [{ occurrence: daysAgo(7), done: true, at: daysAgo(7) }],
 		});
@@ -272,11 +265,9 @@ describe('SyncFlow task completions', () => {
 		});
 
 		exchange.mockResolvedValue({
-			schema: 3,
+			schema: 4,
 			kind: 'data',
-			dreams: [],
-			goals: [],
-			tasks: [remoteTask],
+			items: [remoteTask],
 		});
 
 		await loadStores([], [], [localTask]);
@@ -386,7 +377,7 @@ describe('SyncFlow settings mode', () => {
 		await flushPromises();
 
 		expect(exchange).toHaveBeenCalledWith({
-			schema: 3,
+			schema: 4,
 			kind: 'settings',
 			settings: {
 				general: settings.general,

@@ -1,13 +1,4 @@
-import {
-	parseDream,
-	parseGoal,
-	parseSettings,
-	parseTask,
-	type AppSettings,
-	type Dream,
-	type Goal,
-	type Task,
-} from '@/types';
+import { parseItem, parseSettings, type AppSettings, type Item } from '@/types';
 import { syncSignal } from './SyncSignal';
 
 /** Data channel messages cap at 256 KB; stay well clear and fail loudly. */
@@ -17,14 +8,12 @@ const CHANNEL_LABEL = 'todo-sync';
 const GATHER_TIMEOUT_MS = 5000;
 const CONNECT_TIMEOUT_MS = 30_000;
 
-export const SYNC_SCHEMA = 3;
+export const SYNC_SCHEMA = 4;
 
 export interface SyncDataPayload {
 	schema: number;
 	kind: 'data';
-	dreams: Dream[];
-	goals: Goal[];
-	tasks: Task[];
+	items: Item[];
 }
 
 export interface SyncSettingsPayload {
@@ -184,26 +173,24 @@ export class SyncConnection {
 					}
 
 					if (parsed.kind === 'data') {
-						if (
-							!Array.isArray(parsed.dreams) ||
-							!Array.isArray(parsed.goals) ||
-							!Array.isArray(parsed.tasks)
-						) {
+						if (!Array.isArray(parsed.items)) {
 							reject(new SyncError('The other device sent something unexpected'));
 							return;
 						}
 
-						// Shape-checking the arrays is not enough: each element still has
+						// Shape-checking the array is not enough: each element still has
 						// to be a valid record. This is data from another device, not the
 						// user's own file, so a bad record must not reach the merge and
-						// garbage-collection steps — parseDream/parseGoal/parseTask throw
-						// on the first invalid one, and the catch below turns that into
-						// the same full-reject as every other malformed-payload case here.
-						parsed.dreams.forEach(parseDream);
-						parsed.goals.forEach(parseGoal);
-						parsed.tasks.forEach(parseTask);
-
-						resolve(parsed as SyncDataPayload);
+						// garbage-collection steps — parseItem throws on the first invalid
+						// one, and the catch below turns that into the same full-reject as
+						// every other malformed-payload case here. What resolves is the
+						// parsed copy, not the raw JSON, so fields the parsers do not know
+						// never reach storage.
+						resolve({
+							schema: parsed.schema,
+							kind: 'data',
+							items: parsed.items.map(parseItem),
+						});
 						return;
 					}
 

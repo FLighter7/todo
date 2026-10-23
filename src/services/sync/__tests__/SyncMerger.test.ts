@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { ItemType, Status, type Completion, type Task } from '@/types';
+import {
+	ItemType,
+	Status,
+	isTask,
+	type Completion,
+	type Dream,
+	type Goal,
+	type Item,
+	type Task,
+} from '@/types';
 import { SyncMerger } from '../SyncMerger';
 
 /**
@@ -8,14 +17,14 @@ import { SyncMerger } from '../SyncMerger';
  * these tests exercise that generic behaviour with a shape of their own
  * rather than reaching for one of the app's real record types.
  */
-interface Item {
+interface Stub {
 	id: string;
 	title: string;
 	updated: string;
 	deleted: boolean;
 }
 
-function makeItem(overrides: Partial<Item> = {}): Item {
+function makeStub(overrides: Partial<Stub> = {}): Stub {
 	return {
 		id: 'id-1',
 		title: 'Buy milk',
@@ -25,7 +34,7 @@ function makeItem(overrides: Partial<Item> = {}): Item {
 	};
 }
 
-function byId(items: Item[]): Record<string, Item> {
+function byId(items: Stub[]): Record<string, Stub> {
 	return Object.fromEntries(items.map((item) => [item.id, item]));
 }
 
@@ -37,49 +46,49 @@ describe('SyncMerger.merge', () => {
 	});
 
 	it('keeps a record that exists only locally', () => {
-		const local = [makeItem()];
+		const local = [makeStub()];
 
 		expect(merger.merge(local, [])).toEqual(local);
 	});
 
 	it('takes a record that exists only remotely', () => {
-		const remote = [makeItem({ id: 'remote-only' })];
+		const remote = [makeStub({ id: 'remote-only' })];
 
 		expect(merger.merge([], remote)).toEqual(remote);
 	});
 
 	it('keeps the local version when it was updated later', () => {
-		const local = [makeItem({ title: 'Local wins', updated: '2026-08-02T00:00:00.000Z' })];
-		const remote = [makeItem({ title: 'Remote loses', updated: '2026-08-01T00:00:00.000Z' })];
+		const local = [makeStub({ title: 'Local wins', updated: '2026-08-02T00:00:00.000Z' })];
+		const remote = [makeStub({ title: 'Remote loses', updated: '2026-08-01T00:00:00.000Z' })];
 
 		expect(merger.merge(local, remote)[0].title).toBe('Local wins');
 	});
 
 	it('takes the remote version when it was updated later', () => {
-		const local = [makeItem({ title: 'Local loses', updated: '2026-08-01T00:00:00.000Z' })];
-		const remote = [makeItem({ title: 'Remote wins', updated: '2026-08-02T00:00:00.000Z' })];
+		const local = [makeStub({ title: 'Local loses', updated: '2026-08-01T00:00:00.000Z' })];
+		const remote = [makeStub({ title: 'Remote wins', updated: '2026-08-02T00:00:00.000Z' })];
 
 		expect(merger.merge(local, remote)[0].title).toBe('Remote wins');
 	});
 
 	it('prefers the local version on identical timestamps so the result is deterministic', () => {
-		const local = [makeItem({ title: 'Local' })];
-		const remote = [makeItem({ title: 'Remote' })];
+		const local = [makeStub({ title: 'Local' })];
+		const remote = [makeStub({ title: 'Remote' })];
 
 		expect(merger.merge(local, remote)[0].title).toBe('Local');
 		expect(merger.merge(remote, local)[0].title).toBe('Remote');
 	});
 
 	it('lets a newer tombstone win over an older edit', () => {
-		const local = [makeItem({ title: 'Edited', updated: '2026-08-01T00:00:00.000Z' })];
-		const remote = [makeItem({ deleted: true, updated: '2026-08-02T00:00:00.000Z' })];
+		const local = [makeStub({ title: 'Edited', updated: '2026-08-01T00:00:00.000Z' })];
+		const remote = [makeStub({ deleted: true, updated: '2026-08-02T00:00:00.000Z' })];
 
 		expect(merger.merge(local, remote)[0].deleted).toBe(true);
 	});
 
 	it('lets a newer edit win over an older tombstone', () => {
-		const local = [makeItem({ title: 'Resurrected', updated: '2026-08-03T00:00:00.000Z' })];
-		const remote = [makeItem({ deleted: true, updated: '2026-08-02T00:00:00.000Z' })];
+		const local = [makeStub({ title: 'Resurrected', updated: '2026-08-03T00:00:00.000Z' })];
+		const remote = [makeStub({ deleted: true, updated: '2026-08-02T00:00:00.000Z' })];
 
 		const merged = merger.merge(local, remote)[0];
 		expect(merged.deleted).toBe(false);
@@ -87,14 +96,14 @@ describe('SyncMerger.merge', () => {
 	});
 
 	it('keeps a tombstone that only the remote side knows about', () => {
-		const remote = [makeItem({ id: 'gone', deleted: true })];
+		const remote = [makeStub({ id: 'gone', deleted: true })];
 
 		expect(merger.merge([], remote)[0].deleted).toBe(true);
 	});
 
 	it('combines records from both sides', () => {
-		const local = [makeItem({ id: 'a' }), makeItem({ id: 'b' })];
-		const remote = [makeItem({ id: 'b' }), makeItem({ id: 'c' })];
+		const local = [makeStub({ id: 'a' }), makeStub({ id: 'b' })];
+		const remote = [makeStub({ id: 'b' }), makeStub({ id: 'c' })];
 
 		const merged = merger.merge(local, remote);
 
@@ -103,8 +112,8 @@ describe('SyncMerger.merge', () => {
 	});
 
 	it('does not mutate either input', () => {
-		const local = [makeItem({ title: 'Local', updated: '2026-08-01T00:00:00.000Z' })];
-		const remote = [makeItem({ title: 'Remote', updated: '2026-08-02T00:00:00.000Z' })];
+		const local = [makeStub({ title: 'Local', updated: '2026-08-01T00:00:00.000Z' })];
+		const remote = [makeStub({ title: 'Remote', updated: '2026-08-02T00:00:00.000Z' })];
 		const localCopy = structuredClone(local);
 		const remoteCopy = structuredClone(remote);
 
@@ -116,10 +125,10 @@ describe('SyncMerger.merge', () => {
 
 	it('is idempotent: merging the result again changes nothing', () => {
 		const local = [
-			makeItem({ id: 'a' }),
-			makeItem({ id: 'b', updated: '2026-08-05T00:00:00.000Z' }),
+			makeStub({ id: 'a' }),
+			makeStub({ id: 'b', updated: '2026-08-05T00:00:00.000Z' }),
 		];
-		const remote = [makeItem({ id: 'b' }), makeItem({ id: 'c', deleted: true })];
+		const remote = [makeStub({ id: 'b' }), makeStub({ id: 'c', deleted: true })];
 
 		const once = merger.merge(local, remote);
 		const twice = merger.merge(once, remote);
@@ -128,10 +137,10 @@ describe('SyncMerger.merge', () => {
 	});
 
 	it('gives the same result regardless of which side runs it', () => {
-		const local = [makeItem({ id: 'a', updated: '2026-08-04T00:00:00.000Z' })];
+		const local = [makeStub({ id: 'a', updated: '2026-08-04T00:00:00.000Z' })];
 		const remote = [
-			makeItem({ id: 'a', updated: '2026-08-05T00:00:00.000Z' }),
-			makeItem({ id: 'b' }),
+			makeStub({ id: 'a', updated: '2026-08-05T00:00:00.000Z' }),
+			makeStub({ id: 'b' }),
 		];
 
 		expect(byId(merger.merge(local, remote))).toEqual(byId(merger.merge(remote, local)));
@@ -156,7 +165,36 @@ function mark(occurrence: string, done: boolean, at: string): Completion {
 	return { occurrence, done, at };
 }
 
-describe('SyncMerger.merge on entity records', () => {
+function makeDream(overrides: Partial<Dream> = {}): Dream {
+	return {
+		type: ItemType.Dream,
+		id: 'dream-1',
+		name: 'Visit Japan',
+		created: '2026-08-01T10:00:00.000Z',
+		updated: '2026-08-01T10:00:00.000Z',
+		status: Status.Opened,
+		...overrides,
+	};
+}
+
+function makeGoal(overrides: Partial<Goal> = {}): Goal {
+	return {
+		type: ItemType.Goal,
+		id: 'goal-1',
+		name: 'Learn Japanese',
+		created: '2026-08-01T10:00:00.000Z',
+		updated: '2026-08-01T10:00:00.000Z',
+		status: Status.Opened,
+		...overrides,
+	};
+}
+
+/** `mergeItems` narrowed back to tasks, for the cases where every record is one. */
+function mergeTasks(local: Item[], remote: Item[]): Task[] {
+	return merger.mergeItems(local, remote).filter(isTask);
+}
+
+describe('SyncMerger.merge on real records', () => {
 	it('lets a newer closure win over an older edit', () => {
 		const local = [makeTask({ name: 'Edited', updated: '2026-08-01T00:00:00.000Z' })];
 		const remote = [makeTask({ status: Status.Cancelled, updated: '2026-08-02T00:00:00.000Z' })];
@@ -174,7 +212,7 @@ describe('SyncMerger.merge on entity records', () => {
 	});
 });
 
-describe('SyncMerger.mergeTasks', () => {
+describe('SyncMerger.mergeItems on tasks', () => {
 	it('keeps marks made on two devices for different occurrences', () => {
 		// The phone marked the 7th, the desktop marked the 14th without ever
 		// seeing the 7th. Whole-record last-write-wins would drop one of them.
@@ -191,7 +229,7 @@ describe('SyncMerger.mergeTasks', () => {
 			}),
 		];
 
-		const merged = merger.mergeTasks(local, remote)[0];
+		const merged = mergeTasks(local, remote)[0];
 
 		expect(merged.completions?.map((c) => c.occurrence).sort()).toEqual([
 			'2026-08-07T09:00',
@@ -213,7 +251,7 @@ describe('SyncMerger.mergeTasks', () => {
 			}),
 		];
 
-		const merged = merger.mergeTasks(local, remote)[0];
+		const merged = mergeTasks(local, remote)[0];
 
 		expect(merged.completions).toEqual([
 			mark('2026-08-07T09:00', false, '2026-08-10T00:00:00.000Z'),
@@ -232,14 +270,14 @@ describe('SyncMerger.mergeTasks', () => {
 			}),
 		];
 
-		expect(merger.mergeTasks(local, remote)[0].completions?.[0].done).toBe(true);
+		expect(mergeTasks(local, remote)[0].completions?.[0].done).toBe(true);
 	});
 
 	it('still applies last-write-wins to every other field', () => {
 		const local = [makeTask({ name: 'Local', updated: '2026-08-01T00:00:00.000Z' })];
 		const remote = [makeTask({ name: 'Remote', updated: '2026-08-02T00:00:00.000Z' })];
 
-		expect(merger.mergeTasks(local, remote)[0].name).toBe('Remote');
+		expect(mergeTasks(local, remote)[0].name).toBe('Remote');
 	});
 
 	it('carries marks over from the losing version of the record', () => {
@@ -252,31 +290,25 @@ describe('SyncMerger.mergeTasks', () => {
 		];
 		const remote = [makeTask({ name: 'Remote wins', updated: '2026-08-02T00:00:00.000Z' })];
 
-		const merged = merger.mergeTasks(local, remote)[0];
+		const merged = mergeTasks(local, remote)[0];
 
 		expect(merged.name).toBe('Remote wins');
 		expect(merged.completions).toHaveLength(1);
 	});
 
 	it('leaves completions undefined when neither side has any', () => {
-		expect(merger.mergeTasks([makeTask()], [makeTask()])[0].completions).toBeUndefined();
+		expect(mergeTasks([makeTask()], [makeTask()])[0].completions).toBeUndefined();
 	});
 
 	it('takes a task that exists only on one side, completions included', () => {
 		const remoteMark = mark('2026-08-07T09:00', true, '2026-08-07T00:00:00.000Z');
 		const localMark = mark('2026-08-14T09:00', true, '2026-08-14T00:00:00.000Z');
 
-		const remoteOnly = merger.mergeTasks(
-			[],
-			[makeTask({ id: 'remote-only', completions: [remoteMark] })],
-		);
+		const remoteOnly = mergeTasks([], [makeTask({ id: 'remote-only', completions: [remoteMark] })]);
 		expect(remoteOnly).toHaveLength(1);
 		expect(remoteOnly[0].completions).toEqual([remoteMark]);
 
-		const localOnly = merger.mergeTasks(
-			[makeTask({ id: 'local-only', completions: [localMark] })],
-			[],
-		);
+		const localOnly = mergeTasks([makeTask({ id: 'local-only', completions: [localMark] })], []);
 		expect(localOnly).toHaveLength(1);
 		expect(localOnly[0].completions).toEqual([localMark]);
 	});
@@ -291,7 +323,7 @@ describe('SyncMerger.mergeTasks', () => {
 		const localCopy = structuredClone(local);
 		const remoteCopy = structuredClone(remote);
 
-		merger.mergeTasks(local, remote);
+		mergeTasks(local, remote);
 
 		expect(local).toEqual(localCopy);
 		expect(remote).toEqual(remoteCopy);
@@ -305,8 +337,8 @@ describe('SyncMerger.mergeTasks', () => {
 			makeTask({ completions: [mark('2026-08-14T09:00', true, '2026-08-14T00:00:00.000Z')] }),
 		];
 
-		const once = merger.mergeTasks(local, remote);
-		const twice = merger.mergeTasks(once, remote);
+		const once = mergeTasks(local, remote);
+		const twice = mergeTasks(once, remote);
 
 		expect(twice).toEqual(once);
 	});
@@ -327,8 +359,8 @@ describe('SyncMerger.mergeTasks', () => {
 		const sortByOccurrence = (completions: Completion[]) =>
 			[...completions].sort((a, b) => a.occurrence.localeCompare(b.occurrence));
 
-		const one = sortByOccurrence(merger.mergeTasks(local, remote)[0].completions ?? []);
-		const other = sortByOccurrence(merger.mergeTasks(remote, local)[0].completions ?? []);
+		const one = sortByOccurrence(mergeTasks(local, remote)[0].completions ?? []);
+		const other = sortByOccurrence(mergeTasks(remote, local)[0].completions ?? []);
 
 		expect(one).toEqual(other);
 
@@ -341,5 +373,64 @@ describe('SyncMerger.mergeTasks', () => {
 		]);
 		expect(one).toEqual(union);
 		expect(other).toEqual(union);
+	});
+});
+
+describe('SyncMerger.mergeItems across types', () => {
+	it('merges dreams, goals and tasks from one mixed list each, record by record', () => {
+		const local: Item[] = [
+			makeDream({ name: 'Local dream', updated: '2026-08-05T00:00:00.000Z' }),
+			makeGoal({ name: 'Local goal', updated: '2026-08-01T00:00:00.000Z' }),
+		];
+		const remote: Item[] = [
+			makeDream({ name: 'Remote dream', updated: '2026-08-01T00:00:00.000Z' }),
+			makeGoal({ name: 'Remote goal', updated: '2026-08-05T00:00:00.000Z' }),
+			makeTask({ id: 'task-remote' }),
+		];
+
+		const merged = merger.mergeItems(local, remote);
+
+		expect(merged.map((item) => item.name).sort()).toEqual([
+			'File the report',
+			'Local dream',
+			'Remote goal',
+		]);
+	});
+
+	it('hands a dream or goal winner through untouched, with no completions added', () => {
+		const dream = makeDream();
+		const goal = makeGoal();
+
+		const merged = merger.mergeItems([dream], [goal]);
+
+		expect(merged).toEqual([dream, goal]);
+		expect(merged.every((item) => !('completions' in item))).toBe(true);
+	});
+
+	it('lets the newer side win outright when one id holds different types on each side', () => {
+		const olderTask = makeTask({
+			id: 'shared',
+			updated: '2026-08-01T00:00:00.000Z',
+			completions: [mark('2026-08-01T09:00', true, '2026-08-01T00:00:00.000Z')],
+		});
+		const newerGoal = makeGoal({ id: 'shared', updated: '2026-08-02T00:00:00.000Z' });
+
+		const merged = merger.mergeItems([olderTask], [newerGoal]);
+
+		expect(merged).toEqual([newerGoal]);
+	});
+
+	it("keeps only the winning task's own marks when the other side holds a non-task", () => {
+		const ownMark = mark('2026-08-07T09:00', true, '2026-08-07T00:00:00.000Z');
+		const newerTask = makeTask({
+			id: 'shared',
+			updated: '2026-08-02T00:00:00.000Z',
+			completions: [ownMark],
+		});
+		const olderGoal = makeGoal({ id: 'shared', updated: '2026-08-01T00:00:00.000Z' });
+
+		const merged = merger.mergeItems([olderGoal], [newerTask]);
+
+		expect(merged).toEqual([newerTask]);
 	});
 });

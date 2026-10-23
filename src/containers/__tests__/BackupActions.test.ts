@@ -50,10 +50,12 @@ describe('BackupActions export', () => {
 
 		expect(download).toHaveBeenCalledTimes(1);
 		const backup = download.mock.calls[0][0];
-		expect(backup.version).toBe(3);
-		expect(backup.dreams).toHaveLength(1);
-		expect(backup.goals).toHaveLength(1);
-		expect(backup.tasks).toHaveLength(1);
+		expect(backup.version).toBe(4);
+		expect(backup.items.map((item) => item.type).sort()).toEqual([
+			ItemType.Task,
+			ItemType.Goal,
+			ItemType.Dream,
+		]);
 		expect(wrapper.emitted('notify')).toEqual([['Backup saved.']]);
 	});
 
@@ -81,40 +83,34 @@ describe('BackupActions import', () => {
 		await goals.add({ name: 'Old goal' });
 		await tasks.add({ name: 'Old task', important: false, urgent: false });
 
-		const incoming = backupService.create(
-			[
-				{
-					id: 'dream-1',
-					type: ItemType.Dream,
-					name: 'Imported dream',
-					created: '2026-08-06T10:00:00.000Z',
-					updated: '2026-08-06T10:00:00.000Z',
-					status: Status.Opened,
-				},
-			],
-			[
-				{
-					id: 'goal-1',
-					type: ItemType.Goal,
-					name: 'Imported goal',
-					created: '2026-08-06T10:00:00.000Z',
-					updated: '2026-08-06T10:00:00.000Z',
-					status: Status.Opened,
-				},
-			],
-			[
-				{
-					id: 'task-1',
-					type: ItemType.Task,
-					name: 'Imported task',
-					created: '2026-08-06T10:00:00.000Z',
-					updated: '2026-08-06T10:00:00.000Z',
-					status: Status.Opened,
-					important: false,
-					urgent: false,
-				},
-			],
-		);
+		const incoming = backupService.create([
+			{
+				id: 'dream-1',
+				type: ItemType.Dream,
+				name: 'Imported dream',
+				created: '2026-08-06T10:00:00.000Z',
+				updated: '2026-08-06T10:00:00.000Z',
+				status: Status.Opened,
+			},
+			{
+				id: 'goal-1',
+				type: ItemType.Goal,
+				name: 'Imported goal',
+				created: '2026-08-06T10:00:00.000Z',
+				updated: '2026-08-06T10:00:00.000Z',
+				status: Status.Opened,
+			},
+			{
+				id: 'task-1',
+				type: ItemType.Task,
+				name: 'Imported task',
+				created: '2026-08-06T10:00:00.000Z',
+				updated: '2026-08-06T10:00:00.000Z',
+				status: Status.Opened,
+				important: false,
+				urgent: false,
+			},
+		]);
 		readText.mockResolvedValue(JSON.stringify(incoming));
 
 		const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
@@ -144,7 +140,7 @@ describe('BackupActions import', () => {
 		const settings = useSettingsStore();
 		settings.setTheme('dark');
 
-		const incoming = backupService.create([], [], [], {
+		const incoming = backupService.create([], {
 			general: {
 				theme: 'light',
 				locale: 'ru',
@@ -181,7 +177,7 @@ describe('BackupActions import', () => {
 		const settings = useSettingsStore();
 		settings.setTheme('dark');
 
-		const incoming = backupService.create([], [], []);
+		const incoming = backupService.create([]);
 		readText.mockResolvedValue(JSON.stringify(incoming));
 
 		const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
@@ -206,20 +202,16 @@ describe('BackupActions import', () => {
 		const tasks = useTasksStore();
 		await tasks.add({ name: 'Old task', important: false, urgent: false });
 
-		const incoming = backupService.create(
-			[
-				{
-					id: 'dream-1',
-					type: ItemType.Dream,
-					name: 'Imported dream',
-					created: '2026-08-06T10:00:00.000Z',
-					updated: '2026-08-06T10:00:00.000Z',
-					status: Status.Opened,
-				},
-			],
-			[],
-			[],
-		);
+		const incoming = backupService.create([
+			{
+				id: 'dream-1',
+				type: ItemType.Dream,
+				name: 'Imported dream',
+				created: '2026-08-06T10:00:00.000Z',
+				updated: '2026-08-06T10:00:00.000Z',
+				status: Status.Opened,
+			},
+		]);
 		readText.mockResolvedValue(JSON.stringify(incoming));
 
 		// dreams.replaceAll runs first and is left to succeed for real; goals is

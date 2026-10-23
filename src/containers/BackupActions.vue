@@ -45,6 +45,7 @@ import { mdiDownloadOutline, mdiUploadOutline } from '@mdi/js';
 import type { Backup } from '@/services/backup/BackupService';
 import { BackupFormatError, backupService } from '@/services/backup/BackupService';
 import { backupFile } from '@/services/backup/BackupFile';
+import { isDream, isGoal, isTask } from '@/types';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
@@ -65,7 +66,7 @@ const confirmOpen = ref(false);
 const incomingCount = computed(() => {
 	const backup = pending.value;
 
-	return backup === null ? 0 : backup.dreams.length + backup.goals.length + backup.tasks.length;
+	return backup === null ? 0 : backup.items.length;
 });
 
 const currentCount = computed(
@@ -85,7 +86,7 @@ function exportFile(): void {
 	// records, not active: a backup that omitted closed records would resurrect
 	// everything ever finished or abandoned on the next restore.
 	backupFile.download(
-		backupService.create(dreams.records, goals.records, tasks.records, {
+		backupService.create([...dreams.records, ...goals.records, ...tasks.records], {
 			general: settings.general,
 			dreams: settings.dreams,
 			goals: settings.goals,
@@ -145,9 +146,9 @@ async function confirmImport(): Promise<void> {
 	// This only catches something that throws before persist() gets involved
 	// - a genuine bug, since parse() has already validated the backup.
 	try {
-		await dreams.replaceAll(backup.dreams);
-		await goals.replaceAll(backup.goals);
-		await tasks.replaceAll(backup.tasks);
+		await dreams.replaceAll(backup.items.filter(isDream));
+		await goals.replaceAll(backup.items.filter(isGoal));
+		await tasks.replaceAll(backup.items.filter(isTask));
 		if (backup.settings) {
 			settings.replaceAll(backup.settings);
 		}
@@ -160,6 +161,6 @@ async function confirmImport(): Promise<void> {
 }
 
 function incomingTotal(backup: Backup): number {
-	return backup.dreams.length + backup.goals.length + backup.tasks.length;
+	return backup.items.length;
 }
 </script>

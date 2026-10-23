@@ -1,4 +1,4 @@
-import { Status, type ItemBase, type Task } from '@/types';
+import { Status, isTask, type Item, type ItemBase, type Task } from '@/types';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -107,4 +107,9 @@ export function pruneTask(task: Task, windowDays: number, now: Date): Task {
 		fullyPruned.schedule?.exdate?.length === task.schedule?.exdate?.length;
 
 	return unchanged ? task : fullyPruned;
+}
+
+/** `pruneTask` for whatever kind of item this is: only a task has anything to prune. */
+export function pruneItem(item: Item, windowDays: number, now: Date): Item {
+	return isTask(item) ? pruneTask(item, windowDays, now) : item;
 }

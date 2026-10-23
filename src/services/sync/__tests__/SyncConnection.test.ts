@@ -123,9 +123,7 @@ function makePayload(overrides: Partial<SyncDataPayload> = {}): SyncDataPayload 
 	return {
 		schema: SYNC_SCHEMA,
 		kind: 'data',
-		dreams: [makeDream()],
-		goals: [makeGoal()],
-		tasks: [makeTask()],
+		items: [makeDream(), makeGoal(), makeTask()],
 		...overrides,
 	};
 }
@@ -151,9 +149,11 @@ describe('SyncConnection.exchange', () => {
 	it('resolves with a fully-formed incoming payload', async () => {
 		const { connection, channel } = await makeConnection();
 		const incoming = makePayload({
-			dreams: [makeDream({ id: 'remote-dream' })],
-			goals: [makeGoal({ id: 'remote-goal' })],
-			tasks: [makeTask({ id: 'remote-task' })],
+			items: [
+				makeDream({ id: 'remote-dream' }),
+				makeGoal({ id: 'remote-goal' }),
+				makeTask({ id: 'remote-task' }),
+			],
 		});
 
 		const exchangePromise = connection.exchange(makePayload());
@@ -167,7 +167,7 @@ describe('SyncConnection.exchange', () => {
 		const { connection, channel } = await makeConnection();
 		const malformed = {
 			...makePayload(),
-			tasks: [{ ...makeTask(), status: 'not-a-status' }],
+			items: [{ ...makeTask(), status: 'not-a-status' }],
 		};
 
 		const exchangePromise = connection.exchange(makePayload());
@@ -182,13 +182,48 @@ describe('SyncConnection.exchange', () => {
 		const { connection, channel } = await makeConnection();
 		const dreamWithoutId: Partial<Dream> = makeDream();
 		delete dreamWithoutId.id;
-		const malformed = { ...makePayload(), dreams: [dreamWithoutId] };
+		const malformed = { ...makePayload(), items: [dreamWithoutId] };
 
 		const exchangePromise = connection.exchange(makePayload());
 		await flushMicrotasks();
 		channel.receive(JSON.stringify(malformed));
 
 		await expect(exchangePromise).rejects.toThrow(SyncError);
+	});
+
+	it('rejects the whole exchange when an incoming item has an unknown type', async () => {
+		const { connection, channel } = await makeConnection();
+		const malformed = { ...makePayload(), items: [{ ...makeDream(), type: 9 }] };
+
+		const exchangePromise = connection.exchange(makePayload());
+		await flushMicrotasks();
+		channel.receive(JSON.stringify(malformed));
+
+		await expect(exchangePromise).rejects.toThrow(SyncError);
+	});
+
+	it('rejects a payload without an items list', async () => {
+		const { connection, channel } = await makeConnection();
+
+		const exchangePromise = connection.exchange(makePayload());
+		await flushMicrotasks();
+		channel.receive(
+			JSON.stringify({ schema: SYNC_SCHEMA, kind: 'data', dreams: [], goals: [], tasks: [] }),
+		);
+
+		await expect(exchangePromise).rejects.toThrow(SyncError);
+	});
+
+	it('hands back the parsed records, without fields the parsers do not know', async () => {
+		const { connection, channel } = await makeConnection();
+		const incoming = { ...makePayload(), items: [{ ...makeDream(), smuggled: 'value' }] };
+
+		const exchangePromise = connection.exchange(makePayload());
+		await flushMicrotasks();
+		channel.receive(JSON.stringify(incoming));
+
+		const received = await exchangePromise;
+		expect(received.kind === 'data' && received.items[0]).not.toHaveProperty('smuggled');
 	});
 
 	it('still rejects on a schema mismatch, ahead of any record validation', async () => {

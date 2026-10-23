@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { ItemType, Status, type ItemBase, type Task } from '@/types';
-import { collectGarbage, pruneCompletions, pruneExdate, pruneTask } from '../collectGarbage';
+import { ItemType, Status, type Dream, type ItemBase, type Task } from '@/types';
+import {
+	collectGarbage,
+	pruneCompletions,
+	pruneExdate,
+	pruneItem,
+	pruneTask,
+} from '../collectGarbage';
 
 const NOW = new Date('2026-08-16T12:00:00.000Z');
 
@@ -288,5 +294,21 @@ describe('pruneTask', () => {
 
 		expect(pruned).not.toBe(task);
 		expect(pruned.schedule?.exdate).toEqual(['2026-08-10T09:00']);
+	});
+});
+
+describe('pruneItem', () => {
+	it('prunes a task the way pruneTask does', () => {
+		const task = makeTask({
+			completions: [{ occurrence: '2026-01-01T09:00', done: true, at: daysBefore(200) }],
+		});
+
+		expect(pruneItem(task, 30, NOW)).toEqual(pruneTask(task, 30, NOW));
+	});
+
+	it('hands any other type back untouched, as the same reference', () => {
+		const dream = { ...makeRecord(), type: ItemType.Dream } as Dream;
+
+		expect(pruneItem(dream, 30, NOW)).toBe(dream);
 	});
 });

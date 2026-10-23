@@ -59,31 +59,29 @@ const task = makeTask();
 const backupService = new BackupService();
 
 describe('BackupService.create', () => {
-	it('creates a version 3 backup holding all three collections', () => {
-		const backup = backupService.create([dream], [goal], [task]);
+	it('creates a version 4 backup holding every item in one list', () => {
+		const backup = backupService.create([dream, goal, task]);
 
-		expect(backup.version).toBe(3);
-		expect(backup.dreams).toEqual([dream]);
-		expect(backup.goals).toEqual([goal]);
-		expect(backup.tasks).toEqual([task]);
+		expect(backup.version).toBe(4);
+		expect(backup.items).toEqual([dream, goal, task]);
 		expect(Number.isNaN(Date.parse(backup.exportedAt))).toBe(false);
 	});
 
 	it('includes closed records', () => {
 		const closed = { ...task, status: Status.Cancelled };
-		expect(backupService.create([], [], [closed]).tasks).toEqual([closed]);
+		expect(backupService.create([closed]).items).toEqual([closed]);
 	});
 });
 
 describe('BackupService.create settings', () => {
 	it('leaves settings undefined when none are given', () => {
-		const backup = backupService.create([], [], []);
+		const backup = backupService.create([]);
 		expect(backup.settings).toBeUndefined();
 	});
 
 	it('includes a defensive copy of the given settings', () => {
 		const settings: AppSettings = DEFAULT_SETTINGS;
-		const backup = backupService.create([], [], [], settings);
+		const backup = backupService.create([], settings);
 
 		expect(backup.settings).toEqual(settings);
 		expect(backup.settings).not.toBe(settings);
@@ -92,72 +90,72 @@ describe('BackupService.create settings', () => {
 });
 
 describe('BackupService.parse', () => {
-	it('reads a version 3 file back', () => {
-		const text = serialize(backupService.create([dream], [goal], [task]));
+	it('reads a version 4 file back', () => {
+		const text = serialize(backupService.create([dream, goal, task]));
 		const parsed = backupService.parse(text);
 
-		expect(parsed.dreams).toEqual([dream]);
-		expect(parsed.goals).toEqual([goal]);
-		expect(parsed.tasks).toEqual([task]);
+		expect(parsed.items).toEqual([dream, goal, task]);
 	});
 
 	// A tombstone has to survive an actual file, not just the in-memory object
 	// `create()` returns: this is what an export followed by a restore does.
 	it('keeps a closed record through create, JSON.stringify and parse', () => {
 		const closed = { ...task, status: Status.Cancelled };
-		const text = serialize(backupService.create([], [], [closed]));
+		const text = serialize(backupService.create([closed]));
 
 		const parsed = backupService.parse(text);
 
-		expect(parsed.tasks).toEqual([closed]);
+		expect(parsed.items).toEqual([closed]);
 	});
 
-	it('accepts a backup whose three collections are all empty', () => {
-		const text = serialize({ version: 3, exportedAt: '', dreams: [], goals: [], tasks: [] });
+	it('accepts a backup with no items', () => {
+		const text = serialize({ version: 4, exportedAt: '', items: [] });
 
-		const parsed = backupService.parse(text);
-
-		expect(parsed.dreams).toEqual([]);
-		expect(parsed.goals).toEqual([]);
-		expect(parsed.tasks).toEqual([]);
+		expect(backupService.parse(text).items).toEqual([]);
 	});
 
-	it('rejects a version 1 or 2 file', () => {
-		for (const version of [1, 2]) {
-			const text = serialize({ version, exportedAt: '', todos: [] });
-			expect(() => backupService.parse(text)).toThrow(BackupFormatError);
+	it('rejects a version 1, 2 or 3 file', () => {
+		const files = [
+			{ version: 1, exportedAt: '', todos: [] },
+			{ version: 2, exportedAt: '', todos: [] },
+			{ version: 3, exportedAt: '', dreams: [], goals: [], tasks: [] },
+		];
+
+		for (const file of files) {
+			expect(() => backupService.parse(serialize(file))).toThrow(BackupFormatError);
 		}
 	});
 
 	it('rejects a file whose version does not match the one this app supports', () => {
-		expect(() => backupService.parse(serialize({ version: 4 }))).toThrow(BackupFormatError);
+		expect(() => backupService.parse(serialize({ version: 5, items: [] }))).toThrow(
+			BackupFormatError,
+		);
 	});
 
-	it('names the collection and the index of a broken record', () => {
+	it('names the index of a broken record', () => {
+		const text = serialize({ version: 4, exportedAt: '', items: [dream, { id: 'a' }] });
+
+		expect(() => backupService.parse(text)).toThrow(/items\[1\]/);
+	});
+
+	it('rejects a record of an unknown type', () => {
+		const text = serialize({ version: 4, exportedAt: '', items: [{ ...dream, type: 9 }] });
+
+		expect(() => backupService.parse(text)).toThrow(/items\[0\]/);
+	});
+
+	it('rejects two records sharing an id, even of different types', () => {
 		const text = serialize({
-			version: 3,
+			version: 4,
 			exportedAt: '',
-			dreams: [],
-			goals: [],
-			tasks: [{ id: 'a' }],
+			items: [dream, { ...goal, id: dream.id }],
 		});
 
-		expect(() => backupService.parse(text)).toThrow(/tasks.*0/);
+		expect(() => backupService.parse(text)).toThrow(/items\[1\].*dream-1/);
 	});
 
-	it('rejects a file missing any of the three collections, naming which one', () => {
-		for (const collection of ['dreams', 'goals', 'tasks'] as const) {
-			const backup: Record<string, unknown> = {
-				version: 3,
-				exportedAt: '',
-				dreams: [],
-				goals: [],
-				tasks: [],
-			};
-			delete backup[collection];
-
-			expect(() => backupService.parse(serialize(backup))).toThrow(new RegExp(`"${collection}"`));
-		}
+	it('rejects a file with no items list', () => {
+		expect(() => backupService.parse(serialize({ version: 4, exportedAt: '' }))).toThrow(/"items"/);
 	});
 
 	it('rejects a file that is not JSON', () => {
@@ -175,24 +173,22 @@ describe('BackupService.parse', () => {
 
 describe('BackupService.parse settings', () => {
 	it('round-trips settings through create, JSON.stringify and parse', () => {
-		const text = serialize(backupService.create([], [], [], DEFAULT_SETTINGS));
+		const text = serialize(backupService.create([], DEFAULT_SETTINGS));
 		const parsed = backupService.parse(text);
 		expect(parsed.settings).toEqual(DEFAULT_SETTINGS);
 	});
 
 	it('leaves settings undefined when the file has none', () => {
-		const text = serialize(backupService.create([], [], []));
+		const text = serialize(backupService.create([]));
 		const parsed = backupService.parse(text);
 		expect(parsed.settings).toBeUndefined();
 	});
 
 	it('rejects a corrupt settings block with an addressed error', () => {
 		const text = serialize({
-			version: 3,
+			version: 4,
 			exportedAt: '',
-			dreams: [],
-			goals: [],
-			tasks: [],
+			items: [],
 			settings: { general: { theme: 'blue' } },
 		});
 

@@ -1,4 +1,4 @@
-import type { Completion, Task } from '@/types';
+import { isTask, type Completion, type Item } from '@/types';
 
 /**
  * All a merge needs. Deliberately structural rather than tied to one type,
@@ -36,8 +36,8 @@ export class SyncMerger {
 	}
 
 	/**
-	 * Tasks take the rule above for every field except `completions`, which
-	 * merge per occurrence instead.
+	 * Items take the rule above for every field except a task's `completions`,
+	 * which merge per occurrence instead.
 	 *
 	 * Whole-record last-write-wins would silently drop marks: two devices out
 	 * of contact, one marking the 7th and the other the 14th, produce two
@@ -48,15 +48,26 @@ export class SyncMerger {
 	 * Completions are read from both sides' original records by id, not from
 	 * whichever side happens to win the whole-record tie-break: the loser of
 	 * that tie-break can still hold a mark the winner has never seen.
+	 *
+	 * Only a task carries marks, so the per-occurrence merge runs only when
+	 * the winner is one, and each side's marks are read only if that side's
+	 * record is a task too: should a record ever change type, marks must not
+	 * ride onto the new type from the version that lost.
 	 */
-	mergeTasks(local: Task[], remote: Task[]): Task[] {
-		const localById = new Map(local.map((task) => [task.id, task]));
-		const remoteById = new Map(remote.map((task) => [task.id, task]));
+	mergeItems(local: Item[], remote: Item[]): Item[] {
+		const localById = new Map(local.map((item) => [item.id, item]));
+		const remoteById = new Map(remote.map((item) => [item.id, item]));
+		const marksOf = (item: Item | undefined) =>
+			item !== undefined && isTask(item) ? item.completions : undefined;
 
 		return this.merge(local, remote).map((winner) => {
+			if (!isTask(winner)) {
+				return winner;
+			}
+
 			const completions = this.mergeCompletions(
-				localById.get(winner.id)?.completions,
-				remoteById.get(winner.id)?.completions,
+				marksOf(localById.get(winner.id)),
+				marksOf(remoteById.get(winner.id)),
 			);
 
 			return completions === undefined ? winner : { ...winner, completions };

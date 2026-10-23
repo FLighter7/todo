@@ -88,7 +88,7 @@ import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SyncCode from '../SyncCode.vue';
 import SyncScanner from '../SyncScanner.vue';
-import type { AppSettings, ItemBase } from '@/types';
+import { isDream, isGoal, isTask, type AppSettings, type ItemBase } from '@/types';
 import {
 	SyncConnection,
 	SYNC_SCHEMA,
@@ -96,7 +96,7 @@ import {
 	type SyncSettingsPayload,
 } from '@/services/sync/SyncConnection';
 import { syncMerger } from '@/services/sync/SyncMerger';
-import { collectGarbage, pruneTask } from '@/utils';
+import { collectGarbage, pruneItem } from '@/utils';
 import { useDreamsStore } from '@/stores/dreams';
 import { useGoalsStore } from '@/stores/goals';
 import { useTasksStore } from '@/stores/tasks';
@@ -231,19 +231,14 @@ async function runExchange(): Promise<void> {
 		const theirs = (await connection.exchange({
 			schema: SYNC_SCHEMA,
 			kind: 'data',
-			dreams: [...dreams.records],
-			goals: [...goals.records],
-			tasks: [...tasks.records],
+			items: [...dreams.records, ...goals.records, ...tasks.records],
 		})) as SyncDataPayload;
 
 		const now = new Date();
-		const mergedDreams = sweep(syncMerger.merge([...dreams.records], theirs.dreams), now);
-		const mergedGoals = sweep(syncMerger.merge([...goals.records], theirs.goals), now);
-		const mergedTasks = sweep(syncMerger.mergeTasks([...tasks.records], theirs.tasks), now).map(
-			(task) => pruneTask(task, settings.general.cleanupDays, now),
+		const ours = [...dreams.records, ...goals.records, ...tasks.records];
+		const merged = sweep(syncMerger.mergeItems(ours, theirs.items), now).map((item) =>
+			pruneItem(item, settings.general.cleanupDays, now),
 		);
-
-		const merged = [...mergedDreams, ...mergedGoals, ...mergedTasks];
 
 		result.value = {
 			added: merged.filter((record) => !before.has(record.id)).length,
@@ -253,9 +248,9 @@ async function runExchange(): Promise<void> {
 			}).length,
 		};
 
-		await dreams.replaceAll(mergedDreams);
-		await goals.replaceAll(mergedGoals);
-		await tasks.replaceAll(mergedTasks);
+		await dreams.replaceAll(merged.filter(isDream));
+		await goals.replaceAll(merged.filter(isGoal));
+		await tasks.replaceAll(merged.filter(isTask));
 
 		step.value = 'done';
 		connection.close();

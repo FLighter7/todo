@@ -1,25 +1,19 @@
 import {
 	ItemFormatError,
 	SettingsFormatError,
-	parseDream,
-	parseGoal,
+	parseItem,
 	parseSettings,
-	parseTask,
 	type AppSettings,
-	type Dream,
-	type Goal,
-	type Task,
+	type Item,
 } from '@/types';
 
-export const BACKUP_VERSION = 3;
+export const BACKUP_VERSION = 4;
 
 export interface Backup {
 	version: number;
 	/** ISO 8601 timestamp in UTC. */
 	exportedAt: string;
-	dreams: Dream[];
-	goals: Goal[];
-	tasks: Task[];
+	items: Item[];
 	settings?: AppSettings;
 }
 
@@ -35,29 +29,43 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Wraps the shared parsers so a bad record reports where it is. The parsers
- * already say what is wrong with it; only its address has to be added.
+ * Wraps `parseItem` so a bad record reports where it is. The parsers already
+ * say what is wrong with it; only its address has to be added.
+ *
+ * Ids are checked for uniqueness too: every type shares one IndexedDB key
+ * space, so two records with the same id -- a hand-edited file, say -- would
+ * otherwise collapse into one on restore without a word.
  */
-function readAll<T>(raw: unknown, collection: string, parse: (value: unknown) => T): T[] {
+function readItems(raw: unknown): Item[] {
 	if (!Array.isArray(raw)) {
-		throw new BackupFormatError(`The backup has no "${collection}" list`);
+		throw new BackupFormatError('The backup has no "items" list');
 	}
 
+	const seen = new Set<string>();
+
 	return raw.map((value, index) => {
+		let item: Item;
 		try {
-			return parse(value);
+			item = parseItem(value);
 		} catch (error) {
 			if (error instanceof ItemFormatError) {
-				throw new BackupFormatError(`${collection}[${index}] is invalid: ${error.message}`);
+				throw new BackupFormatError(`items[${index}] is invalid: ${error.message}`);
 			}
 
 			throw error;
 		}
+
+		if (seen.has(item.id)) {
+			throw new BackupFormatError(`items[${index}] repeats the id "${item.id}"`);
+		}
+		seen.add(item.id);
+
+		return item;
 	});
 }
 
 /**
- * Wraps `parseSettings` the same way `readAll` wraps the per-record parsers:
+ * Wraps `parseSettings` the same way `readItems` wraps `parseItem`:
  * the settings document is not a collection, so it gets one address
  * ("settings") instead of an index.
  */
@@ -78,16 +86,14 @@ function readSettings(raw: unknown): AppSettings | undefined {
 }
 
 export class BackupService {
-	create(dreams: Dream[], goals: Goal[], tasks: Task[], settings?: AppSettings): Backup {
+	create(items: Item[], settings?: AppSettings): Backup {
 		return {
 			version: BACKUP_VERSION,
 			exportedAt: new Date().toISOString(),
 			// Closed records are included on purpose: a backup restores a complete
 			// state, and dropping the tombstones would resurrect everything ever
 			// finished or abandoned.
-			dreams: dreams.map((dream) => ({ ...dream })),
-			goals: goals.map((goal) => ({ ...goal })),
-			tasks: tasks.map((task) => ({ ...task })),
+			items: items.map((item) => ({ ...item })),
 			settings:
 				settings === undefined
 					? undefined
@@ -120,9 +126,10 @@ export class BackupService {
 			throw new BackupFormatError('The backup has no version');
 		}
 
-		// Versions 1 and 2 held a single `todos` list against a model this app no
-		// longer has. Guessing at a migration would invent dreams and goals that
-		// were never written, so the file is refused instead.
+		// Versions 1 and 2 held a single `todos` list, version 3 separate
+		// dreams/goals/tasks lists with no `type` on a record. Neither is carried
+		// forward: the data model moved on, and the move deliberately started
+		// clean rather than guess at a migration, so older files are refused.
 		if (raw.version !== BACKUP_VERSION) {
 			throw new BackupFormatError(
 				`This app reads backup version ${BACKUP_VERSION} only, and the file is version ${raw.version}`,
@@ -132,9 +139,7 @@ export class BackupService {
 		return {
 			version: raw.version,
 			exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : '',
-			dreams: readAll(raw.dreams, 'dreams', parseDream),
-			goals: readAll(raw.goals, 'goals', parseGoal),
-			tasks: readAll(raw.tasks, 'tasks', parseTask),
+			items: readItems(raw.items),
 			settings: readSettings(raw.settings),
 		};
 	}
