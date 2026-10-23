@@ -43,19 +43,19 @@ src/
 	containers/              — shared, business logic, not tied to one page
 
 	stores/                  — Pinia stores; the only thing that touches repositories directly.
-	                            createEntityStore.ts is the shared half every entity store (dreams,
-	                            goals, tasks) is built from; storage.ts is the separate store for
-	                            storage-wide state (`persistent`, `lastError`) they all report through
+	                            items.ts holds every item of every type and the views over them
+	                            (per-type lists, quadrants, sections by parent); storage.ts is the
+	                            separate store for storage-wide state (`persistent`, `lastError`)
 
 	services/                — business logic; one class per file, exported as a singleton
-	repositories/            — data access only. Each backend implements EntityStorage:
-	                            EntityDbRepository.ts (IndexedDB, a fresh connection per instance
-	                            opened against AppDatabase.ts's one shared schema) and
-	                            EntityMemoryRepository.ts (in-memory)
+	repositories/            — data access only. Each backend implements ItemStorage:
+	                            ItemDbRepository.ts (IndexedDB, the one `items` object store that
+	                            AppDatabase.ts defines) and ItemMemoryRepository.ts (in-memory)
 
-	types/                   — the entity shapes (EntityBase, Dream, Goal, Task) and the runtime
-	                            code that validates them at a boundary — the Status enum and every
-	                            parse* guard — not type declarations alone
+	types/                   — the item shapes (ItemBase, Task, Group, Goal, Dream, their drafts,
+	                            the Item union in itemUnion.ts) and the runtime code that validates
+	                            them at a boundary — the Status and ItemType enums and every parse*
+	                            guard — not type declarations alone
 
 	i18n/                    — vue-i18n setup and locales (`locales/ru.json` is the one non-English file)
 	plugins/                 — Vuetify setup
@@ -66,7 +66,8 @@ src/
 	                            and useToggleConfirm.ts (Done/Reopen confirm gating, shared by all
 	                            three page containers)
 	utils/                   — pure, Vue-independent utility functions, one per file, e.g.
-	                            collectGarbage.ts (closed-record and stale-completion pruning)
+	                            collectGarbage.ts (closed-record and stale-completion pruning),
+	                            quadrants.ts and sectionByParent.ts
 	assets/                  — assets imported into the build, e.g. the self-hosted webfonts under
 	                            fonts/
 ```
@@ -95,25 +96,25 @@ pages → containers / components → stores → services / repositories → typ
 
 ## Services vs. repositories
 
-- **`repositories/`** — data access only. Each backend implements the `EntityStorage` interface (`getAll/put/remove/clear`), so a store can swap `EntityDbRepository` for `EntityMemoryRepository` without knowing the difference — this is what keeps store tests free of a real browser. Both are generic over the entity type (`EntityDbRepository<Dream>`, `EntityMemoryRepository<Task>`, …); `AppDatabase.ts` defines the one shared schema (`AppDbSchema`, one `upgrade()` callback) that every `EntityDbRepository` instance opens its own IndexedDB connection against — three entities mean three separate connections, not one shared connection object — so a schema change happens in one place regardless of which entity is being read.
+- **`repositories/`** — data access only. Each backend implements the `ItemStorage` interface (`getAll/put/remove/clear/replaceAll`), so the store can swap `ItemDbRepository` for `ItemMemoryRepository` without knowing the difference — this is what keeps store tests free of a real browser. `ItemDbRepository` reads and writes every type through the one `items` object store, so the app holds one IndexedDB connection; `replaceAll` runs as a single transaction, so a failed restore or sync leaves the old list in place. `ItemMemoryRepository` is generic over the item type (`ItemMemoryRepository<Item>`, `ItemMemoryRepository<Task>`, …) for tests that only need one. `AppDatabase.ts` defines the schema (`AppDbSchema`, one `upgrade()` callback) in one place.
 - **`services/`** — business logic: rules that span or interpret data, not just store it (backup envelope validation, sync merge/pairing). Each concern is one class.
 - Neither layer knows about Vue or Pinia — that's what keeps them unit-testable without a browser environment.
 
 ## Classes and instantiation
 
-Every `services/` and `repositories/` file exports a class. Most also export a ready-to-use singleton instance (`export const backupService = new BackupService()`), the same pattern the codebase already uses for Pinia stores (`useTasksStore()`). This keeps interface implementation working normally (`implements EntityStorage`, which only applies to instance methods) and leaves room for constructor parameters, which a static-only class couldn't support.
+Every `services/` and `repositories/` file exports a class. Most also export a ready-to-use singleton instance (`export const backupService = new BackupService()`), the same pattern the codebase already uses for Pinia stores (`useItemsStore()`). This keeps interface implementation working normally (`implements ItemStorage`, which only applies to instance methods) and leaves room for constructor parameters, which a static-only class couldn't support.
 
 Two documented exceptions:
 
-- **`EntityDbRepository`** has no module-level singleton. Opening a connection is async, so construction goes through `static async create<T>(storeName, parse): Promise<EntityDbRepository<T>>` instead of `new` — there's nothing to export until that resolves, and the result is generic per entity besides. Each entity store supplies its own `createRepository` option instead (e.g. `EntityDbRepository.create('dreams', parseDream)` in `stores/dreams.ts`); the shared `load()` in `createEntityStore.ts` is what calls it.
+- **`ItemDbRepository`** has no module-level singleton. Opening a connection is async, so construction goes through `static async create(parse = parseItem): Promise<ItemDbRepository>` instead of `new` — there's nothing to export until that resolves. The items store's `load()` calls it by default; tests pass their own repository to `load()` instead.
 - **`SyncConnection`** has no singleton either, deliberately: it's stateful per pairing attempt (one peer connection, one data channel), and a fresh `new SyncConnection()` is created every time `SyncFlow.vue` starts or restarts a sync.
-- **`EntityMemoryRepository`** has no singleton for the same reason as `SyncConnection`: it's meant to hold independent, disposable state (a fallback instance, or a seeded instance in tests), not to be shared.
+- **`ItemMemoryRepository`** has no singleton for the same reason as `SyncConnection`: it's meant to hold independent, disposable state (a fallback instance, or a seeded instance in tests), not to be shared.
 
-Tests construct their own instances directly (`new EntityMemoryRepository<Dream>(seed)`, `new BackupService()`) rather than importing the shared singleton, so test state never leaks between cases.
+Tests construct their own instances directly (`new ItemMemoryRepository<Item>(seed)`, `new BackupService()`) rather than importing the shared singleton, so test state never leaks between cases. Component and container tests seed the items store through `loadItems(records)` in `src/vitestHelpers.ts`.
 
 ## Naming
 
-camelCase/PascalCase throughout — `.vue` files and class files (`EntityDbRepository.ts`) are PascalCase, matching the class/component name. No kebab-case, unless a filename is mandated by a tool outside this project's control (`package-lock.json`).
+camelCase/PascalCase throughout — `.vue` files and class files (`ItemDbRepository.ts`) are PascalCase, matching the class/component name. No kebab-case, unless a filename is mandated by a tool outside this project's control (`package-lock.json`).
 
 Imports inside `src` use the `@/` alias; a file only uses a relative import for a sibling in the same page folder (e.g. `pages/MatrixPage/containers/MatrixBoard.vue` importing `../TaskQuadrant.vue`).
 
