@@ -78,7 +78,7 @@ function dateLabel(goal: Goal): string | undefined {
 const activeGrouped = computed(() => goals.groupedByDream.active);
 const closedGrouped = computed(() => goals.groupedByDream.closed);
 
-const groups = computed(() => {
+const sections = computed(() => {
 	const source = tab.value === 'active' ? activeGrouped.value : closedGrouped.value;
 	return source.groups.map((group) => ({
 		key: group.dreamId,
@@ -86,10 +86,10 @@ const groups = computed(() => {
 		items: group.items,
 	}));
 });
-const ungrouped = computed(
+const loose = computed(
 	() => (tab.value === 'active' ? activeGrouped.value : closedGrouped.value).ungrouped,
 );
-const rows = useSortedEntityRows(groups, ungrouped, 'goals');
+const rows = useSortedEntityRows(sections, loose, 'goals');
 
 const dialogOpen = ref(false);
 const editing = ref<Goal | null>(null);

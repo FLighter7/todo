@@ -4,10 +4,13 @@
 	</p>
 
 	<template v-else>
-		<template v-for="row in rows" :key="row.type === 'group' ? `group:${row.group.key}` : `item:${row.item.id}`">
-			<EntityListGroup v-if="row.type === 'group'" :label="row.group.label">
+		<template
+			v-for="row in rows"
+			:key="row.kind === 'section' ? `section:${row.section.key}` : `item:${row.item.id}`"
+		>
+			<EntityListSection v-if="row.kind === 'section'" :label="row.section.label">
 				<EntityListItem
-					v-for="item in row.group.items"
+					v-for="item in row.section.items"
 					:key="item.id"
 					:name="item.name"
 					:note="showNote ? item.note : undefined"
@@ -16,7 +19,7 @@
 					@update:done="emit('toggle', item.id, $event)"
 					@click="emit('open', item)"
 				/>
-			</EntityListGroup>
+			</EntityListSection>
 
 			<EntityListItem
 				v-else
@@ -32,7 +35,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends EntityBase">
-import EntityListGroup from './EntityListGroup.vue';
+import EntityListSection from './EntityListSection.vue';
 import EntityListItem from './EntityListItem.vue';
 import { Status, type EntityBase } from '@/types';
 import type { EntityRow } from '@/utils/sortEntities';

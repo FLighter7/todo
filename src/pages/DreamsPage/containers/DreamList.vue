@@ -51,7 +51,7 @@ import { useEntityTabsStore } from '@/stores/entityTabs';
 import { useCascadeCancel } from '@/composables/useCascadeCancel';
 import { useToggleConfirm } from '@/composables/useToggleConfirm';
 import { useSortedEntityRows } from '@/composables/useSortedEntityRows';
-import type { EntityGroup } from '@/utils/sortEntities';
+import type { ListSection } from '@/utils/sortEntities';
 import EntityList from '@/components/EntityList.vue';
 import DreamDialog from '@/components/DreamDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -64,8 +64,8 @@ const cascade = useCascadeCancel();
 
 const visible = computed(() => (tab.value === 'active' ? dreams.active : dreams.closed));
 const showNote = computed(() => settings.dreams.rows === 2);
-const groups = computed<EntityGroup<Dream>[]>(() => []);
-const rows = useSortedEntityRows(groups, visible, 'dreams');
+const sections = computed<ListSection<Dream>[]>(() => []);
+const rows = useSortedEntityRows(sections, visible, 'dreams');
 
 const dialogOpen = ref(false);
 const editing = ref<Dream | null>(null);

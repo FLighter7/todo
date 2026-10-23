@@ -19,11 +19,11 @@ function makeDream(overrides: Partial<Dream> = {}): Dream {
 }
 
 function itemRow(dream: Dream): EntityRow<Dream> {
-	return { type: 'item', item: dream };
+	return { kind: 'item', item: dream };
 }
 
-function groupRow(key: string, label: string, items: Dream[]): EntityRow<Dream> {
-	return { type: 'group', group: { key, label, items } };
+function sectionRow(key: string, label: string, items: Dream[]): EntityRow<Dream> {
+	return { kind: 'section', section: { key, label, items } };
 }
 
 describe('EntityList empty state', () => {
@@ -37,10 +37,10 @@ describe('EntityList empty state', () => {
 	});
 });
 
-describe('EntityList grouped rendering', () => {
-	it('renders a group row with its label and items', () => {
+describe('EntityList sectioned rendering', () => {
+	it('renders a section row with its label and items', () => {
 		const rows: EntityRow<Dream>[] = [
-			groupRow('dream-1', 'Visit Japan', [makeDream({ id: 'g1', name: 'Learn Japanese' })]),
+			sectionRow('dream-1', 'Visit Japan', [makeDream({ id: 'g1', name: 'Learn Japanese' })]),
 			itemRow(makeDream({ id: 'g2', name: 'Read more' })),
 		];
 		const wrapper = mount(EntityList, {
@@ -53,7 +53,7 @@ describe('EntityList grouped rendering', () => {
 		expect(wrapper.text()).toContain('Read more');
 	});
 
-	it('renders item rows with no group wrapper when there are no group rows', () => {
+	it('renders item rows with no section wrapper when there are no section rows', () => {
 		const rows: EntityRow<Dream>[] = [itemRow(makeDream({ id: 'a', name: 'Visit Japan' }))];
 		const wrapper = mount(EntityList, {
 			props: { rows, emptyText: 'Nothing here yet.', showNote: false },
@@ -64,10 +64,10 @@ describe('EntityList grouped rendering', () => {
 		expect(wrapper.text()).toContain('Visit Japan');
 	});
 
-	it('renders rows in the given order, interleaving groups and items', () => {
+	it('renders rows in the given order, interleaving sections and items', () => {
 		const rows: EntityRow<Dream>[] = [
 			itemRow(makeDream({ id: 'first', name: 'First item' })),
-			groupRow('mid-group', 'Middle group', [makeDream({ id: 'mid', name: 'Middle item' })]),
+			sectionRow('mid-group', 'Middle group', [makeDream({ id: 'mid', name: 'Middle item' })]),
 			itemRow(makeDream({ id: 'last', name: 'Last item' })),
 		];
 		const wrapper = mount(EntityList, {
@@ -101,9 +101,9 @@ describe('EntityList note visibility', () => {
 		expect(wrapper.text()).toContain('Cherry blossoms');
 	});
 
-	it('hides the note for items inside a group when showNote is false', () => {
+	it('hides the note for items inside a section when showNote is false', () => {
 		const rows: EntityRow<Dream>[] = [
-			groupRow('g1', 'A goal', [makeDream({ id: 'a', note: 'Cherry blossoms' })]),
+			sectionRow('g1', 'A goal', [makeDream({ id: 'a', note: 'Cherry blossoms' })]),
 		];
 		const wrapper = mount(EntityList, {
 			props: { rows, emptyText: 'Nothing here yet.', showNote: false },
@@ -139,10 +139,14 @@ describe('EntityList events', () => {
 		expect(wrapper.emitted('open')).toEqual([[dream]]);
 	});
 
-	it('emits toggle and open for an item rendered inside a group', async () => {
+	it('emits toggle and open for an item rendered inside a section', async () => {
 		const dream = makeDream({ id: 'a' });
 		const wrapper = mount(EntityList, {
-			props: { rows: [groupRow('g1', 'A goal', [dream])], emptyText: 'Nothing here yet.', showNote: false },
+			props: {
+				rows: [sectionRow('g1', 'A goal', [dream])],
+				emptyText: 'Nothing here yet.',
+				showNote: false,
+			},
 			global: { plugins: [vuetify, i18n] },
 		});
 

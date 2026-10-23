@@ -64,7 +64,7 @@ function labelFor(goalId: string): string {
 const activeGrouped = computed(() => tasks.groupedByGoal.active);
 const closedGrouped = computed(() => tasks.groupedByGoal.closed);
 
-const groups = computed(() => {
+const sections = computed(() => {
 	const source = tab.value === 'active' ? activeGrouped.value : closedGrouped.value;
 	return source.groups.map((group) => ({
 		key: group.goalId,
@@ -72,10 +72,10 @@ const groups = computed(() => {
 		items: group.items,
 	}));
 });
-const ungrouped = computed(
+const loose = computed(
 	() => (tab.value === 'active' ? activeGrouped.value : closedGrouped.value).ungrouped,
 );
-const rows = useSortedEntityRows(groups, ungrouped, 'tasks');
+const rows = useSortedEntityRows(sections, loose, 'tasks');
 
 const {
 	toggleConfirmOpen,

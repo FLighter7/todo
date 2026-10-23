@@ -1,12 +1,12 @@
 <style lang="scss" module>
-.group {
+.section {
 	border: 1px solid rgb(var(--v-theme-outline));
 	border-radius: 4px;
 	padding: 0;
 	margin: 0;
 }
 
-.group + .group {
+.section + .section {
 	margin-top: 4px;
 }
 
@@ -19,7 +19,7 @@
 </style>
 
 <template>
-	<fieldset :class="$style.group">
+	<fieldset :class="$style.section">
 		<legend :class="$style.legend">{{ label }}</legend>
 		<slot />
 	</fieldset>

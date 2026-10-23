@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { mount } from '@vue/test-utils';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import EntityListGroup from '../EntityListGroup.vue';
+import EntityListSection from '../EntityListSection.vue';
 
-describe('EntityListGroup', () => {
+describe('EntityListSection', () => {
 	it('renders the label in a legend and the slot content inside a fieldset', () => {
-		const wrapper = mount(EntityListGroup, {
+		const wrapper = mount(EntityListSection, {
 			props: { label: 'Visit Japan' },
 			slots: { default: '<p>Learn Japanese</p>' },
 			global: { plugins: [vuetify, i18n] },

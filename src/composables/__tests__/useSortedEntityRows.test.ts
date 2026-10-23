@@ -6,7 +6,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { i18n } from '@/i18n';
 import { Status, type Dream } from '@/types';
 import { useSettingsStore } from '@/stores/settings';
-import type { EntityGroup, EntityRow } from '@/utils/sortEntities';
+import type { EntityRow, ListSection } from '@/utils/sortEntities';
 import { useSortedEntityRows } from '../useSortedEntityRows';
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
@@ -35,7 +35,7 @@ function useComposableInSetup<T>(setup: () => T): T {
 }
 
 function ids(rows: EntityRow<Dream>[]): Array<string | null> {
-	return rows.map((row) => (row.type === 'item' ? row.item.id : null));
+	return rows.map((row) => (row.kind === 'item' ? row.item.id : null));
 }
 
 beforeEach(() => {
@@ -44,13 +44,13 @@ beforeEach(() => {
 });
 
 describe('useSortedEntityRows', () => {
-	it('sorts by the settings entity\'s current sortOrder', () => {
+	it("sorts by the settings entity's current sortOrder", () => {
 		const older = makeDream({ id: 'older', updated: '2026-08-01T00:00:00.000Z' });
 		const newer = makeDream({ id: 'newer', updated: '2026-08-10T00:00:00.000Z' });
-		const groups = computed<EntityGroup<Dream>[]>(() => []);
-		const ungrouped = computed(() => [older, newer]);
+		const sections = computed<ListSection<Dream>[]>(() => []);
+		const loose = computed(() => [older, newer]);
 
-		const rows = useComposableInSetup(() => useSortedEntityRows(groups, ungrouped, 'dreams'));
+		const rows = useComposableInSetup(() => useSortedEntityRows(sections, loose, 'dreams'));
 
 		expect(ids(rows.value)).toEqual(['newer', 'older']);
 	});
@@ -58,10 +58,10 @@ describe('useSortedEntityRows', () => {
 	it('reacts to a sortOrder change on the settings store', () => {
 		const older = makeDream({ id: 'older', updated: '2026-08-01T00:00:00.000Z' });
 		const newer = makeDream({ id: 'newer', updated: '2026-08-10T00:00:00.000Z' });
-		const groups = computed<EntityGroup<Dream>[]>(() => []);
-		const ungrouped = computed(() => [older, newer]);
+		const sections = computed<ListSection<Dream>[]>(() => []);
+		const loose = computed(() => [older, newer]);
 
-		const rows = useComposableInSetup(() => useSortedEntityRows(groups, ungrouped, 'dreams'));
+		const rows = useComposableInSetup(() => useSortedEntityRows(sections, loose, 'dreams'));
 		useSettingsStore().updatePageSettings('dreams', { sortOrder: 'oldest' });
 
 		expect(ids(rows.value)).toEqual(['older', 'newer']);
@@ -70,10 +70,10 @@ describe('useSortedEntityRows', () => {
 	it('reads the sortOrder for the given page independently of the others', () => {
 		const older = makeDream({ id: 'older', updated: '2026-08-01T00:00:00.000Z' });
 		const newer = makeDream({ id: 'newer', updated: '2026-08-10T00:00:00.000Z' });
-		const groups = computed<EntityGroup<Dream>[]>(() => []);
-		const ungrouped = computed(() => [older, newer]);
+		const sections = computed<ListSection<Dream>[]>(() => []);
+		const loose = computed(() => [older, newer]);
 
-		const rows = useComposableInSetup(() => useSortedEntityRows(groups, ungrouped, 'tasks'));
+		const rows = useComposableInSetup(() => useSortedEntityRows(sections, loose, 'tasks'));
 		useSettingsStore().updatePageSettings('dreams', { sortOrder: 'oldest' });
 
 		expect(ids(rows.value)).toEqual(['newer', 'older']);
