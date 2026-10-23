@@ -118,12 +118,9 @@
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { mdiCheck, mdiPlusThick } from '@mdi/js';
-import type { DreamDraft } from '@/stores/dreams';
-import type { GoalDraft } from '@/stores/goals';
-import type { TaskDraft } from '@/stores/tasks';
 import DeadlineField from './DeadlineField.vue';
 import ScheduleField from './ScheduleField.vue';
-import type { Deadline, Schedule } from '@/types';
+import type { Deadline, DreamDraft, GoalDraft, Schedule, TaskDraft } from '@/types';
 
 const props = defineProps<{
 	defaultTab: 'dream' | 'goal' | 'task';

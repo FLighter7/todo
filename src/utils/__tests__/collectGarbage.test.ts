@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Status, type EntityBase, type Task } from '@/types';
-import { collectGarbage, pruneCompletions, pruneExdate } from '../collectGarbage';
+import { collectGarbage, pruneCompletions, pruneExdate, pruneTask } from '../collectGarbage';
 
 const NOW = new Date('2026-08-16T12:00:00.000Z');
 
@@ -240,5 +240,51 @@ describe('pruneExdate', () => {
 		pruneExdate(task, 30, NOW);
 
 		expect(task).toEqual(copy);
+	});
+});
+
+describe('pruneTask', () => {
+	it('hands the same reference back when there is nothing to prune', () => {
+		const task = makeTask({
+			schedule: { start: '2026-08-07T09:00', rrule: 'FREQ=DAILY', exdate: ['2026-08-10T09:00'] },
+			completions: [{ occurrence: '2026-08-11T09:00', done: true, at: daysBefore(5) }],
+		});
+
+		expect(pruneTask(task, 30, NOW)).toBe(task);
+	});
+
+	it('hands the same reference back for a task with no schedule and no completions', () => {
+		const task = makeTask();
+
+		expect(pruneTask(task, 30, NOW)).toBe(task);
+	});
+
+	it('returns a fresh, pruned copy when a stale completion goes', () => {
+		const task = makeTask({
+			completions: [
+				{ occurrence: '2026-01-01T09:00', done: true, at: daysBefore(200) },
+				{ occurrence: '2026-08-11T09:00', done: true, at: daysBefore(5) },
+			],
+		});
+
+		const pruned = pruneTask(task, 30, NOW);
+
+		expect(pruned).not.toBe(task);
+		expect(pruned.completions?.map((entry) => entry.occurrence)).toEqual(['2026-08-11T09:00']);
+	});
+
+	it('returns a fresh, pruned copy when a stale exdate entry goes', () => {
+		const task = makeTask({
+			schedule: {
+				start: '2026-01-01T09:00',
+				rrule: 'FREQ=DAILY',
+				exdate: ['2026-01-02T09:00', '2026-08-10T09:00'],
+			},
+		});
+
+		const pruned = pruneTask(task, 30, NOW);
+
+		expect(pruned).not.toBe(task);
+		expect(pruned.schedule?.exdate).toEqual(['2026-08-10T09:00']);
 	});
 });

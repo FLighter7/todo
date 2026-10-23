@@ -4,7 +4,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { Status, type Task } from '@/types';
 import { EntityMemoryRepository } from '@/repositories/EntityMemoryRepository';
 import type { EntityStorage } from '@/repositories/EntityStorage';
-import { QUADRANT_KEYS, quadrantFlags, quadrantOf, useTasksStore } from '../tasks';
+import { useTasksStore } from '../tasks';
 
 function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
@@ -46,32 +46,6 @@ function spyingRepository(seed: Task[]): { storage: EntityStorage<Task>; putIds:
 
 beforeEach(() => {
 	setActivePinia(createPinia());
-});
-
-describe('quadrantOf', () => {
-	it('maps important and urgent to do', () => {
-		expect(quadrantOf(makeTask({ important: true, urgent: true }))).toBe('do');
-	});
-
-	it('maps important and not urgent to schedule', () => {
-		expect(quadrantOf(makeTask({ important: true, urgent: false }))).toBe('schedule');
-	});
-
-	it('maps not important and urgent to delegate', () => {
-		expect(quadrantOf(makeTask({ important: false, urgent: true }))).toBe('delegate');
-	});
-
-	it('maps not important and not urgent to eliminate', () => {
-		expect(quadrantOf(makeTask({ important: false, urgent: false }))).toBe('eliminate');
-	});
-});
-
-describe('quadrantFlags', () => {
-	it('is the inverse of quadrantOf for every quadrant', () => {
-		for (const key of QUADRANT_KEYS) {
-			expect(quadrantOf(makeTask(quadrantFlags(key)))).toBe(key);
-		}
-	});
 });
 
 describe('useTasksStore quadrants', () => {
@@ -399,13 +373,13 @@ describe('useTasksStore setOccurrenceDone / setOccurrenceSkipped', () => {
 	});
 });
 
-describe('useTasksStore groupedByGoal', () => {
-	it('puts a goalless task in the ungrouped tail', async () => {
+describe('useTasksStore tasksByGoal', () => {
+	it('puts a goalless task in the loose tail', async () => {
 		const store = useTasksStore();
 		await store.load(async () => new EntityMemoryRepository([makeTask({ id: 'a' })]));
 
-		expect(store.groupedByGoal.active.groups).toEqual([]);
-		expect(store.groupedByGoal.active.ungrouped.map((t) => t.id)).toEqual(['a']);
+		expect(store.tasksByGoal.active.sections).toEqual([]);
+		expect(store.tasksByGoal.active.loose.map((t) => t.id)).toEqual(['a']);
 	});
 
 	it('groups multiple tasks under the same goal together', async () => {
@@ -419,10 +393,10 @@ describe('useTasksStore groupedByGoal', () => {
 				]),
 		);
 
-		const groups = store.groupedByGoal.active.groups;
+		const groups = store.tasksByGoal.active.sections;
 		expect(groups).toHaveLength(2);
-		expect(groups.find((g) => g.goalId === 'goal-1')?.items.map((t) => t.id)).toEqual(['a', 'b']);
-		expect(groups.find((g) => g.goalId === 'goal-2')?.items.map((t) => t.id)).toEqual(['c']);
+		expect(groups.find((g) => g.parentId === 'goal-1')?.items.map((t) => t.id)).toEqual(['a', 'b']);
+		expect(groups.find((g) => g.parentId === 'goal-2')?.items.map((t) => t.id)).toEqual(['c']);
 	});
 
 	it('groups a task by goalId regardless of the goal record itself -- the getter never reads Goal data', async () => {
@@ -431,8 +405,8 @@ describe('useTasksStore groupedByGoal', () => {
 			async () => new EntityMemoryRepository([makeTask({ id: 'a', goalId: 'closed-goal' })]),
 		);
 
-		expect(store.groupedByGoal.active.groups).toEqual([
-			{ goalId: 'closed-goal', items: [store.records[0]] },
+		expect(store.tasksByGoal.active.sections).toEqual([
+			{ parentId: 'closed-goal', items: [store.records[0]] },
 		]);
 	});
 
@@ -446,7 +420,7 @@ describe('useTasksStore groupedByGoal', () => {
 				]),
 		);
 
-		expect(store.groupedByGoal.active.groups[0].items.map((t) => t.id)).toEqual(['a']);
-		expect(store.groupedByGoal.closed.groups[0].items.map((t) => t.id)).toEqual(['b']);
+		expect(store.tasksByGoal.active.sections[0].items.map((t) => t.id)).toEqual(['a']);
+		expect(store.tasksByGoal.closed.sections[0].items.map((t) => t.id)).toEqual(['b']);
 	});
 });

@@ -1,48 +1,16 @@
 import { computed } from 'vue';
 import { defineStore, storeToRefs } from 'pinia';
-import { Status, parseTask, type Schedule, type Task } from '@/types';
+import { Status, parseTask, type Task, type TaskDraft } from '@/types';
 import { EntityDbRepository } from '@/repositories/EntityDbRepository';
-import { pruneCompletions, pruneExdate } from '@/utils';
+import {
+	pruneTask,
+	quadrantOf,
+	sectionByParent,
+	type QuadrantKey,
+	type SectionedByParent,
+} from '@/utils';
 import { isLastOccurrence } from '@/utils/schedule';
 import { defineEntityStore } from './createEntityStore';
-
-export interface TaskDraft {
-	name: string;
-	note?: string;
-	goalId?: string;
-	important: boolean;
-	urgent: boolean;
-	schedule?: Schedule;
-}
-
-export type QuadrantKey = 'do' | 'schedule' | 'delegate' | 'eliminate';
-
-export const QUADRANT_KEYS: readonly QuadrantKey[] = ['do', 'schedule', 'delegate', 'eliminate'];
-
-export function quadrantOf(task: Task): QuadrantKey {
-	if (task.important) {
-		return task.urgent ? 'do' : 'schedule';
-	}
-
-	return task.urgent ? 'delegate' : 'eliminate';
-}
-
-export function quadrantFlags(key: QuadrantKey): { important: boolean; urgent: boolean } {
-	return {
-		important: key === 'do' || key === 'schedule',
-		urgent: key === 'do' || key === 'delegate',
-	};
-}
-
-export interface GoalGroup {
-	goalId: string;
-	items: Task[];
-}
-
-export interface GroupedTasks {
-	groups: GoalGroup[];
-	ungrouped: Task[];
-}
 
 const useBaseTasksStore = defineEntityStore<Task, TaskDraft>({
 	id: 'tasks',
@@ -59,42 +27,8 @@ const useBaseTasksStore = defineEntityStore<Task, TaskDraft>({
 		urgent: draft.urgent,
 		schedule: draft.schedule,
 	}),
-	// Both prune functions always return a fresh object, by contract — neither
-	// may alias its input. The store, though, uses reference identity to tell
-	// "nothing to prune" from "rewrite this record", so hand the original back
-	// when neither completions nor exdate actually changed.
-	prune: (task, windowDays, now) => {
-		const afterCompletions = pruneCompletions(task, windowDays, now);
-		const fullyPruned = pruneExdate(afterCompletions, windowDays, now);
-
-		const unchanged =
-			fullyPruned.completions?.length === task.completions?.length &&
-			fullyPruned.schedule?.exdate?.length === task.schedule?.exdate?.length;
-
-		return unchanged ? task : fullyPruned;
-	},
+	prune: pruneTask,
 });
-
-function groupByGoal(records: Task[]): GroupedTasks {
-	const byGoal = new Map<string, Task[]>();
-	const ungrouped: Task[] = [];
-
-	for (const task of records) {
-		if (task.goalId === undefined) {
-			ungrouped.push(task);
-			continue;
-		}
-
-		const items = byGoal.get(task.goalId) ?? [];
-		items.push(task);
-		byGoal.set(task.goalId, items);
-	}
-
-	return {
-		groups: [...byGoal.entries()].map(([goalId, items]) => ({ goalId, items })),
-		ungrouped,
-	};
-}
 
 /**
  * The matrix is a view of the same data, not a separate entity: this getter
@@ -116,7 +50,7 @@ function groupByGoal(records: Task[]): GroupedTasks {
  * store changes. Actions are passed through directly — Pinia already binds
  * them to their own store.
  *
- * `groupedByGoal` keys groups by `goalId` only, the same way `groupedByDream`
+ * `tasksByGoal` keys sections by `goalId` only, the same way `goalsByDream`
  * on the goals store keys by `dreamId` only — it never resolves the Goal's
  * name, since that would mean the tasks store importing the goals store,
  * breaking the mutual independence dreams/goals/tasks keep. A caller with
@@ -141,9 +75,12 @@ export const useTasksStore = defineStore('tasksMatrix', () => {
 		return groups;
 	});
 
-	const groupedByGoal = computed<{ active: GroupedTasks; closed: GroupedTasks }>(() => ({
-		active: groupByGoal(active.value),
-		closed: groupByGoal(closed.value),
+	const tasksByGoal = computed<{
+		active: SectionedByParent<Task>;
+		closed: SectionedByParent<Task>;
+	}>(() => ({
+		active: sectionByParent(active.value, (task) => task.goalId),
+		closed: sectionByParent(closed.value, (task) => task.goalId),
 	}));
 
 	function findTask(id: string): Task | undefined {
@@ -229,7 +166,7 @@ export const useTasksStore = defineStore('tasksMatrix', () => {
 		closed,
 		loading,
 		quadrants,
-		groupedByGoal,
+		tasksByGoal,
 		load: store.load,
 		add: store.add,
 		update: store.update,

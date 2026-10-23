@@ -48,6 +48,15 @@ export interface Task extends EntityBase {
 	completions?: Completion[];
 }
 
+export interface TaskDraft {
+	name: string;
+	note?: string;
+	goalId?: string;
+	important: boolean;
+	urgent: boolean;
+	schedule?: Schedule;
+}
+
 /**
  * Never stored: two fields encoding the same fact drift apart eventually.
  * A task is one-time when it has no rule, or a rule that fires once.

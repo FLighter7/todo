@@ -91,3 +91,20 @@ export function pruneExdate(task: Task, windowDays: number, now: Date): Task {
 		schedule: { ...task.schedule, exdate: exdate.length > 0 ? exdate : undefined },
 	};
 }
+
+/**
+ * Both prunes above, for a task read from storage or received in a sync.
+ * Unlike them, this one hands the original reference back when neither
+ * completions nor exdate actually changed: the store uses reference identity
+ * to tell "nothing to prune" from "rewrite this record".
+ */
+export function pruneTask(task: Task, windowDays: number, now: Date): Task {
+	const afterCompletions = pruneCompletions(task, windowDays, now);
+	const fullyPruned = pruneExdate(afterCompletions, windowDays, now);
+
+	const unchanged =
+		fullyPruned.completions?.length === task.completions?.length &&
+		fullyPruned.schedule?.exdate?.length === task.schedule?.exdate?.length;
+
+	return unchanged ? task : fullyPruned;
+}

@@ -39,8 +39,8 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
-import { Status, type Task } from '@/types';
-import { useTasksStore, type TaskDraft } from '@/stores/tasks';
+import { Status, type Task, type TaskDraft } from '@/types';
+import { useTasksStore } from '@/stores/tasks';
 import { useGoalsStore } from '@/stores/goals';
 import { useSettingsStore } from '@/stores/settings';
 import { useEntityTabsStore } from '@/stores/entityTabs';
@@ -61,19 +61,19 @@ function labelFor(goalId: string): string {
 	return goals.records.find((goal) => goal.id === goalId)?.name ?? '';
 }
 
-const activeGrouped = computed(() => tasks.groupedByGoal.active);
-const closedGrouped = computed(() => tasks.groupedByGoal.closed);
+const activeSections = computed(() => tasks.tasksByGoal.active);
+const closedSections = computed(() => tasks.tasksByGoal.closed);
 
 const sections = computed(() => {
-	const source = tab.value === 'active' ? activeGrouped.value : closedGrouped.value;
-	return source.groups.map((group) => ({
-		key: group.goalId,
-		label: labelFor(group.goalId),
-		items: group.items,
+	const source = tab.value === 'active' ? activeSections.value : closedSections.value;
+	return source.sections.map((section) => ({
+		key: section.parentId,
+		label: labelFor(section.parentId),
+		items: section.items,
 	}));
 });
 const loose = computed(
-	() => (tab.value === 'active' ? activeGrouped.value : closedGrouped.value).ungrouped,
+	() => (tab.value === 'active' ? activeSections.value : closedSections.value).loose,
 );
 const rows = useSortedEntityRows(sections, loose, 'tasks');
 

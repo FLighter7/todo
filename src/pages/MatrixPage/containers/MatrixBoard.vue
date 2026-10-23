@@ -49,7 +49,8 @@ import TaskDialog from '@/components/TaskDialog.vue';
 import { useGoalsStore } from '@/stores/goals';
 import TaskQuadrant from '../TaskQuadrant.vue';
 import { Status } from '@/types';
-import { QUADRANT_KEYS, quadrantFlags, useTasksStore, type QuadrantKey } from '@/stores/tasks';
+import { useTasksStore } from '@/stores/tasks';
+import { QUADRANT_KEYS, quadrantFlags, type QuadrantKey } from '@/utils/quadrants';
 
 const store = useTasksStore();
 const goals = useGoalsStore();

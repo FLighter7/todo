@@ -29,7 +29,7 @@
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EntityDialog from './EntityDialog.vue';
-import type { DreamDraft } from '@/stores/dreams';
+import type { DreamDraft } from '@/types';
 
 const props = withDefaults(
 	defineProps<{

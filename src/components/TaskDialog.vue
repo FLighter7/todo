@@ -78,8 +78,7 @@ import EntityDialog from './EntityDialog.vue';
 import ScheduleField from './ScheduleField.vue';
 import TaskCompletions from './TaskCompletions.vue';
 import { describeRecurrence, formatWallClock, listOccurrences, parseRRule } from '@/utils/schedule';
-import { isPeriodic, type Schedule, type Task } from '@/types';
-import type { TaskDraft } from '@/stores/tasks';
+import { isPeriodic, type Schedule, type Task, type TaskDraft } from '@/types';
 
 const PAST_WINDOW = 5;
 const FUTURE_WINDOW = 5;

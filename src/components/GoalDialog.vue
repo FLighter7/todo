@@ -45,8 +45,7 @@ import { useI18n } from 'vue-i18n';
 import EntityDialog from './EntityDialog.vue';
 import DeadlineField from './DeadlineField.vue';
 import { formatDeadline } from '@/utils/deadline';
-import type { Deadline } from '@/types';
-import type { GoalDraft } from '@/stores/goals';
+import type { Deadline, GoalDraft } from '@/types';
 
 const props = withDefaults(
 	defineProps<{

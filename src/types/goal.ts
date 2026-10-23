@@ -27,6 +27,13 @@ export interface Goal extends EntityBase {
 	deadline?: Deadline;
 }
 
+export interface GoalDraft {
+	name: string;
+	note?: string;
+	dreamId?: string;
+	deadline?: Deadline;
+}
+
 export function isSeason(value: unknown): value is Season {
 	return (
 		value === Season.Winter ||

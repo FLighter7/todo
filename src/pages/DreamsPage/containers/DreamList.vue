@@ -44,8 +44,8 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
-import { Status, type Dream } from '@/types';
-import { useDreamsStore, type DreamDraft } from '@/stores/dreams';
+import { Status, type Dream, type DreamDraft } from '@/types';
+import { useDreamsStore } from '@/stores/dreams';
 import { useSettingsStore } from '@/stores/settings';
 import { useEntityTabsStore } from '@/stores/entityTabs';
 import { useCascadeCancel } from '@/composables/useCascadeCancel';

@@ -32,9 +32,10 @@ import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { mdiPlus } from '@mdi/js';
 import AddEntityDialog from '@/components/AddEntityDialog.vue';
-import { useTasksStore, type TaskDraft } from '@/stores/tasks';
-import { useDreamsStore, type DreamDraft } from '@/stores/dreams';
-import { useGoalsStore, type GoalDraft } from '@/stores/goals';
+import type { DreamDraft, GoalDraft, TaskDraft } from '@/types';
+import { useTasksStore } from '@/stores/tasks';
+import { useDreamsStore } from '@/stores/dreams';
+import { useGoalsStore } from '@/stores/goals';
 
 const { t } = useI18n();
 const route = useRoute();

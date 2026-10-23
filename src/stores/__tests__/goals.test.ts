@@ -24,13 +24,13 @@ beforeEach(() => {
 	setActivePinia(createPinia());
 });
 
-describe('useGoalsStore groupedByDream', () => {
-	it('puts a dreamless goal in the ungrouped tail', async () => {
+describe('useGoalsStore goalsByDream', () => {
+	it('puts a dreamless goal in the loose tail', async () => {
 		const store = useGoalsStore();
 		await store.load(async () => new EntityMemoryRepository([makeGoal({ id: 'a' })]));
 
-		expect(store.groupedByDream.active.groups).toEqual([]);
-		expect(store.groupedByDream.active.ungrouped.map((g) => g.id)).toEqual(['a']);
+		expect(store.goalsByDream.active.sections).toEqual([]);
+		expect(store.goalsByDream.active.loose.map((g) => g.id)).toEqual(['a']);
 	});
 
 	it('groups multiple goals under the same dream together', async () => {
@@ -44,10 +44,13 @@ describe('useGoalsStore groupedByDream', () => {
 				]),
 		);
 
-		const groups = store.groupedByDream.active.groups;
+		const groups = store.goalsByDream.active.sections;
 		expect(groups).toHaveLength(2);
-		expect(groups.find((g) => g.dreamId === 'dream-1')?.items.map((g) => g.id)).toEqual(['a', 'b']);
-		expect(groups.find((g) => g.dreamId === 'dream-2')?.items.map((g) => g.id)).toEqual(['c']);
+		expect(groups.find((g) => g.parentId === 'dream-1')?.items.map((g) => g.id)).toEqual([
+			'a',
+			'b',
+		]);
+		expect(groups.find((g) => g.parentId === 'dream-2')?.items.map((g) => g.id)).toEqual(['c']);
 	});
 
 	it('groups a goal by dreamId regardless of the dream record itself -- the getter never reads Dream data', async () => {
@@ -56,8 +59,8 @@ describe('useGoalsStore groupedByDream', () => {
 			async () => new EntityMemoryRepository([makeGoal({ id: 'a', dreamId: 'closed-dream' })]),
 		);
 
-		expect(store.groupedByDream.active.groups).toEqual([
-			{ dreamId: 'closed-dream', items: [store.records[0]] },
+		expect(store.goalsByDream.active.sections).toEqual([
+			{ parentId: 'closed-dream', items: [store.records[0]] },
 		]);
 	});
 
@@ -71,7 +74,7 @@ describe('useGoalsStore groupedByDream', () => {
 				]),
 		);
 
-		expect(store.groupedByDream.active.groups[0].items.map((g) => g.id)).toEqual(['a']);
-		expect(store.groupedByDream.closed.groups[0].items.map((g) => g.id)).toEqual(['b']);
+		expect(store.goalsByDream.active.sections[0].items.map((g) => g.id)).toEqual(['a']);
+		expect(store.goalsByDream.closed.sections[0].items.map((g) => g.id)).toEqual(['b']);
 	});
 });

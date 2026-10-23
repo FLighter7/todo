@@ -7,6 +7,11 @@ import { parseEntityBase, type EntityBase } from './entity';
  */
 export type Dream = EntityBase;
 
+export interface DreamDraft {
+	name: string;
+	note?: string;
+}
+
 export function parseDream(value: unknown): Dream {
 	return parseEntityBase(value);
 }

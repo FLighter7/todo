@@ -65,7 +65,7 @@
 import { useI18n } from 'vue-i18n';
 import { mdiPlus } from '@mdi/js';
 import type { Task } from '@/types';
-import type { QuadrantKey } from '@/stores/tasks';
+import type { QuadrantKey } from '@/utils/quadrants';
 
 defineProps<{
 	quadrant: QuadrantKey;

@@ -1,11 +1,6 @@
-import { Status, parseDream, type Dream } from '@/types';
+import { Status, parseDream, type Dream, type DreamDraft } from '@/types';
 import { EntityDbRepository } from '@/repositories/EntityDbRepository';
 import { defineEntityStore } from './createEntityStore';
-
-export interface DreamDraft {
-	name: string;
-	note?: string;
-}
 
 export const useDreamsStore = defineEntityStore<Dream, DreamDraft>({
 	id: 'dreams',
