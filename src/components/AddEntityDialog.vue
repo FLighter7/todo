@@ -59,11 +59,15 @@
 				/>
 			</VCardActions>
 
-			<VTabs v-model="activeTab" color="primary" grow :class="$style.tabs">
-				<VTab value="dream">{{ t('dream.title') }}</VTab>
-				<VTab value="goal">{{ t('goal.title') }}</VTab>
-				<VTab value="group">{{ t('group.title') }}</VTab>
-				<VTab value="task">{{ t('task.title') }}</VTab>
+			<!-- A lone task tab needs no tab bar. -->
+			<VTabs
+				v-if="visibleTabs.length > 1"
+				v-model="activeTab"
+				color="primary"
+				grow
+				:class="$style.tabs"
+			>
+				<VTab v-for="tab in visibleTabs" :key="tab" :value="tab">{{ t(`${tab}.title`) }}</VTab>
 			</VTabs>
 
 			<VCardText>
@@ -88,6 +92,7 @@
 					/>
 					<VTextarea v-model="goalNote" :label="t('entity.note')" rows="3" />
 					<VSelect
+						v-if="showDream"
 						v-model="goalDreamId"
 						:items="goalDreamSelectItems"
 						item-title="title"
@@ -126,6 +131,7 @@
 						<VSwitch v-model="taskUrgent" :label="t('task.urgent')" color="primary" hide-details />
 					</div>
 					<VSelect
+						v-if="showGoal"
 						v-model="taskGoalId"
 						:items="taskGoalSelectItems"
 						item-title="title"
@@ -133,6 +139,7 @@
 						:label="t('task.goalLabel')"
 					/>
 					<VSelect
+						v-if="showGroup"
 						v-model="taskGroupId"
 						:items="taskGroupSelectItems"
 						item-title="title"
@@ -154,14 +161,25 @@ import DeadlineField from './DeadlineField.vue';
 import ScheduleField from './ScheduleField.vue';
 import type { Deadline, DreamDraft, GoalDraft, GroupDraft, Schedule, TaskDraft } from '@/types';
 
-type AddTab = 'dream' | 'goal' | 'group' | 'task';
+const TABS = ['dream', 'goal', 'group', 'task'] as const;
+type AddTab = (typeof TABS)[number];
 
-const props = defineProps<{
-	defaultTab: AddTab;
-	dreamOptions: Array<{ value: string; title: string }>;
-	goalOptions: Array<{ value: string; title: string }>;
-	groupOptions: Array<{ value: string; title: string }>;
-}>();
+const props = withDefaults(
+	defineProps<{
+		defaultTab: AddTab;
+		dreamOptions: Array<{ value: string; title: string }>;
+		goalOptions: Array<{ value: string; title: string }>;
+		groupOptions: Array<{ value: string; title: string }>;
+		/**
+		 * False while that page is switched off in Settings: its tab goes, and so
+		 * does its picker on the other tabs.
+		 */
+		showDream?: boolean;
+		showGoal?: boolean;
+		showGroup?: boolean;
+	}>(),
+	{ showDream: true, showGoal: true, showGroup: true },
+);
 
 const emit = defineEmits<{
 	'save-dream': [draft: DreamDraft];
@@ -174,7 +192,21 @@ const open = defineModel<boolean>({ required: true });
 
 const { t } = useI18n();
 
-const activeTab = ref<AddTab>(props.defaultTab);
+const visibleTabs = computed(() => {
+	const shown: Record<AddTab, boolean> = {
+		dream: props.showDream,
+		goal: props.showGoal,
+		group: props.showGroup,
+		task: true,
+	};
+	return TABS.filter((tab) => shown[tab]);
+});
+
+function openingTab(): AddTab {
+	return visibleTabs.value.includes(props.defaultTab) ? props.defaultTab : 'task';
+}
+
+const activeTab = ref<AddTab>(openingTab());
 const showErrors = ref(false);
 const nameField = useTemplateRef<{ focus: () => void }>('nameField');
 
@@ -227,7 +259,7 @@ watch(open, (isOpen) => {
 		return;
 	}
 
-	activeTab.value = props.defaultTab;
+	activeTab.value = openingTab();
 	showErrors.value = false;
 	dreamName.value = '';
 	dreamNote.value = '';

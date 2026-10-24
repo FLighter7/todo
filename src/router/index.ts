@@ -1,4 +1,10 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
+import {
+	createRouter,
+	createWebHistory,
+	type RouteLocationNormalized,
+	type RouteLocationRaw,
+	type RouteRecordRaw,
+} from 'vue-router';
 import {
 	mdiFlagOutline,
 	mdiFolderOutline,
@@ -8,6 +14,7 @@ import {
 } from '@mdi/js';
 import TasksPage from '@/pages/TasksPage/TasksPage.vue';
 import { settingsService } from '@/services/settings/SettingsService';
+import { isPageHidden } from '@/types';
 
 declare module 'vue-router' {
 	interface RouteMeta {
@@ -88,14 +95,31 @@ export function getStartPageOptions(): StartPageOption[] {
 }
 
 export function readStoredStartPage(): StartPage {
-	const stored = settingsService.load().general.startPage;
+	const settings = settingsService.load();
+	const stored = settings.general.startPage;
 	const options = getStartPageOptions();
 	const fallback = options[0]?.value ?? 'tasks';
 
-	return options.some((option) => option.value === stored) ? stored : fallback;
+	return options.some((option) => option.value === stored) && !isPageHidden(settings, stored)
+		? stored
+		: fallback;
 }
 
-export default createRouter({
+/**
+ * A page switched off in Settings cannot be reached by its address either:
+ * it leads to the start page, which is never a hidden one.
+ */
+export function redirectHiddenPage(to: RouteLocationNormalized): RouteLocationRaw | true {
+	return isPageHidden(settingsService.load(), String(to.name))
+		? { name: readStoredStartPage() }
+		: true;
+}
+
+const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
 	routes,
 });
+
+router.beforeEach(redirectHiddenPage);
+
+export default router;

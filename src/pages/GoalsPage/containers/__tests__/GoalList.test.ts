@@ -97,6 +97,22 @@ describe('GoalList grouping', () => {
 	});
 });
 
+describe('GoalList with the Dreams page switched off', () => {
+	it('runs every goal as one flat list, and leaves the dream picker out', async () => {
+		useSettingsStore().setPageVisible('dreams', false);
+		const { wrapper } = await mountWithData(
+			[makeDream()],
+			[makeGoal({ dreamId: 'dream-1' }), makeGoal({ id: 'goal-2', name: 'Run a marathon' })],
+		);
+
+		expect(wrapper.find('fieldset').exists()).toBe(false);
+		expect(wrapper.text()).not.toContain('Visit Japan');
+		expect(wrapper.text()).toContain('Learn Japanese');
+		expect(wrapper.text()).toContain('Run a marathon');
+		expect(wrapper.findComponent({ name: 'GoalDialog' }).props('showDream')).toBe(false);
+	});
+});
+
 describe('GoalList dream picker options', () => {
 	it('offers only active dreams as new choices', async () => {
 		const { wrapper } = await mountWithData(

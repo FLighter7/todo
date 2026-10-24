@@ -60,6 +60,12 @@ describe('SettingsService.load', () => {
 		expect(DEFAULT_SETTINGS.general.theme).toBe('system');
 	});
 
+	it('does not hand back the shared pages object either', () => {
+		const loaded = new SettingsService().load();
+		loaded.general.pages.goals = false;
+		expect(DEFAULT_SETTINGS.general.pages.goals).toBe(true);
+	});
+
 	it('reads back a saved value', () => {
 		const service = new SettingsService();
 		const custom = {
@@ -78,6 +84,22 @@ describe('SettingsService.load', () => {
 
 		expect(loaded.general.theme).toBe('dark');
 		expect(loaded.general.fontScale).toBe(1);
+	});
+
+	it('keeps every other setting of a document saved before pages could be hidden', () => {
+		const general = {
+			theme: 'dark',
+			locale: 'en',
+			startPage: 'tasks',
+			cleanupDays: 30,
+			fontScale: 1,
+		};
+		localStorage.setItem('todo.settings', JSON.stringify({ ...DEFAULT_SETTINGS, general }));
+
+		const loaded = new SettingsService().load();
+
+		expect(loaded.general.theme).toBe('dark');
+		expect(loaded.general.pages).toEqual(DEFAULT_SETTINGS.general.pages);
 	});
 
 	it('keeps every other setting of a document saved before the Groups page existed', () => {

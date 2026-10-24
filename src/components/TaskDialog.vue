@@ -38,6 +38,7 @@
 					<VSwitch v-model="urgent" :label="t('task.urgent')" color="primary" hide-details />
 				</div>
 				<VSelect
+					v-if="showGoal"
 					v-model="goalId"
 					:items="selectItems"
 					item-title="title"
@@ -45,6 +46,7 @@
 					:label="t('task.goalLabel')"
 				/>
 				<VSelect
+					v-if="showGroup"
 					v-model="groupId"
 					:items="groupSelectItems"
 					item-title="title"
@@ -56,10 +58,10 @@
 			<template v-else>
 				<div class="text-title-large">{{ name }}</div>
 				<p v-if="note" class="text-body-medium mt-2">{{ note }}</p>
-				<p v-if="goalName" class="text-body-medium mt-2 text-medium-emphasis">
+				<p v-if="showGoal && goalName" class="text-body-medium mt-2 text-medium-emphasis">
 					{{ t('task.goalLabel') }}: {{ goalName }}
 				</p>
-				<p v-if="groupName" class="text-body-medium mt-2 text-medium-emphasis">
+				<p v-if="showGroup && groupName" class="text-body-medium mt-2 text-medium-emphasis">
 					{{ t('task.groupLabel') }}: {{ groupName }}
 				</p>
 				<p v-if="schedule" class="text-body-medium mt-2 text-medium-emphasis">
@@ -100,8 +102,11 @@ const props = withDefaults(
 		mode?: 'add' | 'edit';
 		goalOptions: Array<{ value: string; title: string }>;
 		groupOptions: Array<{ value: string; title: string }>;
+		/** False while that page is switched off in Settings; the task keeps its link either way. */
+		showGoal?: boolean;
+		showGroup?: boolean;
 	}>(),
-	{ record: null, initialFlags: undefined, mode: 'edit' },
+	{ record: null, initialFlags: undefined, mode: 'edit', showGoal: true, showGroup: true },
 );
 
 const emit = defineEmits<{

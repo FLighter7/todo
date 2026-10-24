@@ -51,6 +51,77 @@ describe('SettingsPage text size', () => {
 	});
 });
 
+describe('SettingsPage pages', () => {
+	function checkboxes(wrapper: ReturnType<typeof mountPage>) {
+		return wrapper.findAllComponents({ name: 'VCheckbox' });
+	}
+
+	it('lists every page, with Tasks and the matrix ticked and disabled', () => {
+		const boxes = checkboxes(mountPage());
+
+		expect(boxes.map((box) => box.props('label'))).toEqual([
+			'Dreams',
+			'Goals',
+			'Groups',
+			'Tasks',
+			'Matrix',
+		]);
+		expect(boxes.map((box) => box.props('modelValue'))).toEqual([true, true, true, true, true]);
+		expect(boxes.map((box) => box.props('disabled') === true)).toEqual([
+			false,
+			false,
+			false,
+			true,
+			true,
+		]);
+	});
+
+	it('switches a page off through the settings store', async () => {
+		const settings = useSettingsStore();
+		const wrapper = mountPage();
+
+		await checkboxes(wrapper)[1].vm.$emit('update:modelValue', false);
+
+		expect(settings.general.pages).toEqual({ dreams: true, goals: false, groups: true });
+	});
+
+	it('offers no hidden page as the start page', () => {
+		const settings = useSettingsStore();
+		settings.setPageVisible('dreams', false);
+		settings.setPageVisible('groups', false);
+		const wrapper = mountPage();
+
+		const [startPageSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		const values = (startPageSelect.props('items') as Array<{ value: string }>).map(
+			(item) => item.value,
+		);
+
+		expect(values).toEqual(['tasks', 'matrix', 'goals']);
+	});
+
+	it('hands the start page back to Tasks when its page is switched off', async () => {
+		const settings = useSettingsStore();
+		settings.setStartPage('groups');
+		const wrapper = mountPage();
+
+		await checkboxes(wrapper)[2].vm.$emit('update:modelValue', false);
+
+		expect(settings.general.startPage).toBe('tasks');
+	});
+
+	it("leaves out a hidden page's own block, and keeps its values", async () => {
+		const settings = useSettingsStore();
+		settings.updatePageSettings('dreams', { confirmDone: true });
+		settings.setPageVisible('dreams', false);
+		settings.setPageVisible('groups', false);
+		const wrapper = mountPage();
+
+		expect(wrapper.findAllComponents({ name: 'VBtnToggle' })).toHaveLength(2);
+		expect(wrapper.findAllComponents({ name: 'VSwitch' })).toHaveLength(4);
+		expect(settings.dreams.confirmDone).toBe(true);
+	});
+});
+
 describe('SettingsPage start page', () => {
 	it('changes the start page through the settings store', async () => {
 		const settings = useSettingsStore();

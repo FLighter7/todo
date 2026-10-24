@@ -220,6 +220,47 @@ describe('TaskDialog edit mode', () => {
 	});
 });
 
+describe('TaskDialog with the Goals and Groups pages switched off', () => {
+	function mountHidden() {
+		return mount(TaskDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				record: makeTask({ goalId: 'goal-1', groupId: 'group-1' }),
+				goalOptions,
+				groupOptions,
+				showGoal: false,
+				showGroup: false,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+	}
+
+	it('leaves the goal and group lines out of the read-only view', () => {
+		const text = mountHidden().text();
+
+		expect(text).not.toContain('Goal:');
+		expect(text).not.toContain('Group:');
+	});
+
+	it('leaves the pickers out, and keeps the task in its goal and group on save', async () => {
+		const wrapper = mountHidden();
+
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		const labels = wrapper.findAllComponents({ name: 'VSelect' }).map((s) => s.props('label'));
+		await wrapper.get('input').setValue('Buy oat milk');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(labels).not.toContain('Goal');
+		expect(labels).not.toContain('Group');
+		expect(wrapper.emitted('save')?.[0][0]).toMatchObject({
+			name: 'Buy oat milk',
+			goalId: 'goal-1',
+			groupId: 'group-1',
+		});
+	});
+});
+
 describe('TaskDialog schedule', () => {
 	it('round-trips an existing one-time schedule back out unchanged', async () => {
 		const wrapper = mount(TaskDialog, {

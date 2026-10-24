@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SETTINGS, SettingsFormatError, parseSettings } from '../settings';
+import {
+	DEFAULT_SETTINGS,
+	SettingsFormatError,
+	cloneSettings,
+	isPageHidden,
+	parseSettings,
+} from '../settings';
 
 function validRaw(): Record<string, unknown> {
 	return {
@@ -117,6 +123,53 @@ describe('parseSettings', () => {
 		expect(() => parseSettings(raw)).toThrow(/fontScale/);
 	});
 
+	it('shows every page when "pages" is absent, as in every document saved before it', () => {
+		expect(parseSettings(validRaw()).general.pages).toEqual({
+			dreams: true,
+			goals: true,
+			groups: true,
+		});
+	});
+
+	it('keeps a present "pages", and rejects a malformed one', () => {
+		const pages = { dreams: false, goals: true, groups: false };
+		const withPages = (value: unknown) => ({
+			...validRaw(),
+			general: { ...(validRaw().general as object), pages: value },
+		});
+
+		expect(parseSettings(withPages(pages)).general.pages).toEqual(pages);
+		expect(() => parseSettings(withPages('nope'))).toThrow(/"pages"/);
+		expect(() => parseSettings(withPages({ ...pages, goals: 'yes' }))).toThrow(/"goals"/);
+		expect(() => parseSettings(withPages({ dreams: true, goals: true }))).toThrow(/"groups"/);
+	});
+
+	it('hands the start page back to tasks when it names a hidden page', () => {
+		const raw = {
+			...validRaw(),
+			general: {
+				...(validRaw().general as object),
+				startPage: 'goals',
+				pages: { dreams: true, goals: false, groups: true },
+			},
+		};
+
+		expect(parseSettings(raw).general.startPage).toBe('tasks');
+	});
+
+	it('keeps a start page that names a shown page', () => {
+		const raw = {
+			...validRaw(),
+			general: {
+				...(validRaw().general as object),
+				startPage: 'goals',
+				pages: { dreams: false, goals: true, groups: false },
+			},
+		};
+
+		expect(parseSettings(raw).general.startPage).toBe('goals');
+	});
+
 	it.each(ENTITIES)('rejects a missing "%s" block', (key) => {
 		const raw = validRaw();
 		delete raw[key];
@@ -157,5 +210,30 @@ describe('parseSettings', () => {
 		const raw = validRaw();
 		raw[key] = pageBlock({ sortOrder: 'random' });
 		expect(() => parseSettings(raw)).toThrow(/sortOrder/);
+	});
+});
+
+describe('isPageHidden', () => {
+	it('is true only for an optional page switched off', () => {
+		const settings = cloneSettings(DEFAULT_SETTINGS);
+		settings.general.pages.groups = false;
+
+		expect(isPageHidden(settings, 'groups')).toBe(true);
+		expect(isPageHidden(settings, 'goals')).toBe(false);
+		expect(isPageHidden(settings, 'tasks')).toBe(false);
+		expect(isPageHidden(settings, 'settings')).toBe(false);
+	});
+});
+
+describe('cloneSettings', () => {
+	it('shares no object with its source, the pages included', () => {
+		const copy = cloneSettings(DEFAULT_SETTINGS);
+
+		copy.general.pages.dreams = false;
+		copy.tasks.rows = 2;
+
+		expect(copy).not.toBe(DEFAULT_SETTINGS);
+		expect(DEFAULT_SETTINGS.general.pages.dreams).toBe(true);
+		expect(DEFAULT_SETTINGS.tasks.rows).toBe(1);
 	});
 });

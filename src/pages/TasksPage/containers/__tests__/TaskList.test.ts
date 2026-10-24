@@ -97,6 +97,41 @@ describe('TaskList grouping', () => {
 	});
 });
 
+describe('TaskList with pages switched off', () => {
+	it('runs every task as one flat list when the Goals page is off, the closed ones on History', async () => {
+		useSettingsStore().setPageVisible('goals', false);
+		const { wrapper } = await mountWithData(
+			[makeGoal()],
+			[
+				makeTask({ goalId: 'goal-1' }),
+				makeTask({ id: 'task-2', name: 'Read more' }),
+				makeTask({ id: 'task-3', name: 'Old one', goalId: 'goal-1', status: Status.Done }),
+			],
+		);
+
+		expect(wrapper.find('fieldset').exists()).toBe(false);
+		expect(wrapper.text()).not.toContain('Learn Japanese');
+		expect(wrapper.text()).toContain('Do Duolingo');
+		expect(wrapper.text()).toContain('Read more');
+		expect(wrapper.text()).not.toContain('Old one');
+
+		await setEntityTab('history');
+		expect(wrapper.find('fieldset').exists()).toBe(false);
+		expect(wrapper.text()).toContain('Old one');
+	});
+
+	it('tells the task dialog which pickers to leave out', async () => {
+		const settings = useSettingsStore();
+		settings.setPageVisible('groups', false);
+		const { wrapper } = await mountWithData([], []);
+
+		const dialog = wrapper.findComponent({ name: 'TaskDialog' });
+
+		expect(dialog.props('showGoal')).toBe(true);
+		expect(dialog.props('showGroup')).toBe(false);
+	});
+});
+
 describe('TaskList goal picker options', () => {
 	it('offers only active goals as new choices', async () => {
 		const { wrapper } = await mountWithData(

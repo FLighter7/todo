@@ -25,6 +25,65 @@ describe('AddEntityDialog default tab', () => {
 	});
 });
 
+describe('AddEntityDialog with pages switched off', () => {
+	function mountWith(
+		shown: { showDream?: boolean; showGoal?: boolean; showGroup?: boolean },
+		defaultTab: 'dream' | 'goal' | 'group' | 'task' = 'task',
+	) {
+		return mount(AddEntityDialog, {
+			props: { modelValue: true, defaultTab, dreamOptions, goalOptions, groupOptions, ...shown },
+			global: { plugins: [vuetify, i18n] },
+		});
+	}
+
+	function selectLabels(wrapper: VueWrapper): string[] {
+		return wrapper.findAllComponents({ name: 'VSelect' }).map((select) => select.props('label'));
+	}
+
+	it('leaves out the tab of a hidden page', () => {
+		const wrapper = mountWith({ showDream: false, showGroup: false });
+
+		expect(wrapper.findAllComponents({ name: 'VTab' }).map((tab) => tab.text())).toEqual([
+			'Goal',
+			'Task',
+		]);
+	});
+
+	it('shows no tab bar when only the task tab is left', () => {
+		const wrapper = mountWith({ showDream: false, showGoal: false, showGroup: false });
+
+		expect(wrapper.findComponent({ name: 'VTabs' }).exists()).toBe(false);
+		expect(wrapper.get('input').attributes('type')).toBe('text');
+	});
+
+	it('opens on the task tab when the default one is hidden', () => {
+		const wrapper = mountWith({ showGoal: false }, 'goal');
+
+		expect(wrapper.findComponent({ name: 'VTabs' }).props('modelValue')).toBe('task');
+	});
+
+	it('leaves out the goal and group pickers on the task tab', async () => {
+		const wrapper = mountWith({ showGoal: false, showGroup: false });
+
+		expect(selectLabels(wrapper)).not.toContain('Goal');
+		expect(selectLabels(wrapper)).not.toContain('Group');
+
+		await wrapper.get('input').setValue('Buy stamps');
+		await clickSave(wrapper);
+
+		expect(wrapper.emitted('save-task')?.[0][0]).toMatchObject({
+			goalId: undefined,
+			groupId: undefined,
+		});
+	});
+
+	it('leaves out the dream picker on the goal tab', () => {
+		const wrapper = mountWith({ showDream: false }, 'goal');
+
+		expect(selectLabels(wrapper)).not.toContain('Dream');
+	});
+});
+
 function clickSave(wrapper: VueWrapper): Promise<void> {
 	return wrapper.get('button[aria-label="Save"]').trigger('click');
 }

@@ -48,39 +48,17 @@
 	<nav :class="$style.bar">
 		<div :class="$style.row">
 			<VBtn
-				:to="{ name: 'dreams' }"
+				v-for="link in before"
+				:key="link.name"
+				:to="{ name: link.name }"
 				:class="$style.link"
 				variant="text"
 				stacked
 				size="small"
-				:prepend-icon="mdiShimmer"
-				:color="route.name === 'dreams' ? 'primary' : undefined"
+				:prepend-icon="link.icon"
+				:color="route.name === link.name ? 'primary' : undefined"
 			>
-				{{ t('nav.dreams') }}
-			</VBtn>
-
-			<VBtn
-				:to="{ name: 'goals' }"
-				:class="$style.link"
-				variant="text"
-				stacked
-				size="small"
-				:prepend-icon="mdiBullseyeArrow"
-				:color="route.name === 'goals' ? 'primary' : undefined"
-			>
-				{{ t('nav.goals') }}
-			</VBtn>
-
-			<VBtn
-				:to="{ name: 'groups' }"
-				:class="$style.link"
-				variant="text"
-				stacked
-				size="small"
-				:prepend-icon="mdiFolderOutline"
-				:color="route.name === 'groups' ? 'primary' : undefined"
-			>
-				{{ t('nav.groups') }}
+				{{ t(link.labelKey) }}
 			</VBtn>
 
 			<div :class="$style.fabWrap">
@@ -88,33 +66,24 @@
 			</div>
 
 			<VBtn
-				:to="{ name: 'tasks' }"
+				v-for="link in after"
+				:key="link.name"
+				:to="{ name: link.name }"
 				:class="$style.link"
 				variant="text"
 				stacked
 				size="small"
-				:prepend-icon="mdiFormatListBulleted"
-				:color="route.name === 'tasks' ? 'primary' : undefined"
+				:prepend-icon="link.icon"
+				:color="route.name === link.name ? 'primary' : undefined"
 			>
-				{{ t('nav.tasks') }}
-			</VBtn>
-
-			<VBtn
-				:to="{ name: 'matrix' }"
-				:class="$style.link"
-				variant="text"
-				stacked
-				size="small"
-				:prepend-icon="mdiViewGridOutline"
-				:color="route.name === 'matrix' ? 'primary' : undefined"
-			>
-				{{ t('nav.matrix') }}
+				{{ t(link.labelKey) }}
 			</VBtn>
 		</div>
 	</nav>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import {
@@ -125,7 +94,34 @@ import {
 	mdiViewGridOutline,
 } from '@mdi/js';
 import QuickAddFab from '@/containers/QuickAddFab.vue';
+import { useSettingsStore } from '@/stores/settings';
+import type { OptionalPage } from '@/types';
+
+interface NavLink {
+	name: string;
+	icon: string;
+	labelKey: string;
+}
+
+const OPTIONAL_LINKS: Array<NavLink & { name: OptionalPage }> = [
+	{ name: 'dreams', icon: mdiShimmer, labelKey: 'nav.dreams' },
+	{ name: 'goals', icon: mdiBullseyeArrow, labelKey: 'nav.goals' },
+	{ name: 'groups', icon: mdiFolderOutline, labelKey: 'nav.groups' },
+];
+const TASKS_LINK: NavLink = { name: 'tasks', icon: mdiFormatListBulleted, labelKey: 'nav.tasks' };
+const MATRIX_LINK: NavLink = { name: 'matrix', icon: mdiViewGridOutline, labelKey: 'nav.matrix' };
 
 const { t } = useI18n();
 const route = useRoute();
+const settings = useSettingsStore();
+
+const optional = computed(() => OPTIONAL_LINKS.filter((link) => settings.general.pages[link.name]));
+
+// The add button stands right before Tasks, so Tasks and the matrix keep their
+// place however many optional pages are shown. Only once none is left does
+// Tasks move to its left, which keeps the button between two pages.
+const before = computed(() => (optional.value.length > 0 ? optional.value : [TASKS_LINK]));
+const after = computed(() =>
+	optional.value.length > 0 ? [TASKS_LINK, MATRIX_LINK] : [MATRIX_LINK],
+);
 </script>

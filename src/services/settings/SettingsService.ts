@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, parseSettings, type AppSettings } from '@/types';
+import { DEFAULT_SETTINGS, cloneSettings, parseSettings, type AppSettings } from '@/types';
 
 const SETTINGS_STORAGE_KEY = 'todo.settings';
 
@@ -10,13 +10,7 @@ const SETTINGS_STORAGE_KEY = 'todo.settings';
  * future fallback for the rest of the session.
  */
 function cloneDefaults(): AppSettings {
-	return {
-		general: { ...DEFAULT_SETTINGS.general },
-		dreams: { ...DEFAULT_SETTINGS.dreams },
-		goals: { ...DEFAULT_SETTINGS.goals },
-		groups: { ...DEFAULT_SETTINGS.groups },
-		tasks: { ...DEFAULT_SETTINGS.tasks },
-	};
+	return cloneSettings(DEFAULT_SETTINGS);
 }
 
 export class SettingsService {

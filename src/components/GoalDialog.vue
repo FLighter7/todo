@@ -17,6 +17,7 @@
 				/>
 				<VTextarea v-model="note" :label="t('entity.note')" rows="3" />
 				<VSelect
+					v-if="showDream"
 					v-model="dreamId"
 					:items="selectItems"
 					item-title="title"
@@ -28,7 +29,7 @@
 			<template v-else>
 				<div class="text-title-large">{{ name }}</div>
 				<p v-if="note" class="text-body-medium mt-2">{{ note }}</p>
-				<p v-if="dreamName" class="text-body-medium mt-2 text-medium-emphasis">
+				<p v-if="showDream && dreamName" class="text-body-medium mt-2 text-medium-emphasis">
 					{{ t('goal.dreamLabel') }}: {{ dreamName }}
 				</p>
 				<p v-if="deadline" class="text-body-medium mt-2 text-medium-emphasis">
@@ -52,8 +53,10 @@ const props = withDefaults(
 		initial?: Partial<GoalDraft>;
 		mode?: 'add' | 'edit';
 		dreamOptions: Array<{ value: string; title: string }>;
+		/** False while the Dreams page is switched off in Settings; the goal keeps its link either way. */
+		showDream?: boolean;
 	}>(),
-	{ initial: () => ({}), mode: 'edit' },
+	{ initial: () => ({}), mode: 'edit', showDream: true },
 );
 
 const emit = defineEmits<{ save: [draft: GoalDraft]; cancel: [] }>();

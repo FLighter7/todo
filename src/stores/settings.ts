@@ -1,6 +1,14 @@
 import { reactive, toRefs } from 'vue';
 import { defineStore } from 'pinia';
-import type { AppSettings, AppTheme, FontScale, PageSettings } from '@/types';
+import {
+	DEFAULT_SETTINGS,
+	cloneSettings,
+	type AppSettings,
+	type AppTheme,
+	type FontScale,
+	type OptionalPage,
+	type PageSettings,
+} from '@/types';
 import { settingsService } from '@/services/settings/SettingsService';
 import { initialLocale } from '@/i18n';
 import { useStorageStore } from './storage';
@@ -66,17 +74,27 @@ export const useSettingsStore = defineStore('settings', () => {
 		persist();
 	}
 
+	/** Hiding the start page hands that role back to Tasks, which is never hidden. */
+	function setPageVisible(page: OptionalPage, visible: boolean): void {
+		state.general.pages[page] = visible;
+		if (!visible && state.general.startPage === page) {
+			state.general.startPage = DEFAULT_SETTINGS.general.startPage;
+		}
+		persist();
+	}
+
 	function updatePageSettings(entity: SettingsEntity, patch: Partial<PageSettings>): void {
 		Object.assign(state[entity], patch);
 		persist();
 	}
 
 	function replaceAll(settings: AppSettings): void {
-		state.general = { ...settings.general };
-		state.dreams = { ...settings.dreams };
-		state.goals = { ...settings.goals };
-		state.groups = { ...settings.groups };
-		state.tasks = { ...settings.tasks };
+		const copy = cloneSettings(settings);
+		state.general = copy.general;
+		state.dreams = copy.dreams;
+		state.goals = copy.goals;
+		state.groups = copy.groups;
+		state.tasks = copy.tasks;
 		persist();
 	}
 
@@ -87,6 +105,7 @@ export const useSettingsStore = defineStore('settings', () => {
 		setStartPage,
 		setCleanupDays,
 		setFontScale,
+		setPageVisible,
 		updatePageSettings,
 		replaceAll,
 	};

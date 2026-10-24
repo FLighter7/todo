@@ -7,6 +7,7 @@ import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { ItemType, Status, type Dream, type Goal, type Group } from '@/types';
 import { useItemsStore } from '@/stores/items';
+import { useSettingsStore } from '@/stores/settings';
 import { loadItems } from '@/vitestHelpers';
 import QuickAddFab from '../QuickAddFab.vue';
 
@@ -103,6 +104,25 @@ describe('QuickAddFab default tab', () => {
 		await wrapper.get('button[aria-label="Add task"]').trigger('click');
 
 		expect(wrapper.findComponent({ name: 'VTabs' }).props('modelValue')).toBe('task');
+	});
+});
+
+describe('QuickAddFab with pages switched off', () => {
+	it('passes the hidden pages on to the add dialog', async () => {
+		const wrapper = await mountAt('/tasks');
+		useSettingsStore().setPageVisible('dreams', false);
+		useSettingsStore().setPageVisible('groups', false);
+
+		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		const dialog = wrapper.findComponent({ name: 'AddEntityDialog' });
+
+		expect(dialog.props('showDream')).toBe(false);
+		expect(dialog.props('showGoal')).toBe(true);
+		expect(dialog.props('showGroup')).toBe(false);
+		expect(wrapper.findAllComponents({ name: 'VTab' }).map((tab) => tab.text())).toEqual([
+			'Goal',
+			'Task',
+		]);
 	});
 });
 

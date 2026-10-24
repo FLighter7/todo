@@ -1,6 +1,7 @@
 import {
 	ItemFormatError,
 	SettingsFormatError,
+	cloneSettings,
 	parseItem,
 	parseSettings,
 	type AppSettings,
@@ -94,16 +95,7 @@ export class BackupService {
 			// state, and dropping the tombstones would resurrect everything ever
 			// finished or abandoned.
 			items: items.map((item) => ({ ...item })),
-			settings:
-				settings === undefined
-					? undefined
-					: {
-							general: { ...settings.general },
-							dreams: { ...settings.dreams },
-							goals: { ...settings.goals },
-							groups: { ...settings.groups },
-							tasks: { ...settings.tasks },
-						},
+			settings: settings === undefined ? undefined : cloneSettings(settings),
 		};
 	}
 

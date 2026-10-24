@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { computed, nextTick, watch } from 'vue';
-import { DEFAULT_SETTINGS } from '@/types';
+import { DEFAULT_SETTINGS, cloneSettings } from '@/types';
 import { settingsService } from '@/services/settings/SettingsService';
 import { useStorageStore } from '../storage';
 import { useSettingsStore } from '../settings';
@@ -74,6 +74,43 @@ describe('useSettingsStore setters', () => {
 		expect(save).toHaveBeenCalled();
 	});
 
+	it('setPageVisible switches one page and persists', () => {
+		const save = vi.spyOn(settingsService, 'save');
+		const store = useSettingsStore();
+
+		store.setPageVisible('goals', false);
+
+		expect(store.general.pages).toEqual({ dreams: true, goals: false, groups: true });
+		expect(save).toHaveBeenCalled();
+	});
+
+	it('setPageVisible hands the start page back to tasks when it hides that page', () => {
+		const store = useSettingsStore();
+		store.setStartPage('goals');
+
+		store.setPageVisible('goals', false);
+
+		expect(store.general.startPage).toBe('tasks');
+	});
+
+	it('setPageVisible leaves the start page alone when it hides another page', () => {
+		const store = useSettingsStore();
+		store.setStartPage('goals');
+
+		store.setPageVisible('dreams', false);
+		store.setPageVisible('goals', true);
+
+		expect(store.general.startPage).toBe('goals');
+	});
+
+	it('setPageVisible never touches DEFAULT_SETTINGS', () => {
+		const store = useSettingsStore();
+
+		store.setPageVisible('groups', false);
+
+		expect(DEFAULT_SETTINGS.general.pages.groups).toBe(true);
+	});
+
 	it('updatePageSettings patches only the named entity and persists', () => {
 		const save = vi.spyOn(settingsService, 'save');
 		const store = useSettingsStore();
@@ -139,6 +176,7 @@ describe('useSettingsStore replaceAll', () => {
 				startPage: 'matrix',
 				cleanupDays: 60 as const,
 				fontScale: 1.25 as const,
+				pages: { dreams: false, goals: true, groups: false },
 			},
 			dreams: {
 				rows: 2 as const,
@@ -163,6 +201,16 @@ describe('useSettingsStore replaceAll', () => {
 		expect(store.goals).toEqual(incoming.goals);
 		expect(store.groups).toEqual(incoming.groups);
 		expect(store.tasks).toEqual(incoming.tasks);
+	});
+
+	it('holds a copy of the pages, not the incoming object itself', () => {
+		const store = useSettingsStore();
+		const incoming = cloneSettings(DEFAULT_SETTINGS);
+
+		store.replaceAll(incoming);
+		incoming.general.pages.dreams = false;
+
+		expect(store.general.pages.dreams).toBe(true);
 	});
 
 	it('persists the replaced settings', () => {

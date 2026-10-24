@@ -20,6 +20,8 @@
 			:record="editingTask"
 			:goal-options="goalOptions"
 			:group-options="groupOptions"
+			:show-goal="settings.general.pages.goals"
+			:show-group="settings.general.pages.groups"
 			@save="handleSave"
 			@cancel="onCancel"
 			@toggle-completion-done="onToggleCompletionDone"
@@ -64,7 +66,13 @@ function labelFor(goalId: string): string {
 const activeSections = computed(() => items.tasksByGoal.active);
 const closedSections = computed(() => items.tasksByGoal.closed);
 
+// With the Goals page switched off, goals are nowhere to be seen, so they head
+// no sections either: the tasks run as one flat list.
 const sections = computed(() => {
+	if (!settings.general.pages.goals) {
+		return [];
+	}
+
 	const source = tab.value === 'active' ? activeSections.value : closedSections.value;
 	return source.sections.map((section) => ({
 		key: section.parentId,
@@ -72,9 +80,13 @@ const sections = computed(() => {
 		items: section.items,
 	}));
 });
-const loose = computed(
-	() => (tab.value === 'active' ? activeSections.value : closedSections.value).loose,
-);
+const loose = computed(() => {
+	if (!settings.general.pages.goals) {
+		return tab.value === 'active' ? items.tasks.active : items.tasks.closed;
+	}
+
+	return (tab.value === 'active' ? activeSections.value : closedSections.value).loose;
+});
 const rows = useSortedEntityRows(sections, loose, 'tasks');
 
 const {

@@ -21,6 +21,9 @@
 		:dream-options="dreamOptions"
 		:goal-options="goalOptions"
 		:group-options="groupOptions"
+		:show-dream="settings.general.pages.dreams"
+		:show-goal="settings.general.pages.goals"
+		:show-group="settings.general.pages.groups"
 		@save-dream="handleDreamSave"
 		@save-goal="handleGoalSave"
 		@save-group="handleGroupSave"
@@ -42,10 +45,12 @@ import {
 	type TaskDraft,
 } from '@/types';
 import { useItemsStore } from '@/stores/items';
+import { useSettingsStore } from '@/stores/settings';
 
 const { t } = useI18n();
 const route = useRoute();
 const items = useItemsStore();
+const settings = useSettingsStore();
 
 const dialogOpen = ref(false);
 

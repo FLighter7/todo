@@ -33,6 +33,8 @@
 			:initial-flags="initialFlags"
 			:goal-options="goalOptions"
 			:group-options="groupOptions"
+			:show-goal="settings.general.pages.goals"
+			:show-group="settings.general.pages.groups"
 			@save="items.add(ItemType.Task, $event)"
 		/>
 	</VContainer>
@@ -50,9 +52,11 @@ import TaskDialog from '@/components/TaskDialog.vue';
 import TaskQuadrant from '../TaskQuadrant.vue';
 import { ItemType, Status } from '@/types';
 import { useItemsStore } from '@/stores/items';
+import { useSettingsStore } from '@/stores/settings';
 import { QUADRANT_KEYS, quadrantFlags, type QuadrantKey } from '@/utils/quadrants';
 
 const items = useItemsStore();
+const settings = useSettingsStore();
 
 const dialogOpen = ref(false);
 const initialFlags = ref<{ important: boolean; urgent: boolean } | undefined>(undefined);

@@ -12,6 +12,13 @@ export type SortOrder = (typeof SORT_ORDERS)[number];
 export const FONT_SCALES = [0.875, 1, 1.125, 1.25, 1.5] as const;
 export type FontScale = (typeof FONT_SCALES)[number];
 
+/**
+ * The pages that can be switched off in Settings, named after their routes.
+ * Tasks and the matrix are always there.
+ */
+export const OPTIONAL_PAGES = ['dreams', 'goals', 'groups'] as const;
+export type OptionalPage = (typeof OPTIONAL_PAGES)[number];
+
 export interface PageSettings {
 	rows: 1 | 2;
 	confirmDone: boolean;
@@ -26,6 +33,8 @@ export interface AppSettings {
 		startPage: string;
 		cleanupDays: 30 | 60 | 90;
 		fontScale: FontScale;
+		/** Whether each optional page is shown; a hidden one is gone from the whole interface. */
+		pages: Record<OptionalPage, boolean>;
 	};
 	dreams: PageSettings;
 	goals: PageSettings;
@@ -34,12 +43,40 @@ export interface AppSettings {
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
-	general: { theme: 'system', locale: 'en', startPage: 'tasks', cleanupDays: 30, fontScale: 1 },
+	general: {
+		theme: 'system',
+		locale: 'en',
+		startPage: 'tasks',
+		cleanupDays: 30,
+		fontScale: 1,
+		pages: { dreams: true, goals: true, groups: true },
+	},
 	dreams: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
 	goals: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
 	groups: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
 	tasks: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
 };
+
+/** True only for an optional page switched off in Settings. */
+export function isPageHidden(settings: AppSettings, page: string): boolean {
+	return (OPTIONAL_PAGES as readonly string[]).includes(page)
+		? !settings.general.pages[page as OptionalPage]
+		: false;
+}
+
+/**
+ * A copy that shares no object with `settings`: every section, and
+ * `general.pages` inside the first one.
+ */
+export function cloneSettings(settings: AppSettings): AppSettings {
+	return {
+		general: { ...settings.general, pages: { ...settings.general.pages } },
+		dreams: { ...settings.dreams },
+		goals: { ...settings.goals },
+		groups: { ...settings.groups },
+		tasks: { ...settings.tasks },
+	};
+}
 
 /**
  * Its own error type, not `ItemFormatError`: settings have no `ItemBase`
@@ -110,6 +147,23 @@ function parseFontScale(value: unknown): FontScale {
 	return value as FontScale;
 }
 
+/** Defaults when absent, for the same reason as `fontScale`. */
+function parsePages(value: unknown): Record<OptionalPage, boolean> {
+	if (value === undefined) {
+		return { ...DEFAULT_SETTINGS.general.pages };
+	}
+
+	if (!isRecordObject(value)) {
+		fail('"pages" must be an object');
+	}
+
+	return {
+		dreams: readBoolean(value, 'dreams'),
+		goals: readBoolean(value, 'goals'),
+		groups: readBoolean(value, 'groups'),
+	};
+}
+
 function parseRows(value: unknown): 1 | 2 {
 	if (value !== 1 && value !== 2) {
 		fail('"rows" must be 1 or 2');
@@ -161,17 +215,26 @@ export function parseSettings(value: unknown): AppSettings {
 		fail('"general" must be an object');
 	}
 
-	return {
+	const settings: AppSettings = {
 		general: {
 			theme: parseTheme(general.theme),
 			locale: readNonEmptyString(general, 'locale'),
 			startPage: readNonEmptyString(general, 'startPage'),
 			cleanupDays: parseCleanupDays(general.cleanupDays),
 			fontScale: parseFontScale(general.fontScale),
+			pages: parsePages(general.pages),
 		},
 		dreams: parsePageSettings(value.dreams, 'dreams'),
 		goals: parsePageSettings(value.goals, 'goals'),
 		groups: parseGroupsPageSettings(value.groups),
 		tasks: parsePageSettings(value.tasks, 'tasks'),
 	};
+
+	// The start page is never a hidden one, whichever source the document came
+	// from: the app would otherwise open on a page it refuses to show.
+	if (isPageHidden(settings, settings.general.startPage)) {
+		settings.general.startPage = DEFAULT_SETTINGS.general.startPage;
+	}
+
+	return settings;
 }

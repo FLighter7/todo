@@ -92,6 +92,36 @@ describe('GoalDialog edit mode', () => {
 	});
 });
 
+describe('GoalDialog with the Dreams page switched off', () => {
+	function mountHidden() {
+		return mount(GoalDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				initial: { name: 'Learn Japanese', dreamId: 'dream-1' },
+				dreamOptions,
+				showDream: false,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+	}
+
+	it('leaves the dream line out of the read-only view', () => {
+		expect(mountHidden().text()).not.toContain('Visit Japan');
+	});
+
+	it('leaves the picker out, and keeps the goal under its dream on save', async () => {
+		const wrapper = mountHidden();
+
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		const labels = wrapper.findAllComponents({ name: 'VSelect' }).map((s) => s.props('label'));
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(labels).not.toContain('Dream');
+		expect(wrapper.emitted('save')?.[0][0]).toMatchObject({ dreamId: 'dream-1' });
+	});
+});
+
 describe('GoalDialog deadline', () => {
 	it('round-trips an existing deadline back out unchanged', async () => {
 		const wrapper = mount(GoalDialog, {

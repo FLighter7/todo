@@ -20,6 +20,7 @@
 			mode="edit"
 			:initial="initialDraft"
 			:dream-options="dreamOptions"
+			:show-dream="settings.general.pages.dreams"
 			@save="handleSave"
 			@cancel="onCancel"
 		/>
@@ -77,7 +78,13 @@ function dateLabel(goal: Goal): string | undefined {
 const activeSections = computed(() => items.goalsByDream.active);
 const closedSections = computed(() => items.goalsByDream.closed);
 
+// With the Dreams page switched off, dreams head no sections either: the goals
+// run as one flat list.
 const sections = computed(() => {
+	if (!settings.general.pages.dreams) {
+		return [];
+	}
+
 	const source = tab.value === 'active' ? activeSections.value : closedSections.value;
 	return source.sections.map((section) => ({
 		key: section.parentId,
@@ -85,9 +92,13 @@ const sections = computed(() => {
 		items: section.items,
 	}));
 });
-const loose = computed(
-	() => (tab.value === 'active' ? activeSections.value : closedSections.value).loose,
-);
+const loose = computed(() => {
+	if (!settings.general.pages.dreams) {
+		return tab.value === 'active' ? items.goals.active : items.goals.closed;
+	}
+
+	return (tab.value === 'active' ? activeSections.value : closedSections.value).loose;
+});
 const rows = useSortedEntityRows(sections, loose, 'goals');
 
 const dialogOpen = ref(false);

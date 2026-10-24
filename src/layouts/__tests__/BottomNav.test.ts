@@ -5,10 +5,17 @@ import { createPinia, setActivePinia } from 'pinia';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
+import { useSettingsStore } from '@/stores/settings';
+import type { OptionalPage } from '@/types';
 import BottomNav from '../BottomNav.vue';
 
-async function mountAt(path: string) {
+async function mountAt(path: string, hidden: OptionalPage[] = []) {
+	window.localStorage.clear();
 	setActivePinia(createPinia());
+	const settings = useSettingsStore();
+	for (const page of hidden) {
+		settings.setPageVisible(page, false);
+	}
 	const testRouter = createRouter({
 		history: createMemoryHistory(),
 		routes: [
@@ -25,16 +32,41 @@ async function mountAt(path: string) {
 	return mount(BottomNav, { global: { plugins: [vuetify, i18n, testRouter] } });
 }
 
+function labelsOf(wrapper: Awaited<ReturnType<typeof mountAt>>): Array<string | undefined> {
+	return wrapper
+		.findAllComponents({ name: 'VBtn' })
+		.map((btn) => btn.text() || btn.attributes('aria-label'));
+}
+
 describe('BottomNav', () => {
 	it('renders all five pages plus the add button, Groups right after Goals', async () => {
 		const wrapper = await mountAt('/dreams');
 
-		const labels = wrapper
-			.findAllComponents({ name: 'VBtn' })
-			.map((btn) => btn.text() || btn.attributes('aria-label'));
-
-		expect(labels).toEqual(['Dreams', 'Goals', 'Groups', 'Add task', 'Tasks', 'Matrix']);
+		expect(labelsOf(wrapper)).toEqual(['Dreams', 'Goals', 'Groups', 'Add task', 'Tasks', 'Matrix']);
 		expect(wrapper.findComponent({ name: 'QuickAddFab' }).exists()).toBe(true);
+	});
+
+	it('leaves out a hidden page and keeps the add button right before Tasks', async () => {
+		const withoutDreams = await mountAt('/tasks', ['dreams']);
+		expect(labelsOf(withoutDreams)).toEqual(['Goals', 'Groups', 'Add task', 'Tasks', 'Matrix']);
+
+		const goalsOnly = await mountAt('/tasks', ['dreams', 'groups']);
+		expect(labelsOf(goalsOnly)).toEqual(['Goals', 'Add task', 'Tasks', 'Matrix']);
+	});
+
+	it('puts Tasks before the add button once every optional page is hidden', async () => {
+		const wrapper = await mountAt('/tasks', ['dreams', 'goals', 'groups']);
+
+		expect(labelsOf(wrapper)).toEqual(['Tasks', 'Add task', 'Matrix']);
+	});
+
+	it('brings a page back when it is shown again', async () => {
+		const wrapper = await mountAt('/tasks', ['groups']);
+
+		useSettingsStore().setPageVisible('groups', true);
+		await wrapper.vm.$nextTick();
+
+		expect(labelsOf(wrapper)).toEqual(['Dreams', 'Goals', 'Groups', 'Add task', 'Tasks', 'Matrix']);
 	});
 
 	it('highlights the Groups button on the groups page', async () => {
