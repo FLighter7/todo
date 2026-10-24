@@ -14,6 +14,7 @@ async function mountAt(path: string) {
 		routes: [
 			{ path: '/dreams', name: 'dreams', component: { template: '<div />' } },
 			{ path: '/goals', name: 'goals', component: { template: '<div />' } },
+			{ path: '/groups', name: 'groups', component: { template: '<div />' } },
 			{ path: '/tasks', name: 'tasks', component: { template: '<div />' } },
 			{ path: '/matrix', name: 'matrix', component: { template: '<div />' } },
 		],
@@ -25,17 +26,27 @@ async function mountAt(path: string) {
 }
 
 describe('BottomNav', () => {
-	it('renders all five nav targets plus the add button', async () => {
+	it('renders all five pages plus the add button, Groups right after Goals', async () => {
 		const wrapper = await mountAt('/dreams');
 
-		expect(wrapper.text()).toContain('Dreams');
-		expect(wrapper.text()).toContain('Goals');
-		expect(wrapper.text()).toContain('Tasks');
-		expect(wrapper.text()).toContain('Matrix');
+		const labels = wrapper
+			.findAllComponents({ name: 'VBtn' })
+			.map((btn) => btn.text() || btn.attributes('aria-label'));
+
+		expect(labels).toEqual(['Dreams', 'Goals', 'Groups', 'Add task', 'Tasks', 'Matrix']);
 		expect(wrapper.findComponent({ name: 'QuickAddFab' }).exists()).toBe(true);
 	});
 
-	it('highlights the current route among all five targets', async () => {
+	it('highlights the Groups button on the groups page', async () => {
+		const wrapper = await mountAt('/groups');
+
+		const buttons = wrapper.findAllComponents({ name: 'VBtn' });
+
+		expect(buttons.find((btn) => btn.text() === 'Groups')?.props('color')).toBe('primary');
+		expect(buttons.find((btn) => btn.text() === 'Goals')?.props('color')).toBeUndefined();
+	});
+
+	it('highlights the current route among the pages', async () => {
 		const wrapper = await mountAt('/goals');
 
 		const buttons = wrapper.findAllComponents({ name: 'VBtn' });

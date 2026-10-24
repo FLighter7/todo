@@ -5,7 +5,7 @@ import { useSettingsStore, type SettingsEntity } from '@/stores/settings';
 import { sortEntityRows, type EntityRow, type ListSection } from '@/utils/sortEntities';
 
 /**
- * Shared wiring for `TaskList.vue`/`GoalList.vue`/`DreamList.vue`: each reads
+ * Shared wiring for `TaskList`/`GroupList`/`GoalList`/`DreamList`: each reads
  * its own page's `sortOrder` off `useSettingsStore()` and the active locale
  * off `useI18n()`, then hands both to `sortEntityRows`.
  */

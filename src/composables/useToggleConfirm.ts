@@ -20,7 +20,7 @@ export interface UseToggleConfirm {
 
 /**
  * The Done/Reopen confirm flow shared by every page's list container --
- * `DreamList.vue`, `GoalList.vue`, `TaskList.vue`. `markingDone` is derived
+ * `DreamList.vue`, `GoalList.vue`, `GroupList.vue`, `TaskList.vue`. `markingDone` is derived
  * from which tab is active, not from the raw boolean `EntityList` emits: a
  * Cancelled record's checkbox reads unchecked, same as a Done one's, so
  * checking it while on the History tab must mean "reopen", never "mark

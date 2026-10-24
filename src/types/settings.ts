@@ -29,6 +29,7 @@ export interface AppSettings {
 	};
 	dreams: PageSettings;
 	goals: PageSettings;
+	groups: PageSettings;
 	tasks: PageSettings;
 }
 
@@ -36,6 +37,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
 	general: { theme: 'system', locale: 'en', startPage: 'tasks', cleanupDays: 30, fontScale: 1 },
 	dreams: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
 	goals: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
+	groups: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
 	tasks: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
 };
 
@@ -141,6 +143,14 @@ function parsePageSettings(value: unknown, key: string): PageSettings {
 	};
 }
 
+/**
+ * Defaults when absent, for the same reason as `fontScale`: every settings
+ * document saved before the Groups page existed lacks this section.
+ */
+function parseGroupsPageSettings(value: unknown): PageSettings {
+	return value === undefined ? { ...DEFAULT_SETTINGS.groups } : parsePageSettings(value, 'groups');
+}
+
 export function parseSettings(value: unknown): AppSettings {
 	if (!isRecordObject(value)) {
 		fail('the settings document is not an object');
@@ -161,6 +171,7 @@ export function parseSettings(value: unknown): AppSettings {
 		},
 		dreams: parsePageSettings(value.dreams, 'dreams'),
 		goals: parsePageSettings(value.goals, 'goals'),
+		groups: parseGroupsPageSettings(value.groups),
 		tasks: parsePageSettings(value.tasks, 'tasks'),
 	};
 }

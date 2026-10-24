@@ -103,7 +103,7 @@ import { useItemsStore } from '@/stores/items';
 import { useEntityTabsStore } from '@/stores/entityTabs';
 
 /** Routes whose page container has an Active/History toggle to host in the app-bar extension. */
-const PAGES_WITH_TOOLBAR = ['tasks', 'goals', 'dreams'];
+const PAGES_WITH_TOOLBAR = ['tasks', 'groups', 'goals', 'dreams'];
 
 const { t, locale } = useI18n();
 const vuetifyLocale = useLocale();

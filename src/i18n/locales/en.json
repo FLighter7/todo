@@ -6,6 +6,7 @@
 	"nav": {
 		"dreams": "Dreams",
 		"goals": "Goals",
+		"groups": "Groups",
 		"tasks": "Tasks",
 		"matrix": "Matrix",
 		"settings": "Settings"
@@ -27,6 +28,8 @@
 		"title": "Task",
 		"goalLabel": "Goal",
 		"noGoal": "No goal",
+		"groupLabel": "Group",
+		"noGroup": "No group",
 		"empty": "No tasks yet. Add the first one.",
 		"schedule": {
 			"label": "Schedule",
@@ -95,7 +98,7 @@
 		"title": "Sample data",
 		"action": "Generate sample data",
 		"confirmTitle": "Replace everything?",
-		"confirmBody": "This replaces every dream, goal and task currently in the app ({current} records total) with freshly generated sample data. Settings are not affected. This cannot be undone.",
+		"confirmBody": "This replaces every dream, goal, group and task currently in the app ({current} records total) with freshly generated sample data. Settings are not affected. This cannot be undone.",
 		"replace": "Generate",
 		"generated": "Sample data generated. Records: {count}.",
 		"failed": "Could not generate sample data: {reason}"
@@ -138,6 +141,7 @@
 		"startPage": "Start page",
 		"startPageDreams": "Dreams",
 		"startPageGoals": "Goals",
+		"startPageGroups": "Groups",
 		"startPageTasks": "Tasks",
 		"startPageMatrix": "Matrix",
 		"theme": "Theme",
@@ -150,6 +154,7 @@
 		"cleanupDaysHint": "Shortening this deletes older closed items and completion history sooner.",
 		"dreams": "Dreams",
 		"goals": "Goals",
+		"groups": "Groups",
 		"tasks": "Tasks",
 		"rows1": "1 row",
 		"rows2": "2 rows",
@@ -184,7 +189,8 @@
 		"cascadeDreamBody": "Active goals under this dream: {goals}. Active tasks under them: {tasks}.",
 		"cascadeOnly": "Cancel only this",
 		"cascadeBranch": "Cancel the whole branch",
-		"cascadeGoalBody": "Active tasks under this goal: {count}."
+		"cascadeGoalBody": "Active tasks under this goal: {count}.",
+		"cascadeGroupBody": "Active tasks in this group: {count}."
 	},
 	"dream": {
 		"title": "Dream",
@@ -212,5 +218,9 @@
 			"seasonSummer": "Summer",
 			"seasonAutumn": "Autumn"
 		}
+	},
+	"group": {
+		"title": "Group",
+		"empty": "No groups yet."
 	}
 }

@@ -48,8 +48,8 @@ describe('MockDataActions', () => {
 		await flushPromises();
 
 		expect(wrapper.text()).not.toContain('Replace everything?');
-		expect(items.records.length).toBe(36);
-		expect(wrapper.emitted('notify')?.at(-1)?.[0]).toBe('Sample data generated. Records: 36.');
+		expect(items.records.length).toBe(41);
+		expect(wrapper.emitted('notify')?.at(-1)?.[0]).toBe('Sample data generated. Records: 41.');
 	});
 
 	it('confirms before replacing when data already exists, and honours Cancel/Generate', async () => {
@@ -77,8 +77,8 @@ describe('MockDataActions', () => {
 		await flushPromises();
 
 		expect(items.records.map((r) => r.name)).not.toContain('Existing dream');
-		expect(items.records.length).toBe(36);
-		expect(wrapper.emitted('notify')?.at(-1)?.[0]).toBe('Sample data generated. Records: 36.');
+		expect(items.records.length).toBe(41);
+		expect(wrapper.emitted('notify')?.at(-1)?.[0]).toBe('Sample data generated. Records: 41.');
 	});
 
 	it('notifies mockData.failed when replaceAll rejects', async () => {

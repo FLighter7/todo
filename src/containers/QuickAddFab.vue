@@ -20,8 +20,10 @@
 		:default-tab="defaultTab"
 		:dream-options="dreamOptions"
 		:goal-options="goalOptions"
+		:group-options="groupOptions"
 		@save-dream="handleDreamSave"
 		@save-goal="handleGoalSave"
+		@save-group="handleGroupSave"
 		@save-task="handleTaskSubmit"
 	/>
 </template>
@@ -32,7 +34,13 @@ import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { mdiPlus } from '@mdi/js';
 import AddEntityDialog from '@/components/AddEntityDialog.vue';
-import { ItemType, type DreamDraft, type GoalDraft, type TaskDraft } from '@/types';
+import {
+	ItemType,
+	type DreamDraft,
+	type GoalDraft,
+	type GroupDraft,
+	type TaskDraft,
+} from '@/types';
 import { useItemsStore } from '@/stores/items';
 
 const { t } = useI18n();
@@ -41,13 +49,17 @@ const items = useItemsStore();
 
 const dialogOpen = ref(false);
 
-const defaultTab = computed<'dream' | 'goal' | 'task'>(() => {
+const defaultTab = computed<'dream' | 'goal' | 'group' | 'task'>(() => {
 	if (route.name === 'dreams') {
 		return 'dream';
 	}
 
 	if (route.name === 'goals') {
 		return 'goal';
+	}
+
+	if (route.name === 'groups') {
+		return 'group';
 	}
 
 	return 'task';
@@ -58,6 +70,9 @@ const dreamOptions = computed(() =>
 );
 const goalOptions = computed(() =>
 	items.goals.active.map((goal) => ({ value: goal.id, title: goal.name })),
+);
+const groupOptions = computed(() =>
+	items.groups.active.map((group) => ({ value: group.id, title: group.name })),
 );
 
 async function handleTaskSubmit(draft: TaskDraft): Promise<void> {
@@ -70,5 +85,9 @@ async function handleDreamSave(draft: DreamDraft): Promise<void> {
 
 async function handleGoalSave(draft: GoalDraft): Promise<void> {
 	await items.add(ItemType.Goal, draft);
+}
+
+async function handleGroupSave(draft: GroupDraft): Promise<void> {
+	await items.add(ItemType.Group, draft);
 }
 </script>

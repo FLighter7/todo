@@ -8,10 +8,11 @@ import AddEntityDialog from '../AddEntityDialog.vue';
 
 const dreamOptions = [{ value: 'dream-1', title: 'Visit Japan' }];
 const goalOptions = [{ value: 'goal-1', title: 'Learn Japanese' }];
+const groupOptions = [{ value: 'group-1', title: 'Errands' }];
 
-function mountDialog(defaultTab: 'dream' | 'goal' | 'task' = 'task') {
+function mountDialog(defaultTab: 'dream' | 'goal' | 'group' | 'task' = 'task') {
 	return mount(AddEntityDialog, {
-		props: { modelValue: true, defaultTab, dreamOptions, goalOptions },
+		props: { modelValue: true, defaultTab, dreamOptions, goalOptions, groupOptions },
 		global: { plugins: [vuetify, i18n] },
 	});
 }
@@ -81,7 +82,56 @@ describe('AddEntityDialog saving a goal', () => {
 	});
 });
 
+describe('AddEntityDialog saving a group', () => {
+	it('offers a name field only and emits save-group with a trimmed name', async () => {
+		const wrapper = mountDialog('group');
+
+		expect(wrapper.findAll('input')).toHaveLength(1);
+		expect(wrapper.find('textarea').exists()).toBe(false);
+
+		await wrapper.get('input').setValue('  Errands  ');
+		await clickSave(wrapper);
+
+		expect(wrapper.emitted('save-group')).toEqual([[{ name: 'Errands' }]]);
+		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([false]);
+	});
+
+	it('blocks save and shows an error when the group name is empty', async () => {
+		const wrapper = mountDialog('group');
+
+		await clickSave(wrapper);
+
+		expect(wrapper.emitted('save-group')).toBeUndefined();
+		expect(wrapper.text()).toContain('Name is required');
+	});
+
+	it('clears the name on save and new', async () => {
+		const wrapper = mountDialog('group');
+
+		await wrapper.get('input').setValue('Errands');
+		await clickSaveAndNew(wrapper);
+
+		expect(wrapper.emitted('save-group')).toEqual([[{ name: 'Errands' }]]);
+		expect((wrapper.get('input').element as HTMLInputElement).value).toBe('');
+	});
+});
+
 describe('AddEntityDialog saving a task', () => {
+	it('emits save-task with the picked group next to the picked goal', async () => {
+		const wrapper = mountDialog('task');
+
+		await wrapper.get('input').setValue('Buy stamps');
+		const [goalSelect, groupSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		await goalSelect.vm.$emit('update:modelValue', 'goal-1');
+		await groupSelect.vm.$emit('update:modelValue', 'group-1');
+		await clickSave(wrapper);
+
+		expect(wrapper.emitted('save-task')?.[0][0]).toMatchObject({
+			goalId: 'goal-1',
+			groupId: 'group-1',
+		});
+	});
+
 	it('emits save-task with flags and the picked goal', async () => {
 		const wrapper = mountDialog('task');
 

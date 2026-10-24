@@ -81,6 +81,36 @@ describe('useCascadeCancel counting', () => {
 	});
 });
 
+describe('useCascadeCancel for groups', () => {
+	it("counts only a group's active tasks, whatever goal they also sit in", async () => {
+		await loadItems([
+			makeTask({ id: 'a', groupId: 'group-1' }),
+			makeTask({ id: 'b', groupId: 'group-1', goalId: 'goal-1' }),
+			makeTask({ id: 'c', groupId: 'group-1', status: Status.Done }),
+			makeTask({ id: 'd', groupId: 'other-group' }),
+			makeTask({ id: 'e', goalId: 'goal-1' }),
+		]);
+		const cascade = useCascadeCancel();
+
+		expect(cascade.countGroupTasks('group-1')).toBe(2);
+	});
+
+	it('cancelGroupTasks cancels the active tasks in the group and leaves the rest alone', async () => {
+		await loadItems([
+			makeTask({ id: 'a', groupId: 'group-1', goalId: 'goal-1' }),
+			makeTask({ id: 'b', groupId: 'group-1', status: Status.Done }),
+			makeTask({ id: 'c', goalId: 'goal-1' }),
+		]);
+		const cascade = useCascadeCancel();
+
+		await cascade.cancelGroupTasks('group-1');
+
+		expect(statusOf('a')).toBe(Status.Cancelled);
+		expect(statusOf('b')).toBe(Status.Done);
+		expect(statusOf('c')).toBe(Status.Opened);
+	});
+});
+
 describe('useCascadeCancel execution', () => {
 	it('cancelGoalTasks cancels every active task under the goal and leaves the rest alone', async () => {
 		await loadItems([

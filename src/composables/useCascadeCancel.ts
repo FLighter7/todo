@@ -7,16 +7,20 @@ export interface CascadeCounts {
 }
 
 /**
- * Counts and cancels a Dream/Goal's active descendants for the cascading-cancel
- * flow. Only Cancel cascades — Done and Reopen say nothing about relatives — so
- * this is a flow the Dreams and Goals page containers opt into, not something
- * the store does on every close.
+ * Counts and cancels a Dream/Goal/Group's active descendants for the
+ * cascading-cancel flow. Only Cancel cascades — Done and Reopen say nothing
+ * about relatives — so this is a flow the Dreams, Goals and Groups page
+ * containers opt into, not something the store does on every close.
  */
 export function useCascadeCancel() {
 	const items = useItemsStore();
 
 	function countGoalTasks(goalId: string): number {
 		return items.tasks.active.filter((task) => task.goalId === goalId).length;
+	}
+
+	function countGroupTasks(groupId: string): number {
+		return items.tasks.active.filter((task) => task.groupId === groupId).length;
 	}
 
 	function countDreamDescendants(dreamId: string): CascadeCounts {
@@ -34,6 +38,16 @@ export function useCascadeCancel() {
 		}
 	}
 
+	async function cancelGroupTasks(groupId: string): Promise<void> {
+		const ids = items.tasks.active
+			.filter((task) => task.groupId === groupId)
+			.map((task) => task.id);
+
+		for (const id of ids) {
+			await items.close(id, Status.Cancelled);
+		}
+	}
+
 	async function cancelDreamGoals(dreamId: string): Promise<void> {
 		const ids = items.goals.active
 			.filter((goal) => goal.dreamId === dreamId)
@@ -45,5 +59,12 @@ export function useCascadeCancel() {
 		}
 	}
 
-	return { countGoalTasks, countDreamDescendants, cancelGoalTasks, cancelDreamGoals };
+	return {
+		countGoalTasks,
+		countGroupTasks,
+		countDreamDescendants,
+		cancelGoalTasks,
+		cancelGroupTasks,
+		cancelDreamGoals,
+	};
 }

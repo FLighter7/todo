@@ -7,9 +7,9 @@ beforeEach(() => {
 });
 
 describe('getStartPageOptions', () => {
-	it('includes the tasks, matrix, dreams and goals routes, tasks first', () => {
+	it('includes the tasks, matrix, dreams, goals and groups routes, tasks first', () => {
 		const values = getStartPageOptions().map((option) => option.value);
 
-		expect(values).toEqual(['tasks', 'matrix', 'dreams', 'goals']);
+		expect(values).toEqual(['tasks', 'matrix', 'dreams', 'goals', 'groups']);
 	});
 });

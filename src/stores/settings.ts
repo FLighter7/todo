@@ -5,7 +5,7 @@ import { settingsService } from '@/services/settings/SettingsService';
 import { initialLocale } from '@/i18n';
 import { useStorageStore } from './storage';
 
-export type SettingsEntity = 'dreams' | 'goals' | 'tasks';
+export type SettingsEntity = 'dreams' | 'goals' | 'groups' | 'tasks';
 
 /**
  * `reactive()` + `toRefs()`, not a plain object spread: a spread only
@@ -75,6 +75,7 @@ export const useSettingsStore = defineStore('settings', () => {
 		state.general = { ...settings.general };
 		state.dreams = { ...settings.dreams };
 		state.goals = { ...settings.goals };
+		state.groups = { ...settings.groups };
 		state.tasks = { ...settings.tasks };
 		persist();
 	}

@@ -372,6 +372,7 @@ describe('SyncFlow settings mode', () => {
 				general: settings.general,
 				dreams: settings.dreams,
 				goals: settings.goals,
+				groups: settings.groups,
 				tasks: settings.tasks,
 			},
 		});

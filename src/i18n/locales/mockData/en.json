@@ -49,6 +49,20 @@
 		"Save six months of expenses",
 		"Master three new recipes"
 	],
+	"groupNames": [
+		"Home",
+		"Work",
+		"Shopping",
+		"Errands",
+		"Health",
+		"Finances",
+		"Car",
+		"Kids",
+		"Garden",
+		"Paperwork",
+		"Weekend",
+		"Calls"
+	],
 	"taskNames": [
 		"Book flights",
 		"Call the bank",

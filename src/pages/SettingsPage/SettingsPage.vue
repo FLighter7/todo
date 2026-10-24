@@ -75,7 +75,9 @@
 
 			<template v-for="entity in ENTITIES" :key="entity">
 				<VListSubheader>{{ t(`settings.${entity}`) }}</VListSubheader>
+				<!-- A group has no note, so its list has no second row to offer. -->
 				<VBtnToggle
+					v-if="entity !== 'groups'"
 					:model-value="settings[entity].rows"
 					mandatory
 					color="primary"
@@ -125,7 +127,7 @@ const emit = defineEmits<{ notify: [message: string] }>();
 const { t, locale } = useI18n();
 const settings = useSettingsStore();
 
-const ENTITIES: SettingsEntity[] = ['dreams', 'goals', 'tasks'];
+const ENTITIES: SettingsEntity[] = ['dreams', 'goals', 'groups', 'tasks'];
 
 const fontScaleIndex = computed(() => FONT_SCALES.indexOf(settings.general.fontScale));
 

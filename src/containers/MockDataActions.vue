@@ -61,7 +61,7 @@ function resolveLocale(): AppLocale {
 async function generateAndReplace(): Promise<void> {
 	try {
 		const result = mockDataService.generate(resolveLocale());
-		const generated = [...result.dreams, ...result.goals, ...result.tasks];
+		const generated = [...result.dreams, ...result.goals, ...result.groups, ...result.tasks];
 		await items.replaceAll(generated);
 		emit('notify', t('mockData.generated', { count: generated.length }));
 	} catch (error) {

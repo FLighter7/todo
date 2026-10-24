@@ -44,6 +44,13 @@
 					item-value="value"
 					:label="t('task.goalLabel')"
 				/>
+				<VSelect
+					v-model="groupId"
+					:items="groupSelectItems"
+					item-title="title"
+					item-value="value"
+					:label="t('task.groupLabel')"
+				/>
 				<ScheduleField v-model="schedule" />
 			</template>
 			<template v-else>
@@ -51,6 +58,9 @@
 				<p v-if="note" class="text-body-medium mt-2">{{ note }}</p>
 				<p v-if="goalName" class="text-body-medium mt-2 text-medium-emphasis">
 					{{ t('task.goalLabel') }}: {{ goalName }}
+				</p>
+				<p v-if="groupName" class="text-body-medium mt-2 text-medium-emphasis">
+					{{ t('task.groupLabel') }}: {{ groupName }}
 				</p>
 				<p v-if="schedule" class="text-body-medium mt-2 text-medium-emphasis">
 					{{ t('task.schedule.label') }}: {{ scheduleSummary }}
@@ -89,6 +99,7 @@ const props = withDefaults(
 		initialFlags?: { important: boolean; urgent: boolean };
 		mode?: 'add' | 'edit';
 		goalOptions: Array<{ value: string; title: string }>;
+		groupOptions: Array<{ value: string; title: string }>;
 	}>(),
 	{ record: null, initialFlags: undefined, mode: 'edit' },
 );
@@ -109,6 +120,7 @@ const note = ref('');
 const important = ref(false);
 const urgent = ref(false);
 const goalId = ref('');
+const groupId = ref('');
 const schedule = ref<Schedule | undefined>(undefined);
 const showErrors = ref(false);
 const editingRecord = ref(props.mode === 'add');
@@ -121,6 +133,15 @@ const selectItems = computed(() => [{ value: '', title: t('task.noGoal') }, ...p
 
 const goalName = computed(
 	() => selectItems.value.find((item) => item.value === goalId.value)?.title,
+);
+
+const groupSelectItems = computed(() => [
+	{ value: '', title: t('task.noGroup') },
+	...props.groupOptions,
+]);
+
+const groupName = computed(
+	() => groupSelectItems.value.find((item) => item.value === groupId.value)?.title,
 );
 
 const scheduleSummary = computed(() => {
@@ -184,6 +205,7 @@ function seedDraftFromRecord(): void {
 	important.value = props.record?.important ?? props.initialFlags?.important ?? false;
 	urgent.value = props.record?.urgent ?? props.initialFlags?.urgent ?? false;
 	goalId.value = props.record?.goalId ?? '';
+	groupId.value = props.record?.groupId ?? '';
 	schedule.value = props.record?.schedule;
 }
 
@@ -220,6 +242,7 @@ function onSave(): void {
 		important: important.value,
 		urgent: urgent.value,
 		goalId: goalId.value === '' ? undefined : goalId.value,
+		groupId: groupId.value === '' ? undefined : groupId.value,
 		schedule: schedule.value,
 	});
 	open.value = false;

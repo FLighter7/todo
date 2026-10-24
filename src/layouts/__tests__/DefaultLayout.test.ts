@@ -15,6 +15,7 @@ function makeTestRouter(): Router {
 			{ path: '/matrix', name: 'matrix', component: { template: '<div />' } },
 			{ path: '/dreams', name: 'dreams', component: { template: '<div />' } },
 			{ path: '/goals', name: 'goals', component: { template: '<div />' } },
+			{ path: '/groups', name: 'groups', component: { template: '<div />' } },
 			{ path: '/settings', name: 'settings', component: { template: '<div />' } },
 			{ path: '/sync', name: 'sync', component: { template: '<div />' } },
 		],

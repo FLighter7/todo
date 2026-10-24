@@ -147,6 +147,12 @@ describe('useSettingsStore replaceAll', () => {
 				sortOrder: 'az' as const,
 			},
 			goals: { rows: 2 as const, confirmDone: true, confirmReopen: true, sortOrder: 'az' as const },
+			groups: {
+				rows: 1 as const,
+				confirmDone: true,
+				confirmReopen: false,
+				sortOrder: 'za' as const,
+			},
 			tasks: { rows: 2 as const, confirmDone: true, confirmReopen: true, sortOrder: 'az' as const },
 		};
 
@@ -155,6 +161,7 @@ describe('useSettingsStore replaceAll', () => {
 		expect(store.general).toEqual(incoming.general);
 		expect(store.dreams).toEqual(incoming.dreams);
 		expect(store.goals).toEqual(incoming.goals);
+		expect(store.groups).toEqual(incoming.groups);
 		expect(store.tasks).toEqual(incoming.tasks);
 	});
 

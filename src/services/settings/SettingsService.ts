@@ -14,6 +14,7 @@ function cloneDefaults(): AppSettings {
 		general: { ...DEFAULT_SETTINGS.general },
 		dreams: { ...DEFAULT_SETTINGS.dreams },
 		goals: { ...DEFAULT_SETTINGS.goals },
+		groups: { ...DEFAULT_SETTINGS.groups },
 		tasks: { ...DEFAULT_SETTINGS.tasks },
 	};
 }

@@ -16,6 +16,7 @@ async function mountAt(path: string): Promise<{ wrapper: VueWrapper; router: Rou
 		routes: [
 			{ path: '/dreams', name: 'dreams', component: { template: '<div />' } },
 			{ path: '/goals', name: 'goals', component: { template: '<div />' } },
+			{ path: '/groups', name: 'groups', component: { template: '<div />' } },
 			{ path: '/tasks', name: 'tasks', component: { template: '<div />' } },
 		],
 	});
@@ -75,6 +76,19 @@ describe('SortMenu selection', () => {
 		expect(settings.goals.sortOrder).toBe('az');
 		expect(settings.tasks.sortOrder).toBe('newest');
 		expect(settings.dreams.sortOrder).toBe('newest');
+	});
+
+	it('keeps the groups page sortOrder apart from the others', async () => {
+		const { wrapper } = await mountAt('/groups');
+
+		await openMenu(wrapper);
+		const items = wrapper.findAllComponents({ name: 'VListItem' });
+		await items.find((item) => item.text().includes('Z-A'))?.trigger('click');
+
+		const settings = useSettingsStore();
+		expect(settings.groups.sortOrder).toBe('za');
+		expect(settings.goals.sortOrder).toBe('newest');
+		expect(settings.tasks.sortOrder).toBe('newest');
 	});
 
 	it('closes the menu after a selection', async () => {

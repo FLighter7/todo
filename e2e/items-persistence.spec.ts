@@ -7,12 +7,15 @@ interface StoredItem {
 	name: string;
 	status: number;
 	updated: string;
+	note?: string;
+	groupId?: string;
 	deadline?: unknown;
 	schedule?: { rrule?: string };
 	completions?: Array<{ occurrence: string; done: boolean }>;
 }
 
 const TASK = 1;
+const GROUP = 2;
 const GOAL = 3;
 const DREAM = 4;
 const OPENED = 1;
@@ -56,7 +59,8 @@ test('sample data with deadlines, schedules and marks survives a reload unchange
 }) => {
 	const before = await generateSampleData(page);
 
-	expect(new Set(before.map((item) => item.type))).toEqual(new Set([TASK, GOAL, DREAM]));
+	expect(new Set(before.map((item) => item.type))).toEqual(new Set([TASK, GROUP, GOAL, DREAM]));
+	expect(before.some((item) => item.groupId !== undefined)).toBe(true);
 	expect(before.some((item) => item.deadline !== undefined)).toBe(true);
 	expect(before.some((item) => item.schedule !== undefined)).toBe(true);
 	expect(before.some((item) => (item.completions ?? []).length > 0)).toBe(true);
@@ -113,4 +117,42 @@ test('a scheduled task keeps its schedule through an edit, and an occurrence mar
 	await page.reload();
 	await expect(page.locator('.v-list-item').first()).toBeVisible();
 	expect(doneCount(await storedTask())).toBe(doneCount(task) + 1);
+});
+
+test('a group made on its page, and a task put in it, survive a reload', async ({ page }) => {
+	await page.goto('/todo/groups');
+	const dialog = page.getByRole('dialog');
+
+	await page.getByRole('button', { name: 'Add task' }).click();
+	await dialog.getByLabel('Name').fill('Errands');
+	await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+	await expect(page.locator('.v-list-item', { hasText: 'Errands' })).toBeVisible();
+
+	// In-app navigation, not page.goto: a reload could cut the group's write short.
+	await page.getByRole('link', { name: 'Tasks' }).click();
+	await page.getByRole('button', { name: 'Add task' }).click();
+	await dialog.getByLabel('Name').fill('Buy stamps');
+	// The field's own overlay takes the click, not the input the label points at.
+	await dialog.locator('.v-field', { has: page.getByLabel('Group', { exact: true }) }).click();
+	await page.getByRole('option', { name: 'Errands' }).click();
+	await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+	await expect(page.locator('.v-list-item', { hasText: 'Buy stamps' })).toBeVisible();
+
+	const stored = async () => {
+		const items = await readItems(page);
+		return {
+			group: items.find((item) => item.type === GROUP),
+			task: items.find((item) => item.type === TASK),
+		};
+	};
+	await expect.poll(async () => (await stored()).task?.groupId).toBeDefined();
+	const { group, task } = await stored();
+	expect(group).toMatchObject({ name: 'Errands', status: OPENED });
+	expect(group?.note).toBeUndefined();
+	expect(task?.groupId).toBe(group?.id);
+
+	await page.reload();
+	await page.getByText('Buy stamps', { exact: true }).click();
+	await expect(dialog.getByText('Group: Errands')).toBeVisible();
+	expect(await stored()).toEqual({ group, task });
 });

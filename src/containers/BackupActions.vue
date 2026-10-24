@@ -83,6 +83,7 @@ function exportFile(): void {
 			general: settings.general,
 			dreams: settings.dreams,
 			goals: settings.goals,
+			groups: settings.groups,
 			tasks: settings.tasks,
 		}),
 	);

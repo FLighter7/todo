@@ -29,8 +29,8 @@ export function clickButtonByText(wrapper: VueWrapper, text: string): Promise<vo
  * The Active/History toggle lives in DefaultLayout, not in the page
  * container, so tests that mount a page container directly can't click a
  * "History" button that isn't rendered there — this flips the shared store
- * the toggle and the page container both read from. One value for all three
- * pages, so no page argument.
+ * the toggle and the page container both read from. One value for all the
+ * list pages, so no page argument.
  */
 export function setEntityTab(value: 'active' | 'history'): Promise<void> {
 	useEntityTabsStore().tab = value;

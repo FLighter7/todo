@@ -5,7 +5,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText, loadItems, setEntityTab } from '@/vitestHelpers';
-import { ItemType, Status, type Goal, type Schedule, type Task } from '@/types';
+import { ItemType, Status, type Goal, type Group, type Schedule, type Task } from '@/types';
 import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
 import TaskList from '../TaskList.vue';
@@ -15,6 +15,18 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
 		type: ItemType.Goal,
 		id: 'goal-1',
 		name: 'Learn Japanese',
+		created: daysAgo(1),
+		updated: daysAgo(1),
+		status: Status.Opened,
+		...overrides,
+	};
+}
+
+function makeGroup(overrides: Partial<Group> = {}): Group {
+	return {
+		type: ItemType.Group,
+		id: 'group-1',
+		name: 'Errands',
 		created: daysAgo(1),
 		updated: daysAgo(1),
 		status: Status.Opened,
@@ -116,6 +128,62 @@ describe('TaskList goal picker options', () => {
 		expect(select.props('modelValue')).toBe('closed-goal');
 		const items = select.props('items') as Array<{ title: string }>;
 		expect(items.map((item) => item.title)).toContain('Closed goal');
+	});
+});
+
+describe('TaskList groups', () => {
+	it('keeps sections by goal only, and names the group inside the task', async () => {
+		await loadItems([
+			makeGoal(),
+			makeGroup(),
+			makeTask({ id: 'both', name: 'In goal and group', goalId: 'goal-1', groupId: 'group-1' }),
+			makeTask({ id: 'group-only', name: 'In group only', groupId: 'group-1' }),
+		]);
+		const wrapper = mount(TaskList, { global: { plugins: [vuetify, i18n] } });
+
+		const sections = wrapper.findAllComponents({ name: 'EntityListSection' });
+		expect(sections.map((section) => section.props('label'))).toEqual(['Learn Japanese']);
+		expect(sections[0].text()).toContain('In goal and group');
+		expect(sections[0].text()).not.toContain('In group only');
+
+		const groupOnly = wrapper
+			.findAll('.v-list-item')
+			.find((item) => item.text().includes('In group only'));
+		await groupOnly?.trigger('click');
+
+		expect(wrapper.text()).toContain('Group: Errands');
+	});
+
+	it('offers active groups, plus the closed one the task is already in', async () => {
+		await loadItems([
+			makeGroup({ id: 'active-group', name: 'Active group' }),
+			makeGroup({ id: 'closed-group', name: 'Closed group', status: Status.Done }),
+			makeGroup({ id: 'other-closed', name: 'Other closed', status: Status.Cancelled }),
+			makeTask({ groupId: 'closed-group' }),
+		]);
+		const wrapper = mount(TaskList, { global: { plugins: [vuetify, i18n] } });
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+
+		const [, groupSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		expect(groupSelect.props('modelValue')).toBe('closed-group');
+		const items = groupSelect.props('items') as Array<{ title: string }>;
+		expect(items.map((item) => item.title)).toEqual(['No group', 'Active group', 'Closed group']);
+	});
+
+	it('saves a group change without touching the goal', async () => {
+		await loadItems([makeGoal(), makeGroup(), makeTask({ goalId: 'goal-1' })]);
+		const items = useItemsStore();
+		const wrapper = mount(TaskList, { global: { plugins: [vuetify, i18n] } });
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		const [, groupSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		await groupSelect.vm.$emit('update:modelValue', 'group-1');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(items.tasks.all[0]).toMatchObject({ goalId: 'goal-1', groupId: 'group-1' });
 	});
 });
 

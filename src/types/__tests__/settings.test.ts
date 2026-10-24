@@ -77,6 +77,20 @@ describe('parseSettings', () => {
 		expect(() => parseSettings(raw)).toThrow(/cleanupDays/);
 	});
 
+	it('defaults the groups section when absent, as in every document saved before groups', () => {
+		expect(parseSettings(validRaw()).groups).toEqual(DEFAULT_SETTINGS.groups);
+	});
+
+	it('keeps a present groups section, and rejects a malformed one', () => {
+		const groups = { rows: 1, confirmDone: true, confirmReopen: true, sortOrder: 'za' };
+
+		expect(parseSettings({ ...validRaw(), groups }).groups).toEqual(groups);
+		expect(() => parseSettings({ ...validRaw(), groups: 'nope' })).toThrow(/"groups"/);
+		expect(() =>
+			parseSettings({ ...validRaw(), groups: { ...groups, confirmDone: 'yes' } }),
+		).toThrow(SettingsFormatError);
+	});
+
 	it('defaults fontScale to 1 when absent', () => {
 		expect(parseSettings(validRaw()).general.fontScale).toBe(1);
 	});

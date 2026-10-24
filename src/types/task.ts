@@ -44,6 +44,8 @@ export interface Completion {
 export interface Task extends ItemBase {
 	type: ItemType.Task;
 	goalId?: string;
+	/** Independent of `goalId`: a task can belong to a goal and a group at once. */
+	groupId?: string;
 	important: boolean;
 	urgent: boolean;
 	schedule?: Schedule;
@@ -54,6 +56,7 @@ export interface TaskDraft {
 	name: string;
 	note?: string;
 	goalId?: string;
+	groupId?: string;
 	important: boolean;
 	urgent: boolean;
 	schedule?: Schedule;
@@ -180,6 +183,11 @@ export function parseTask(value: unknown): Task {
 		fail('"goalId" must be a string when present');
 	}
 
+	const groupId = entry.groupId;
+	if (groupId !== undefined && typeof groupId !== 'string') {
+		fail('"groupId" must be a string when present');
+	}
+
 	let completions: Completion[] | undefined;
 	if (entry.completions !== undefined) {
 		if (!Array.isArray(entry.completions)) {
@@ -191,6 +199,7 @@ export function parseTask(value: unknown): Task {
 	return {
 		...base,
 		goalId,
+		groupId,
 		important: readBoolean(entry, 'important'),
 		urgent: readBoolean(entry, 'urgent'),
 		schedule: entry.schedule === undefined ? undefined : parseSchedule(entry.schedule),

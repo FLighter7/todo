@@ -42,11 +42,11 @@ const options: Array<{ value: SortOrder; labelKey: string }> = [
 
 // Mounted only inside DefaultLayout's `v-if="showPageToolbar"` block, gated
 // by the same PAGES_WITH_TOOLBAR check as EntityTabs -- route.name is
-// therefore always one of these three. The `?? 'tasks'` fallback exists only
+// therefore always one of these four. The `'tasks'` fallback exists only
 // to satisfy the type checker, never to be hit at runtime.
 const settingsEntity = computed<SettingsEntity>(() => {
 	const name = String(route.name);
-	return name === 'dreams' || name === 'goals' ? name : 'tasks';
+	return name === 'dreams' || name === 'goals' || name === 'groups' ? name : 'tasks';
 });
 
 function select(value: SortOrder): void {

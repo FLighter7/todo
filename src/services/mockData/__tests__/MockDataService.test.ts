@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Status, parseDream, parseGoal, parseTask } from '@/types';
+import { Status, parseDream, parseGoal, parseGroup, parseTask } from '@/types';
 import { listOccurrences, parseRRule } from '@/utils/schedule';
 import { SUPPORTED_LOCALES, type AppLocale } from '@/i18n';
 import { MockDataService, type MockDataResult } from '../MockDataService';
@@ -35,7 +35,7 @@ function generateAll(random: () => number): Record<AppLocale, MockDataResult> {
 }
 
 describe('MockDataService.generate', () => {
-	it('produces records that pass parseDream/parseGoal/parseTask for every locale', () => {
+	it('produces records that pass parseDream/parseGoal/parseGroup/parseTask for every locale', () => {
 		for (const locale of SUPPORTED_LOCALES) {
 			const result = service.generate(locale, { now: NOW, random: randomA() });
 
@@ -44,6 +44,10 @@ describe('MockDataService.generate', () => {
 			}
 			for (const goal of result.goals) {
 				expect(() => parseGoal(goal)).not.toThrow();
+			}
+			for (const group of result.groups) {
+				expect(() => parseGroup(group)).not.toThrow();
+				expect(group.note).toBeUndefined();
 			}
 			for (const task of result.tasks) {
 				expect(() => parseTask(task)).not.toThrow();
@@ -57,6 +61,7 @@ describe('MockDataService.generate', () => {
 
 			expect(result.dreams).toHaveLength(6);
 			expect(result.goals).toHaveLength(10);
+			expect(result.groups).toHaveLength(5);
 			expect(result.tasks).toHaveLength(20);
 		}
 	});
@@ -69,12 +74,16 @@ describe('MockDataService.generate', () => {
 		expect(combos).toEqual(new Set(['true:true', 'true:false', 'false:true', 'false:false']));
 	});
 
-	it('covers all three Status values within dreams, goals and tasks individually', () => {
-		const { dreams, goals, tasks } = service.generate('en', { now: NOW, random: randomA() });
+	it('covers all three Status values within dreams, goals, groups and tasks individually', () => {
+		const { dreams, goals, groups, tasks } = service.generate('en', {
+			now: NOW,
+			random: randomA(),
+		});
 		const allStatuses = new Set([Status.Opened, Status.Done, Status.Cancelled]);
 
 		expect(new Set(dreams.map((d) => d.status))).toEqual(allStatuses);
 		expect(new Set(goals.map((g) => g.status))).toEqual(allStatuses);
+		expect(new Set(groups.map((g) => g.status))).toEqual(allStatuses);
 		expect(new Set(tasks.map((t) => t.status))).toEqual(allStatuses);
 	});
 
@@ -85,6 +94,14 @@ describe('MockDataService.generate', () => {
 		expect(goals.some((g) => g.dreamId === undefined)).toBe(true);
 		expect(tasks.some((t) => t.goalId !== undefined)).toBe(true);
 		expect(tasks.some((t) => t.goalId === undefined)).toBe(true);
+	});
+
+	it('has tasks in a group only, in a goal and a group at once, and an empty group', () => {
+		const { groups, tasks } = service.generate('en', { now: NOW, random: randomA() });
+
+		expect(tasks.some((t) => t.groupId !== undefined && t.goalId === undefined)).toBe(true);
+		expect(tasks.some((t) => t.groupId !== undefined && t.goalId !== undefined)).toBe(true);
+		expect(groups.some((g) => !tasks.some((t) => t.groupId === g.id))).toBe(true);
 	});
 
 	it('covers all five deadline shapes among goals', () => {
@@ -143,14 +160,17 @@ describe('MockDataService.generate', () => {
 	});
 
 	it('keeps closed records, occurrences and exdate entries within 14 days of now, and created <= updated always', () => {
-		const { dreams, goals, tasks } = service.generate('en', { now: NOW, random: randomA() });
+		const { dreams, goals, groups, tasks } = service.generate('en', {
+			now: NOW,
+			random: randomA(),
+		});
 		const fourteenDaysMs = 14 * 24 * 60 * 60 * 1000;
 		const within14 = (wallClockOrIso: string) => {
 			const delta = NOW.getTime() - Date.parse(withZ(wallClockOrIso));
 			return delta >= 0 && delta <= fourteenDaysMs;
 		};
 
-		for (const record of [...dreams, ...goals, ...tasks]) {
+		for (const record of [...dreams, ...goals, ...groups, ...tasks]) {
 			expect(Date.parse(record.created)).toBeLessThanOrEqual(Date.parse(record.updated));
 
 			if (record.status === Status.Done || record.status === Status.Cancelled) {
@@ -168,10 +188,14 @@ describe('MockDataService.generate', () => {
 		}
 	});
 
-	it('keeps referential integrity between goals/dreams and tasks/goals', () => {
-		const { dreams, goals, tasks } = service.generate('en', { now: NOW, random: randomA() });
+	it('keeps referential integrity between goals/dreams and tasks/goals/groups', () => {
+		const { dreams, goals, groups, tasks } = service.generate('en', {
+			now: NOW,
+			random: randomA(),
+		});
 		const dreamIds = new Set(dreams.map((d) => d.id));
 		const goalIds = new Set(goals.map((g) => g.id));
+		const groupIds = new Set(groups.map((g) => g.id));
 
 		for (const goal of goals) {
 			if (goal.dreamId !== undefined) {
@@ -181,6 +205,9 @@ describe('MockDataService.generate', () => {
 		for (const task of tasks) {
 			if (task.goalId !== undefined) {
 				expect(goalIds.has(task.goalId)).toBe(true);
+			}
+			if (task.groupId !== undefined) {
+				expect(groupIds.has(task.groupId)).toBe(true);
 			}
 		}
 	});
@@ -207,7 +234,9 @@ describe('MockDataService.generate', () => {
 		expect(namesA).not.toEqual(namesB);
 
 		for (const result of [resultA, resultB]) {
-			const ids = [...result.dreams, ...result.goals, ...result.tasks].map((r) => r.id);
+			const ids = [...result.dreams, ...result.goals, ...result.groups, ...result.tasks].map(
+				(r) => r.id,
+			);
 			expect(new Set(ids).size).toBe(ids.length);
 		}
 	});
@@ -218,6 +247,7 @@ describe('MockDataService.generate', () => {
 			const result = results[locale];
 			expect(result.dreams.every((d) => d.name.length > 0)).toBe(true);
 			expect(result.goals.every((g) => g.name.length > 0)).toBe(true);
+			expect(result.groups.every((g) => g.name.length > 0)).toBe(true);
 			expect(result.tasks.every((t) => t.name.length > 0)).toBe(true);
 		}
 	});

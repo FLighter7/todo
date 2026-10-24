@@ -79,6 +79,17 @@ describe('SettingsService.load', () => {
 		expect(loaded.general.theme).toBe('dark');
 		expect(loaded.general.fontScale).toBe(1);
 	});
+
+	it('keeps every other setting of a document saved before the Groups page existed', () => {
+		const { general, dreams, tasks } = DEFAULT_SETTINGS;
+		const goals = { ...DEFAULT_SETTINGS.goals, confirmDone: true, sortOrder: 'az' };
+		localStorage.setItem('todo.settings', JSON.stringify({ general, dreams, goals, tasks }));
+
+		const loaded = new SettingsService().load();
+
+		expect(loaded.goals).toEqual(goals);
+		expect(loaded.groups).toEqual(DEFAULT_SETTINGS.groups);
+	});
 });
 
 describe('SettingsService.save', () => {

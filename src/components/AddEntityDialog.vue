@@ -1,4 +1,18 @@
 <style lang="scss" module>
+// The dialog's card is a flex column, and a form taller than the screen (the task
+// tab at a large text size) would otherwise squeeze the tab bar to nothing.
+.tabs {
+	flex-shrink: 0;
+
+	// Four tabs share a phone-width dialog, and Vuetify's 90px minimum per tab would
+	// scroll the first one out of view. They split the width by their own labels
+	// instead, and scroll only once a large text size leaves no room for all four.
+	:global(.v-tab.v-tab.v-btn) {
+		min-width: 0;
+		padding-inline: 0.5rem;
+	}
+}
+
 // Wraps rather than squeezing a label mid-word when large text leaves no room
 // for both switches on one line.
 .flags {
@@ -45,9 +59,10 @@
 				/>
 			</VCardActions>
 
-			<VTabs v-model="activeTab" color="primary">
+			<VTabs v-model="activeTab" color="primary" grow :class="$style.tabs">
 				<VTab value="dream">{{ t('dream.title') }}</VTab>
 				<VTab value="goal">{{ t('goal.title') }}</VTab>
+				<VTab value="group">{{ t('group.title') }}</VTab>
 				<VTab value="task">{{ t('task.title') }}</VTab>
 			</VTabs>
 
@@ -82,6 +97,16 @@
 					<DeadlineField v-model="goalDeadline" />
 				</template>
 
+				<template v-else-if="activeTab === 'group'">
+					<VTextField
+						ref="nameField"
+						v-model="groupName"
+						:label="t('entity.name')"
+						:error-messages="groupNameError"
+						autofocus
+					/>
+				</template>
+
 				<template v-else>
 					<VTextField
 						ref="nameField"
@@ -107,6 +132,13 @@
 						item-value="value"
 						:label="t('task.goalLabel')"
 					/>
+					<VSelect
+						v-model="taskGroupId"
+						:items="taskGroupSelectItems"
+						item-title="title"
+						item-value="value"
+						:label="t('task.groupLabel')"
+					/>
 					<ScheduleField v-model="taskSchedule" />
 				</template>
 			</VCardText>
@@ -120,17 +152,21 @@ import { useI18n } from 'vue-i18n';
 import { mdiCheck, mdiPlusThick } from '@mdi/js';
 import DeadlineField from './DeadlineField.vue';
 import ScheduleField from './ScheduleField.vue';
-import type { Deadline, DreamDraft, GoalDraft, Schedule, TaskDraft } from '@/types';
+import type { Deadline, DreamDraft, GoalDraft, GroupDraft, Schedule, TaskDraft } from '@/types';
+
+type AddTab = 'dream' | 'goal' | 'group' | 'task';
 
 const props = defineProps<{
-	defaultTab: 'dream' | 'goal' | 'task';
+	defaultTab: AddTab;
 	dreamOptions: Array<{ value: string; title: string }>;
 	goalOptions: Array<{ value: string; title: string }>;
+	groupOptions: Array<{ value: string; title: string }>;
 }>();
 
 const emit = defineEmits<{
 	'save-dream': [draft: DreamDraft];
 	'save-goal': [draft: GoalDraft];
+	'save-group': [draft: GroupDraft];
 	'save-task': [draft: TaskDraft];
 }>();
 
@@ -138,7 +174,7 @@ const open = defineModel<boolean>({ required: true });
 
 const { t } = useI18n();
 
-const activeTab = ref<'dream' | 'goal' | 'task'>(props.defaultTab);
+const activeTab = ref<AddTab>(props.defaultTab);
 const showErrors = ref(false);
 const nameField = useTemplateRef<{ focus: () => void }>('nameField');
 
@@ -150,11 +186,14 @@ const goalNote = ref('');
 const goalDreamId = ref('');
 const goalDeadline = ref<Deadline | undefined>(undefined);
 
+const groupName = ref('');
+
 const taskName = ref('');
 const taskNote = ref('');
 const taskImportant = ref(false);
 const taskUrgent = ref(false);
 const taskGoalId = ref('');
+const taskGroupId = ref('');
 const taskSchedule = ref<Schedule | undefined>(undefined);
 
 const goalDreamSelectItems = computed(() => [
@@ -165,12 +204,19 @@ const taskGoalSelectItems = computed(() => [
 	{ value: '', title: t('task.noGoal') },
 	...props.goalOptions,
 ]);
+const taskGroupSelectItems = computed(() => [
+	{ value: '', title: t('task.noGroup') },
+	...props.groupOptions,
+]);
 
 const dreamNameError = computed(() =>
 	showErrors.value && dreamName.value.trim() === '' ? t('form.nameRequired') : '',
 );
 const goalNameError = computed(() =>
 	showErrors.value && goalName.value.trim() === '' ? t('form.nameRequired') : '',
+);
+const groupNameError = computed(() =>
+	showErrors.value && groupName.value.trim() === '' ? t('form.nameRequired') : '',
 );
 const taskNameError = computed(() =>
 	showErrors.value && taskName.value.trim() === '' ? t('form.nameRequired') : '',
@@ -189,11 +235,13 @@ watch(open, (isOpen) => {
 	goalNote.value = '';
 	goalDreamId.value = '';
 	goalDeadline.value = undefined;
+	groupName.value = '';
 	taskName.value = '';
 	taskNote.value = '';
 	taskImportant.value = false;
 	taskUrgent.value = false;
 	taskGoalId.value = '';
+	taskGroupId.value = '';
 	taskSchedule.value = undefined;
 });
 
@@ -228,6 +276,16 @@ function trySave(): boolean {
 		return true;
 	}
 
+	if (activeTab.value === 'group') {
+		if (groupName.value.trim() === '') {
+			showErrors.value = true;
+			return false;
+		}
+
+		emit('save-group', { name: groupName.value.trim() });
+		return true;
+	}
+
 	if (taskName.value.trim() === '') {
 		showErrors.value = true;
 		return false;
@@ -240,6 +298,7 @@ function trySave(): boolean {
 		important: taskImportant.value,
 		urgent: taskUrgent.value,
 		goalId: taskGoalId.value === '' ? undefined : taskGoalId.value,
+		groupId: taskGroupId.value === '' ? undefined : taskGroupId.value,
 		schedule: taskSchedule.value,
 	});
 	return true;
@@ -263,6 +322,8 @@ function onSaveAndNew(): void {
 	} else if (activeTab.value === 'goal') {
 		goalName.value = '';
 		goalNote.value = '';
+	} else if (activeTab.value === 'group') {
+		groupName.value = '';
 	} else {
 		taskName.value = '';
 		taskNote.value = '';

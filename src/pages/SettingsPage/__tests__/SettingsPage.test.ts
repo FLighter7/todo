@@ -89,11 +89,27 @@ describe('SettingsPage cleanup window', () => {
 });
 
 describe('SettingsPage per-entity sections', () => {
-	it('shows one section per entity with a rows toggle and two switches', () => {
+	it('shows one section per entity with two switches, and a rows toggle for all but groups', () => {
 		const wrapper = mountPage();
 
+		expect(wrapper.text()).toContain('Groups');
 		expect(wrapper.findAllComponents({ name: 'VBtnToggle' })).toHaveLength(3);
-		expect(wrapper.findAllComponents({ name: 'VSwitch' })).toHaveLength(6);
+		expect(wrapper.findAllComponents({ name: 'VSwitch' })).toHaveLength(8);
+	});
+
+	it('changes the groups confirm switches without touching the others', async () => {
+		const settings = useSettingsStore();
+		const wrapper = mountPage();
+
+		// dreams, goals, groups, tasks -- two switches each.
+		const switches = wrapper.findAllComponents({ name: 'VSwitch' });
+		await switches[4].vm.$emit('update:modelValue', true);
+		await switches[5].vm.$emit('update:modelValue', true);
+
+		expect(settings.groups.confirmDone).toBe(true);
+		expect(settings.groups.confirmReopen).toBe(true);
+		expect(settings.goals.confirmDone).toBe(false);
+		expect(settings.tasks.confirmDone).toBe(false);
 	});
 
 	it('changes rows for one entity without touching the others', async () => {

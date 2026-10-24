@@ -6,6 +6,7 @@ import {
 	type Deadline,
 	type Dream,
 	type Goal,
+	type Group,
 	type Schedule,
 	type Task,
 } from '@/types';
@@ -15,10 +16,12 @@ import { POOLS } from './pools';
 import {
 	DREAM_TEMPLATES,
 	GOAL_TEMPLATES,
+	GROUP_TEMPLATES,
 	TASK_TEMPLATES,
 	type DeadlineShape,
 	type DreamTemplate,
 	type GoalTemplate,
+	type GroupTemplate,
 	type ScheduleKind,
 	type TaskTemplate,
 } from './templates';
@@ -26,6 +29,7 @@ import {
 export interface MockDataResult {
 	dreams: Dream[];
 	goals: Goal[];
+	groups: Group[];
 	tasks: Task[];
 }
 
@@ -234,9 +238,11 @@ export class MockDataService {
 		const dreamNames = sample(pool.dreamNames, DREAM_TEMPLATES.length, random);
 		const goalNames = sample(pool.goalNames, GOAL_TEMPLATES.length, random);
 		const taskNames = sample(pool.taskNames, TASK_TEMPLATES.length, random);
+		const groupNames = sample(pool.groupNames, GROUP_TEMPLATES.length, random);
 
 		// One shared note pool, consumed in dream -> goal -> task order across
 		// every `hasNote: true` slot in all three template arrays combined.
+		// Groups take no part: a group carries a name only.
 		const noteSlots =
 			countNoteSlots(DREAM_TEMPLATES) +
 			countNoteSlots(GOAL_TEMPLATES) +
@@ -277,6 +283,18 @@ export class MockDataService {
 			};
 		});
 
+		const groups: Group[] = GROUP_TEMPLATES.map((template: GroupTemplate, index) => {
+			const { created, updated } = buildTimestamps(now, random);
+			return {
+				id: crypto.randomUUID(),
+				type: ItemType.Group,
+				name: groupNames[index],
+				created,
+				updated,
+				status: template.status,
+			};
+		});
+
 		const tasks: Task[] = TASK_TEMPLATES.map((template: TaskTemplate, index) => {
 			const { created, updated } = buildTimestamps(now, random);
 			const { schedule, completions } =
@@ -293,6 +311,7 @@ export class MockDataService {
 				updated,
 				status: template.status,
 				goalId: template.goalIndex === undefined ? undefined : goals[template.goalIndex].id,
+				groupId: template.groupIndex === undefined ? undefined : groups[template.groupIndex].id,
 				important: template.important,
 				urgent: template.urgent,
 				schedule,
@@ -300,7 +319,7 @@ export class MockDataService {
 			};
 		});
 
-		return { dreams, goals, tasks };
+		return { dreams, goals, groups, tasks };
 	}
 }
 

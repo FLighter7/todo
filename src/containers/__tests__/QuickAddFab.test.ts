@@ -5,7 +5,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { ItemType, Status, type Dream, type Goal } from '@/types';
+import { ItemType, Status, type Dream, type Goal, type Group } from '@/types';
 import { useItemsStore } from '@/stores/items';
 import { loadItems } from '@/vitestHelpers';
 import QuickAddFab from '../QuickAddFab.vue';
@@ -34,15 +34,31 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
 	};
 }
 
-async function mountAt(path: string, seed: { dreams?: Dream[]; goals?: Goal[] } = {}) {
+function makeGroup(overrides: Partial<Group> = {}): Group {
+	return {
+		type: ItemType.Group,
+		id: 'group-1',
+		name: 'Errands',
+		created: '2026-08-06T10:00:00.000Z',
+		updated: '2026-08-06T10:00:00.000Z',
+		status: Status.Opened,
+		...overrides,
+	};
+}
+
+async function mountAt(
+	path: string,
+	seed: { dreams?: Dream[]; goals?: Goal[]; groups?: Group[] } = {},
+) {
 	setActivePinia(createPinia());
-	await loadItems([...(seed.dreams ?? []), ...(seed.goals ?? [])]);
+	await loadItems([...(seed.dreams ?? []), ...(seed.goals ?? []), ...(seed.groups ?? [])]);
 
 	const testRouter = createRouter({
 		history: createMemoryHistory(),
 		routes: [
 			{ path: '/dreams', name: 'dreams', component: { template: '<div />' } },
 			{ path: '/goals', name: 'goals', component: { template: '<div />' } },
+			{ path: '/groups', name: 'groups', component: { template: '<div />' } },
 			{ path: '/tasks', name: 'tasks', component: { template: '<div />' } },
 		],
 	});
@@ -71,6 +87,14 @@ describe('QuickAddFab default tab', () => {
 		await wrapper.get('button[aria-label="Add task"]').trigger('click');
 
 		expect(wrapper.findComponent({ name: 'VTabs' }).props('modelValue')).toBe('goal');
+	});
+
+	it('defaults to Group on /groups', async () => {
+		const wrapper = await mountAt('/groups');
+
+		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+
+		expect(wrapper.findComponent({ name: 'VTabs' }).props('modelValue')).toBe('group');
 	});
 
 	it('defaults to Task everywhere else', async () => {
@@ -112,6 +136,21 @@ describe('QuickAddFab creating a goal', () => {
 	});
 });
 
+describe('QuickAddFab creating a group', () => {
+	it('adds a group, carrying a name only, through the items store', async () => {
+		const wrapper = await mountAt('/groups');
+		const items = useItemsStore();
+
+		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		await wrapper.get('input').setValue('Errands');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(items.groups.all).toHaveLength(1);
+		expect(items.groups.all[0]).toMatchObject({ type: ItemType.Group, name: 'Errands' });
+		expect(items.groups.all[0].note).toBeUndefined();
+	});
+});
+
 describe('QuickAddFab creating a task', () => {
 	it('adds a task through the items store, offering only active goals', async () => {
 		const wrapper = await mountAt('/tasks', { goals: [makeGoal({ name: 'Learn Japanese' })] });
@@ -125,5 +164,29 @@ describe('QuickAddFab creating a task', () => {
 
 		expect(items.tasks.all).toHaveLength(1);
 		expect(items.tasks.all[0]).toMatchObject({ name: 'Do Duolingo', goalId: 'goal-1' });
+	});
+
+	it('puts a task in a goal and a group at once, offering only active groups', async () => {
+		const wrapper = await mountAt('/tasks', {
+			goals: [makeGoal()],
+			groups: [
+				makeGroup(),
+				makeGroup({ id: 'group-closed', name: 'Old errands', status: Status.Done }),
+			],
+		});
+		const items = useItemsStore();
+
+		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		await wrapper.get('input').setValue('Buy stamps');
+		const [goalSelect, groupSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		expect(groupSelect.props('items')).toEqual([
+			{ value: '', title: 'No group' },
+			{ value: 'group-1', title: 'Errands' },
+		]);
+		await goalSelect.vm.$emit('update:modelValue', 'goal-1');
+		await groupSelect.vm.$emit('update:modelValue', 'group-1');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(items.tasks.all[0]).toMatchObject({ goalId: 'goal-1', groupId: 'group-1' });
 	});
 });

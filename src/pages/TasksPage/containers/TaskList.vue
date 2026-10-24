@@ -19,6 +19,7 @@
 			mode="edit"
 			:record="editingTask"
 			:goal-options="goalOptions"
+			:group-options="groupOptions"
 			@save="handleSave"
 			@cancel="onCancel"
 			@toggle-completion-done="onToggleCompletionDone"
@@ -39,7 +40,7 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
-import { ItemType, Status, isGoal, isTask, type Task, type TaskDraft } from '@/types';
+import { ItemType, Status, isGoal, isGroup, isTask, type Task, type TaskDraft } from '@/types';
 import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
 import { useEntityTabsStore } from '@/stores/entityTabs';
@@ -100,6 +101,20 @@ const goalOptions = computed(() => {
 		const closedGoal = items.byId.get(currentGoalId);
 		if (closedGoal !== undefined && isGoal(closedGoal)) {
 			options.push({ value: closedGoal.id, title: closedGoal.name });
+		}
+	}
+
+	return options;
+});
+
+const groupOptions = computed(() => {
+	const options = items.groups.active.map((group) => ({ value: group.id, title: group.name }));
+	const currentGroupId = editingTask.value?.groupId;
+
+	if (currentGroupId !== undefined && !options.some((option) => option.value === currentGroupId)) {
+		const closedGroup = items.byId.get(currentGroupId);
+		if (closedGroup !== undefined && isGroup(closedGroup)) {
+			options.push({ value: closedGroup.id, title: closedGroup.name });
 		}
 	}
 

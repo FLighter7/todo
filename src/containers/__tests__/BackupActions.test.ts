@@ -139,6 +139,7 @@ describe('BackupActions import', () => {
 			},
 			dreams: { rows: 2, confirmDone: true, confirmReopen: true, sortOrder: 'az' },
 			goals: { rows: 2, confirmDone: true, confirmReopen: true, sortOrder: 'az' },
+			groups: { rows: 1, confirmDone: true, confirmReopen: true, sortOrder: 'za' },
 			tasks: { rows: 2, confirmDone: true, confirmReopen: true, sortOrder: 'az' },
 		});
 		readText.mockResolvedValue(JSON.stringify(incoming));

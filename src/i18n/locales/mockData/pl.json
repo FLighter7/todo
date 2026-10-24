@@ -49,6 +49,20 @@
 		"Zaoszczędzić na pół roku wydatków",
 		"Opanować trzy nowe przepisy"
 	],
+	"groupNames": [
+		"Dom",
+		"Praca",
+		"Zakupy",
+		"Sprawy na mieście",
+		"Zdrowie",
+		"Finanse",
+		"Samochód",
+		"Dzieci",
+		"Ogród",
+		"Dokumenty",
+		"Weekend",
+		"Telefony"
+	],
 	"taskNames": [
 		"Kupić bilety lotnicze",
 		"Zadzwonić do banku",

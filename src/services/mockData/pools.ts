@@ -6,6 +6,7 @@ import pl from '@/i18n/locales/mockData/pl.json';
 export interface MockContentPool {
 	dreamNames: string[];
 	goalNames: string[];
+	groupNames: string[];
 	taskNames: string[];
 	notes: string[];
 }

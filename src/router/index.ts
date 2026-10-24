@@ -1,5 +1,11 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
-import { mdiFlagOutline, mdiTelescope, mdiViewGridOutline, mdiViewListOutline } from '@mdi/js';
+import {
+	mdiFlagOutline,
+	mdiFolderOutline,
+	mdiTelescope,
+	mdiViewGridOutline,
+	mdiViewListOutline,
+} from '@mdi/js';
 import TasksPage from '@/pages/TasksPage/TasksPage.vue';
 import { settingsService } from '@/services/settings/SettingsService';
 
@@ -50,6 +56,12 @@ const routes: RouteRecordRaw[] = [
 		name: 'goals',
 		component: () => import('@/pages/GoalsPage/GoalsPage.vue'),
 		meta: { startPage: { icon: mdiFlagOutline, labelKey: 'settings.startPageGoals' } },
+	},
+	{
+		path: '/groups',
+		name: 'groups',
+		component: () => import('@/pages/GroupsPage/GroupsPage.vue'),
+		meta: { startPage: { icon: mdiFolderOutline, labelKey: 'settings.startPageGroups' } },
 	},
 	{ path: '/sync', name: 'sync', component: () => import('@/pages/SyncPage/SyncPage.vue') },
 	{

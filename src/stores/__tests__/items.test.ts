@@ -457,6 +457,7 @@ describe('useItemsStore add', () => {
 		const task = await store.add(ItemType.Task, {
 			name: 'Ship the release',
 			goalId: 'goal-1',
+			groupId: 'group-1',
 			important: true,
 			urgent: true,
 		});
@@ -470,10 +471,19 @@ describe('useItemsStore add', () => {
 		expect(task).toMatchObject({
 			type: ItemType.Task,
 			goalId: 'goal-1',
+			groupId: 'group-1',
 			important: true,
 			urgent: true,
 		});
-		expect(group.type).toBe(ItemType.Group);
+		// A group carries a name only.
+		expect(group).toEqual({
+			id: group.id,
+			type: ItemType.Group,
+			name: 'Errands',
+			created: group.created,
+			updated: group.created,
+			status: Status.Opened,
+		});
 		expect(goal).toMatchObject({
 			type: ItemType.Goal,
 			dreamId: 'dream-1',

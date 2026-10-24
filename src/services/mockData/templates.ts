@@ -22,6 +22,11 @@ export interface GoalTemplate {
 	deadlineShape: DeadlineShape;
 }
 
+/** A group carries a name only, so its template has nothing to say but its status. */
+export interface GroupTemplate {
+	status: Status;
+}
+
 export interface TaskTemplate {
 	status: Status;
 	important: boolean;
@@ -29,6 +34,8 @@ export interface TaskTemplate {
 	hasNote: boolean;
 	/** Index into GOAL_TEMPLATES. Absent = standalone task. */
 	goalIndex?: number;
+	/** Index into GROUP_TEMPLATES, independent of `goalIndex`. Absent = in no group. */
+	groupIndex?: number;
 	scheduleKind: ScheduleKind;
 }
 
@@ -57,6 +64,16 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
 	{ status: Status.Cancelled, hasNote: true, deadlineShape: 'yearSeason' }, // 9
 ];
 
+// Group #2 is deliberately never referenced by any TaskTemplate.groupIndex below -- it must
+// render as an empty group. Tasks #0 and #10 sit in a goal and a group at once.
+export const GROUP_TEMPLATES: GroupTemplate[] = [
+	{ status: Status.Opened }, // 0
+	{ status: Status.Opened }, // 1
+	{ status: Status.Opened }, // 2
+	{ status: Status.Done }, // 3
+	{ status: Status.Cancelled }, // 4
+];
+
 export const TASK_TEMPLATES: TaskTemplate[] = [
 	{
 		status: Status.Opened,
@@ -64,6 +81,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
 		urgent: true,
 		hasNote: true,
 		goalIndex: 0,
+		groupIndex: 0,
 		scheduleKind: 'none',
 	}, // 0
 	{
@@ -86,6 +104,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
 		important: true,
 		urgent: false,
 		hasNote: false,
+		groupIndex: 0,
 		scheduleKind: 'none',
 	}, // 3
 	{
@@ -101,6 +120,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
 		important: false,
 		urgent: true,
 		hasNote: false,
+		groupIndex: 1,
 		scheduleKind: 'none',
 	}, // 5
 	{
@@ -116,6 +136,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
 		important: false,
 		urgent: false,
 		hasNote: true,
+		groupIndex: 1,
 		scheduleKind: 'none',
 	}, // 7
 	{
@@ -131,6 +152,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
 		important: true,
 		urgent: false,
 		hasNote: false,
+		groupIndex: 0,
 		scheduleKind: 'recurringWeeklyWithExdate',
 	}, // 9
 	{
@@ -139,6 +161,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
 		urgent: true,
 		hasNote: false,
 		goalIndex: 7,
+		groupIndex: 1,
 		scheduleKind: 'none',
 	}, // 10
 	{
@@ -153,6 +176,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
 		important: true,
 		urgent: false,
 		hasNote: false,
+		groupIndex: 3,
 		scheduleKind: 'none',
 	}, // 12
 	{
@@ -176,6 +200,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
 		important: true,
 		urgent: false,
 		hasNote: false,
+		groupIndex: 3,
 		scheduleKind: 'none',
 	}, // 15
 	{
@@ -206,6 +231,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
 		important: false,
 		urgent: false,
 		hasNote: false,
+		groupIndex: 4,
 		scheduleKind: 'none',
 	}, // 19
 ];

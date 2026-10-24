@@ -6,6 +6,7 @@
 	"nav": {
 		"dreams": "Marzenia",
 		"goals": "Cele",
+		"groups": "Grupy",
 		"tasks": "Zadania",
 		"matrix": "Macierz",
 		"settings": "Ustawienia"
@@ -27,6 +28,8 @@
 		"title": "Zadanie",
 		"goalLabel": "Cel",
 		"noGoal": "Bez celu",
+		"groupLabel": "Grupa",
+		"noGroup": "Bez grupy",
 		"empty": "Brak zadań. Dodaj pierwsze.",
 		"schedule": {
 			"label": "Harmonogram",
@@ -95,7 +98,7 @@
 		"title": "Przykładowe dane",
 		"action": "Wygeneruj przykładowe dane",
 		"confirmTitle": "Zastąpić wszystko?",
-		"confirmBody": "To zastąpi wszystkie marzenia, cele i zadania obecne w aplikacji (łącznie {current} rekordów) nowo wygenerowanymi danymi przykładowymi. Ustawienia nie zostaną naruszone. Tej operacji nie można cofnąć.",
+		"confirmBody": "To zastąpi wszystkie marzenia, cele, grupy i zadania obecne w aplikacji (łącznie {current} rekordów) nowo wygenerowanymi danymi przykładowymi. Ustawienia nie zostaną naruszone. Tej operacji nie można cofnąć.",
 		"replace": "Generuj",
 		"generated": "Wygenerowano przykładowe dane. Rekordów: {count}.",
 		"failed": "Nie udało się wygenerować przykładowych danych: {reason}"
@@ -135,6 +138,7 @@
 		"startPage": "Strona początkowa",
 		"startPageDreams": "Marzenia",
 		"startPageGoals": "Cele",
+		"startPageGroups": "Grupy",
 		"startPageTasks": "Zadania",
 		"startPageMatrix": "Macierz",
 		"theme": "Motyw",
@@ -147,6 +151,7 @@
 		"cleanupDaysHint": "Skrócenie tego okresu usunie starsze zamknięte pozycje i historię wykonania szybciej.",
 		"dreams": "Marzenia",
 		"goals": "Cele",
+		"groups": "Grupy",
 		"tasks": "Zadania",
 		"rows1": "1 wiersz",
 		"rows2": "2 wiersze",
@@ -181,7 +186,8 @@
 		"cascadeDreamBody": "Aktywnych celów w tym marzeniu: {goals}. Aktywnych zadań w nich: {tasks}.",
 		"cascadeOnly": "Anuluj tylko to",
 		"cascadeBranch": "Anuluj całą gałąź",
-		"cascadeGoalBody": "Aktywnych zadań w tym celu: {count}."
+		"cascadeGoalBody": "Aktywnych zadań w tym celu: {count}.",
+		"cascadeGroupBody": "Aktywnych zadań w tej grupie: {count}."
 	},
 	"dream": {
 		"title": "Marzenie",
@@ -209,5 +215,9 @@
 			"seasonSummer": "Lato",
 			"seasonAutumn": "Jesień"
 		}
+	},
+	"group": {
+		"title": "Grupa",
+		"empty": "Brak grup."
 	}
 }

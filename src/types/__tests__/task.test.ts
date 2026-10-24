@@ -40,6 +40,17 @@ describe('parseTask', () => {
 		expect(parseTask(makeRaw({ goalId: 'goal-1' })).goalId).toBe('goal-1');
 	});
 
+	it('keeps a group link next to the goal link', () => {
+		const task = parseTask(makeRaw({ goalId: 'goal-1', groupId: 'group-1' }));
+
+		expect(task.goalId).toBe('goal-1');
+		expect(task.groupId).toBe('group-1');
+	});
+
+	it('rejects a non-string group link', () => {
+		expect(() => parseTask(makeRaw({ groupId: 7 }))).toThrow(ItemFormatError);
+	});
+
 	it('parses a schedule with a recurrence rule', () => {
 		const schedule = {
 			start: '2026-08-07T09:00',

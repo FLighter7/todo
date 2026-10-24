@@ -10,6 +10,7 @@ import TaskCompletions from '../TaskCompletions.vue';
 import TaskDialog from '../TaskDialog.vue';
 
 const goalOptions = [{ value: 'goal-1', title: 'Learn Japanese' }];
+const groupOptions = [{ value: 'group-1', title: 'Errands' }];
 
 function makeTask(overrides: Partial<Task> = {}): Task {
 	return {
@@ -28,7 +29,7 @@ function makeTask(overrides: Partial<Task> = {}): Task {
 describe('TaskDialog add mode', () => {
 	it('emits a draft including flags and the picked goal', async () => {
 		const wrapper = mount(TaskDialog, {
-			props: { modelValue: true, mode: 'add', goalOptions },
+			props: { modelValue: true, mode: 'add', goalOptions, groupOptions },
 			global: { plugins: [vuetify, i18n] },
 		});
 
@@ -44,9 +45,44 @@ describe('TaskDialog add mode', () => {
 		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([false]);
 	});
 
+	it('emits the picked group next to the picked goal', async () => {
+		const wrapper = mount(TaskDialog, {
+			props: { modelValue: true, mode: 'add', goalOptions, groupOptions },
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		await wrapper.get('input').setValue('Buy stamps');
+		const [goalSelect, groupSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		expect(groupSelect.props('items')).toEqual([
+			{ value: '', title: 'No group' },
+			{ value: 'group-1', title: 'Errands' },
+		]);
+		await goalSelect.vm.$emit('update:modelValue', 'goal-1');
+		await groupSelect.vm.$emit('update:modelValue', 'group-1');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(wrapper.emitted('save')?.[0][0]).toMatchObject({
+			goalId: 'goal-1',
+			groupId: 'group-1',
+		});
+	});
+
+	it('emits groupId undefined when "no group" stays selected', async () => {
+		const wrapper = mount(TaskDialog, {
+			props: { modelValue: true, mode: 'add', goalOptions, groupOptions },
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		await wrapper.get('input').setValue('Buy stamps');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		const [[draft]] = wrapper.emitted('save') as [[{ groupId?: string }]];
+		expect(draft.groupId).toBeUndefined();
+	});
+
 	it('blocks save and shows an error when the name is empty', async () => {
 		const wrapper = mount(TaskDialog, {
-			props: { modelValue: true, mode: 'add', goalOptions },
+			props: { modelValue: true, mode: 'add', goalOptions, groupOptions },
 			global: { plugins: [vuetify, i18n] },
 		});
 
@@ -58,7 +94,7 @@ describe('TaskDialog add mode', () => {
 
 	it('emits goalId undefined when "no goal" stays selected', async () => {
 		const wrapper = mount(TaskDialog, {
-			props: { modelValue: true, mode: 'add', goalOptions },
+			props: { modelValue: true, mode: 'add', goalOptions, groupOptions },
 			global: { plugins: [vuetify, i18n] },
 		});
 
@@ -77,6 +113,7 @@ describe('TaskDialog add mode', () => {
 				mode: 'add',
 				initialFlags: { important: true, urgent: false },
 				goalOptions,
+				groupOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -90,7 +127,7 @@ describe('TaskDialog add mode', () => {
 describe('TaskDialog goal picker', () => {
 	it('offers "no goal" plus every option passed in', () => {
 		const wrapper = mount(TaskDialog, {
-			props: { modelValue: true, mode: 'add', goalOptions },
+			props: { modelValue: true, mode: 'add', goalOptions, groupOptions },
 			global: { plugins: [vuetify, i18n] },
 		});
 
@@ -109,6 +146,7 @@ describe('TaskDialog goal picker', () => {
 				mode: 'edit',
 				record: makeTask({ goalId: 'closed-goal' }),
 				goalOptions: closedOptions,
+				groupOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -128,6 +166,7 @@ describe('TaskDialog edit mode', () => {
 				mode: 'edit',
 				record: makeTask({ important: true, goalId: 'goal-1' }),
 				goalOptions,
+				groupOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -138,9 +177,31 @@ describe('TaskDialog edit mode', () => {
 		expect(wrapper.text()).not.toContain('Urgent');
 	});
 
+	it('shows the linked group name in the read-only view, and "No group" without one, like the goal', () => {
+		const withGroup = mount(TaskDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				record: makeTask({ goalId: 'goal-1', groupId: 'group-1' }),
+				goalOptions,
+				groupOptions,
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+		const withoutGroup = mount(TaskDialog, {
+			props: { modelValue: true, mode: 'edit', record: makeTask(), goalOptions, groupOptions },
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		expect(withGroup.text()).toContain('Group: Errands');
+		expect(withGroup.text()).toContain('Goal: Learn Japanese');
+		expect(withoutGroup.text()).toContain('Goal: No goal');
+		expect(withoutGroup.text()).toContain('Group: No group');
+	});
+
 	it('omits the important/urgent chips entirely when both flags are false', () => {
 		const wrapper = mount(TaskDialog, {
-			props: { modelValue: true, mode: 'edit', record: makeTask(), goalOptions },
+			props: { modelValue: true, mode: 'edit', record: makeTask(), goalOptions, groupOptions },
 			global: { plugins: [vuetify, i18n] },
 		});
 
@@ -149,7 +210,7 @@ describe('TaskDialog edit mode', () => {
 
 	it('emits cancel when the cancel-record button is clicked', async () => {
 		const wrapper = mount(TaskDialog, {
-			props: { modelValue: true, mode: 'edit', record: makeTask(), goalOptions },
+			props: { modelValue: true, mode: 'edit', record: makeTask(), goalOptions, groupOptions },
 			global: { plugins: [vuetify, i18n] },
 		});
 
@@ -167,6 +228,7 @@ describe('TaskDialog schedule', () => {
 				mode: 'edit',
 				record: makeTask({ name: 'Water plants', schedule: { start: '2026-08-21T09:00' } }),
 				goalOptions,
+				groupOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -200,6 +262,7 @@ describe('TaskDialog schedule', () => {
 				mode: 'edit',
 				record: makeTask({ name: 'Water plants', schedule: { start: '2026-08-21T09:00' } }),
 				goalOptions,
+				groupOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -232,6 +295,7 @@ describe('TaskDialog schedule', () => {
 					schedule: { start: '2026-08-21T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR;INTERVAL=1' },
 				}),
 				goalOptions,
+				groupOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -246,6 +310,7 @@ describe('TaskDialog schedule', () => {
 				mode: 'edit',
 				record: makeTask({ name: 'Water plants', schedule: { start: '2026-08-21T09:00' } }),
 				goalOptions,
+				groupOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -264,6 +329,7 @@ describe('TaskDialog completions', () => {
 					schedule: { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' },
 				}),
 				goalOptions,
+				groupOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -278,6 +344,7 @@ describe('TaskDialog completions', () => {
 				mode: 'edit',
 				record: makeTask({ schedule: { start: '2026-08-07T09:00' } }),
 				goalOptions,
+				groupOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -287,7 +354,7 @@ describe('TaskDialog completions', () => {
 
 	it('hides the completions section when there is no record', () => {
 		const wrapper = mount(TaskDialog, {
-			props: { modelValue: true, mode: 'add', goalOptions },
+			props: { modelValue: true, mode: 'add', goalOptions, groupOptions },
 			global: { plugins: [vuetify, i18n] },
 		});
 
@@ -305,6 +372,7 @@ describe('TaskDialog completions', () => {
 				mode: 'edit',
 				record: makeTask({ schedule, completions }),
 				goalOptions,
+				groupOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -323,6 +391,7 @@ describe('TaskDialog completions', () => {
 					schedule: { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' },
 				}),
 				goalOptions,
+				groupOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -344,6 +413,7 @@ describe('TaskDialog completions', () => {
 					schedule: { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' },
 				}),
 				goalOptions,
+				groupOptions,
 			},
 			global: { plugins: [vuetify, i18n] },
 		});
@@ -359,7 +429,7 @@ describe('TaskDialog completions', () => {
 		const schedule = { start: '2026-08-07T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
 		const record = makeTask({ id: 'task-9', name: 'File the report', schedule });
 		const wrapper = mount(TaskDialog, {
-			props: { modelValue: true, mode: 'edit', record, goalOptions },
+			props: { modelValue: true, mode: 'edit', record, goalOptions, groupOptions },
 			global: { plugins: [vuetify, i18n] },
 		});
 

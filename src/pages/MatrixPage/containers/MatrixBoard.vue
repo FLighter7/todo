@@ -32,6 +32,7 @@
 			mode="add"
 			:initial-flags="initialFlags"
 			:goal-options="goalOptions"
+			:group-options="groupOptions"
 			@save="items.add(ItemType.Task, $event)"
 		/>
 	</VContainer>
@@ -58,6 +59,9 @@ const initialFlags = ref<{ important: boolean; urgent: boolean } | undefined>(un
 
 const goalOptions = computed(() =>
 	items.goals.active.map((goal) => ({ value: goal.id, title: goal.name })),
+);
+const groupOptions = computed(() =>
+	items.groups.active.map((group) => ({ value: group.id, title: group.name })),
 );
 
 const quadrantMeta: Record<QuadrantKey, { icon: string; accent?: boolean }> = {
