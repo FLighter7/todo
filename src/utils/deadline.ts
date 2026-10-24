@@ -1,4 +1,5 @@
 import { Season, type Deadline } from '@/types';
+import { dateTimeFormat } from './intl';
 
 const SEASON_KEYS: Record<Season, string> = {
 	[Season.Winter]: 'goal.deadline.seasonWinter',
@@ -27,7 +28,7 @@ export function formatDeadline(
 		// this formats. Day 1 always exists, so the month/year parts stay
 		// correct; the real day number is substituted in afterwards.
 		const date = new Date(deadline.year ?? PLACEHOLDER_YEAR, deadline.month - 1, 1);
-		const formatter = new Intl.DateTimeFormat(locale, {
+		const formatter = dateTimeFormat(locale, {
 			day: deadline.day === undefined ? undefined : 'numeric',
 			month: 'long',
 			year: deadline.year === undefined ? undefined : 'numeric',

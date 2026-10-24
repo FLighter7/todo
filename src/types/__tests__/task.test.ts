@@ -73,6 +73,18 @@ describe('parseTask', () => {
 		expect(parseTask(makeRaw({ schedule })).schedule?.tzid).toBe('Europe/Moscow');
 	});
 
+	it('remembers only valid zones and rules, so an invalid one fails on every parse', () => {
+		const valid = { start: '2026-08-07T09:00', tzid: 'Asia/Tokyo', rrule: 'FREQ=DAILY' };
+		const zone = { start: '2026-08-07T09:00', tzid: 'Venus/Ishtar' };
+		const rule = { start: '2026-08-07T09:00', rrule: 'FREQ=SOMETIMES' };
+
+		for (let attempt = 0; attempt < 2; attempt++) {
+			expect(parseTask(makeRaw({ schedule: valid })).schedule).toMatchObject(valid);
+			expect(() => parseTask(makeRaw({ schedule: zone }))).toThrow(ItemFormatError);
+			expect(() => parseTask(makeRaw({ schedule: rule }))).toThrow(ItemFormatError);
+		}
+	});
+
 	it('rejects a start with a trailing Z', () => {
 		expect(() => parseTask(makeRaw({ schedule: { start: '2026-08-07T09:00:00.000Z' } }))).toThrow(
 			ItemFormatError,

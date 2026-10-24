@@ -72,6 +72,16 @@ export function isPeriodic(task: Task): boolean {
 	return RRule.fromString(rule).origOptions.count !== 1;
 }
 
+/**
+ * Zones and rules already proven valid. Checking one builds an
+ * `Intl.DateTimeFormat` or parses an RRULE, tens of microseconds each, and
+ * every load, restore and sync runs every task through here — while one list
+ * holds only a handful of distinct zones and rules. Only successes are kept,
+ * so an invalid string is rechecked, and reported, every time.
+ */
+const knownZones = new Set<string>();
+const knownRules = new Set<string>();
+
 function parseStringArray(value: unknown, key: string): string[] | undefined {
 	if (value === undefined) {
 		return undefined;
@@ -107,22 +117,24 @@ export function parseSchedule(value: unknown): Schedule {
 	}
 
 	const tzid = readOptionalString(value, 'tzid');
-	if (tzid !== undefined) {
+	if (tzid !== undefined && !knownZones.has(tzid)) {
 		// The same Intl that renders the zone decides whether it exists.
 		try {
 			new Intl.DateTimeFormat('en', { timeZone: tzid });
 		} catch {
 			fail(`"schedule.tzid" is not a known time zone: ${tzid}`);
 		}
+		knownZones.add(tzid);
 	}
 
 	const rule = readOptionalString(value, 'rrule');
-	if (rule !== undefined) {
+	if (rule !== undefined && !knownRules.has(rule)) {
 		try {
 			RRule.fromString(rule);
 		} catch {
 			fail(`"schedule.rrule" is not a valid recurrence rule: ${rule}`);
 		}
+		knownRules.add(rule);
 	}
 
 	const start = readString(value, 'start');

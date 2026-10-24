@@ -1,5 +1,6 @@
 import { Frequency, RRule, Weekday, type Options } from 'rrule';
 import type { Completion, Schedule } from '@/types';
+import { dateTimeFormat } from './intl';
 
 export interface RecurrenceRule {
 	freq: 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -178,7 +179,7 @@ export function formatWallClock(wallClock: string, locale: string): string {
 	const [hour, minute] = timePart.split(':').map(Number);
 	const date = new Date(Date.UTC(year, month - 1, day, hour, minute));
 
-	return new Intl.DateTimeFormat(locale, {
+	return dateTimeFormat(locale, {
 		dateStyle: 'medium',
 		timeStyle: 'short',
 		timeZone: 'UTC',
@@ -202,12 +203,12 @@ const FREQ_KEYS: Record<RecurrenceRule['freq'], string> = {
  *  anchor for reading weekday names back out regardless of today's date. */
 export function weekdayName(iso: number, locale: string): string {
 	const date = new Date(Date.UTC(2000, 0, 3 + (iso - 1)));
-	return new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' }).format(date);
+	return dateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' }).format(date);
 }
 
 function formatUntilDate(until: string, locale: string): string {
 	const [year, month, day] = until.split('-').map(Number);
-	return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' }).format(
+	return dateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' }).format(
 		new Date(Date.UTC(year, month - 1, day)),
 	);
 }
@@ -288,7 +289,7 @@ function deviceLocalWallClock(instant: Date): Date {
  * `Intl.DateTimeFormat`.
  */
 function instantAsWallClockInZone(instant: Date, tzid: string): Date {
-	const parts = new Intl.DateTimeFormat('en-US', {
+	const parts = dateTimeFormat('en-US', {
 		timeZone: tzid,
 		year: 'numeric',
 		month: '2-digit',

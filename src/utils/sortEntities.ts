@@ -33,12 +33,17 @@ function compareKeys(a: SortKey, b: SortKey, order: SortOrder, collator: Intl.Co
 	}
 }
 
+interface Keyed<V> {
+	key: SortKey;
+	value: V;
+}
+
 function recordKey<T extends ItemBase>(record: T): SortKey {
 	return { date: Date.parse(record.updated), name: record.name, id: record.id };
 }
 
-function sectionKey<T extends ItemBase>(section: ListSection<T>): SortKey {
-	const newestDate = Math.max(...section.items.map((item) => Date.parse(item.updated)));
+function sectionKey<T extends ItemBase>(section: ListSection<T>, items: Keyed<T>[]): SortKey {
+	const newestDate = Math.max(...items.map((item) => item.key.date));
 	return { date: newestDate, name: section.label, id: section.key };
 }
 
@@ -56,20 +61,32 @@ export function sortEntityRows<T extends ItemBase>(
 	locale: string,
 ): EntityRow<T>[] {
 	const collator = new Intl.Collator(locale, { sensitivity: 'base' });
-	const compareRecords = (a: T, b: T) => compareKeys(recordKey(a), recordKey(b), order, collator);
+	const byKey = (a: Keyed<unknown>, b: Keyed<unknown>) =>
+		compareKeys(a.key, b.key, order, collator);
+	// Keys are computed once per record, not inside the comparator: a sort
+	// compares each record about log2(n) times, and parsing its date anew on
+	// every comparison was most of what sorting a long list cost.
+	const sortRecords = (records: T[]): Keyed<T>[] =>
+		records.map((record) => ({ key: recordKey(record), value: record })).sort(byKey);
 
-	const sortedSections = sections.map((s) => ({ ...s, items: [...s.items].sort(compareRecords) }));
-	const sortedLoose = [...loose].sort(compareRecords);
-
-	const units: Array<{ key: SortKey; row: EntityRow<T> }> = [
-		...sortedSections.map((s) => ({
-			key: sectionKey(s),
-			row: { kind: 'section' as const, section: s },
+	const units: Keyed<EntityRow<T>>[] = [
+		...sections.map((section) => {
+			const items = sortRecords(section.items);
+			return {
+				key: sectionKey(section, items),
+				value: {
+					kind: 'section' as const,
+					section: { ...section, items: items.map((item) => item.value) },
+				},
+			};
+		}),
+		...sortRecords(loose).map(({ key, value }) => ({
+			key,
+			value: { kind: 'item' as const, item: value },
 		})),
-		...sortedLoose.map((item) => ({ key: recordKey(item), row: { kind: 'item' as const, item } })),
 	];
 
-	units.sort((a, b) => compareKeys(a.key, b.key, order, collator));
+	units.sort(byKey);
 
-	return units.map((unit) => unit.row);
+	return units.map((unit) => unit.value);
 }
