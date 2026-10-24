@@ -67,7 +67,9 @@ src/
 	                            three page containers)
 	utils/                   — pure, Vue-independent utility functions, one per file, e.g.
 	                            collectGarbage.ts (closed-record and stale-completion pruning),
-	                            quadrants.ts and sectionByParent.ts
+	                            quadrants.ts, sectionByParent.ts and intl.ts (one shared
+	                            Intl.DateTimeFormat per locale and options — use it for any
+	                            formatter a list calls per row)
 	assets/                  — assets imported into the build, e.g. the self-hosted webfonts under
 	                            fonts/
 ```
