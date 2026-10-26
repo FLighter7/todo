@@ -27,7 +27,7 @@ describe('AddEntityDialog default tab', () => {
 
 describe('AddEntityDialog with pages switched off', () => {
 	function mountWith(
-		shown: { showDream?: boolean; showGoal?: boolean; showGroup?: boolean },
+		shown: { showDream?: boolean; showGoal?: boolean; showGroup?: boolean; showTask?: boolean },
 		defaultTab: 'dream' | 'goal' | 'group' | 'task' = 'task',
 	) {
 		return mount(AddEntityDialog, {
@@ -60,6 +60,23 @@ describe('AddEntityDialog with pages switched off', () => {
 		const wrapper = mountWith({ showGoal: false }, 'goal');
 
 		expect(wrapper.findComponent({ name: 'VTabs' }).props('modelValue')).toBe('task');
+	});
+
+	it('leaves out the task tab, and then opens on the first tab left', () => {
+		const wrapper = mountWith({ showDream: false, showTask: false });
+
+		expect(wrapper.findAllComponents({ name: 'VTab' }).map((tab) => tab.text())).toEqual([
+			'Goal',
+			'Group',
+		]);
+		expect(wrapper.findComponent({ name: 'VTabs' }).props('modelValue')).toBe('goal');
+	});
+
+	it('shows no tab bar when only one other tab is left', () => {
+		const wrapper = mountWith({ showDream: false, showGoal: false, showTask: false });
+
+		expect(wrapper.findComponent({ name: 'VTabs' }).exists()).toBe(false);
+		expect(wrapper.findAllComponents({ name: 'VSelect' })).toHaveLength(0);
 	});
 
 	it('leaves out the goal and group pickers on the task tab', async () => {

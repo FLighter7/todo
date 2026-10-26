@@ -126,6 +126,29 @@ describe('QuickAddFab with pages switched off', () => {
 	});
 });
 
+describe('QuickAddFab with Tasks or the matrix switched off', () => {
+	async function taskTabShown(hidden: Array<'tasks' | 'matrix'>): Promise<boolean> {
+		// Saved settings would otherwise carry over from the previous call.
+		window.localStorage.clear();
+		const wrapper = await mountAt('/dreams');
+		for (const page of hidden) {
+			useSettingsStore().setPageVisible(page, false);
+		}
+
+		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		return wrapper.findComponent({ name: 'AddEntityDialog' }).props('showTask');
+	}
+
+	it('keeps the task tab while either page still shows tasks', async () => {
+		expect(await taskTabShown(['tasks'])).toBe(true);
+		expect(await taskTabShown(['matrix'])).toBe(true);
+	});
+
+	it('drops the task tab once neither page is shown', async () => {
+		expect(await taskTabShown(['tasks', 'matrix'])).toBe(false);
+	});
+});
+
 describe('QuickAddFab creating a dream', () => {
 	it('adds a dream through the items store', async () => {
 		const wrapper = await mountAt('/dreams');

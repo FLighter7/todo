@@ -1,12 +1,12 @@
 import { reactive, toRefs } from 'vue';
 import { defineStore } from 'pinia';
 import {
-	DEFAULT_SETTINGS,
 	cloneSettings,
+	enforcePageRules,
+	type AppPage,
 	type AppSettings,
 	type AppTheme,
 	type FontScale,
-	type OptionalPage,
 	type PageSettings,
 } from '@/types';
 import { settingsService } from '@/services/settings/SettingsService';
@@ -74,12 +74,13 @@ export const useSettingsStore = defineStore('settings', () => {
 		persist();
 	}
 
-	/** Hiding the start page hands that role back to Tasks, which is never hidden. */
-	function setPageVisible(page: OptionalPage, visible: boolean): void {
+	/**
+	 * Hiding the last shown page brings Tasks back, and hiding the start page
+	 * hands that role to the first page still shown.
+	 */
+	function setPageVisible(page: AppPage, visible: boolean): void {
 		state.general.pages[page] = visible;
-		if (!visible && state.general.startPage === page) {
-			state.general.startPage = DEFAULT_SETTINGS.general.startPage;
-		}
+		enforcePageRules(state);
 		persist();
 	}
 

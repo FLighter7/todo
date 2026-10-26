@@ -24,6 +24,7 @@
 		:show-dream="settings.general.pages.dreams"
 		:show-goal="settings.general.pages.goals"
 		:show-group="settings.general.pages.groups"
+		:show-task="settings.general.pages.tasks || settings.general.pages.matrix"
 		@save-dream="handleDreamSave"
 		@save-goal="handleGoalSave"
 		@save-group="handleGroupSave"

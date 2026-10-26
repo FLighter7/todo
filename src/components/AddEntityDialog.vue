@@ -59,7 +59,7 @@
 				/>
 			</VCardActions>
 
-			<!-- A lone task tab needs no tab bar. -->
+			<!-- A lone tab needs no tab bar. -->
 			<VTabs
 				v-if="visibleTabs.length > 1"
 				v-model="activeTab"
@@ -172,13 +172,15 @@ const props = withDefaults(
 		groupOptions: Array<{ value: string; title: string }>;
 		/**
 		 * False while that page is switched off in Settings: its tab goes, and so
-		 * does its picker on the other tabs.
+		 * does its picker on the other tabs. Tasks show on two pages, Tasks and the
+		 * matrix, so the task tab goes only when both are off.
 		 */
 		showDream?: boolean;
 		showGoal?: boolean;
 		showGroup?: boolean;
+		showTask?: boolean;
 	}>(),
-	{ showDream: true, showGoal: true, showGroup: true },
+	{ showDream: true, showGoal: true, showGroup: true, showTask: true },
 );
 
 const emit = defineEmits<{
@@ -197,13 +199,18 @@ const visibleTabs = computed(() => {
 		dream: props.showDream,
 		goal: props.showGoal,
 		group: props.showGroup,
-		task: true,
+		task: props.showTask,
 	};
 	return TABS.filter((tab) => shown[tab]);
 });
 
+/** The default tab when it is shown, otherwise the task tab, otherwise the first one left. */
 function openingTab(): AddTab {
-	return visibleTabs.value.includes(props.defaultTab) ? props.defaultTab : 'task';
+	if (visibleTabs.value.includes(props.defaultTab)) {
+		return props.defaultTab;
+	}
+
+	return visibleTabs.value.includes('task') ? 'task' : (visibleTabs.value[0] ?? 'task');
 }
 
 const activeTab = ref<AddTab>(openingTab());

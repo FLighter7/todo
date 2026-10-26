@@ -6,10 +6,10 @@ import { createMemoryHistory, createRouter } from 'vue-router';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { useSettingsStore } from '@/stores/settings';
-import type { OptionalPage } from '@/types';
+import type { AppPage } from '@/types';
 import BottomNav from '../BottomNav.vue';
 
-async function mountAt(path: string, hidden: OptionalPage[] = []) {
+async function mountAt(path: string, hidden: AppPage[] = []) {
 	window.localStorage.clear();
 	setActivePinia(createPinia());
 	const settings = useSettingsStore();
@@ -58,6 +58,28 @@ describe('BottomNav', () => {
 		const wrapper = await mountAt('/tasks', ['dreams', 'goals', 'groups']);
 
 		expect(labelsOf(wrapper)).toEqual(['Tasks', 'Add task', 'Matrix']);
+	});
+
+	it('keeps the pages left of the add button in place when Tasks or the matrix is hidden', async () => {
+		const withoutTasks = await mountAt('/dreams', ['tasks']);
+		expect(labelsOf(withoutTasks)).toEqual(['Dreams', 'Goals', 'Groups', 'Add task', 'Matrix']);
+
+		const leftOnly = await mountAt('/dreams', ['tasks', 'matrix']);
+		expect(labelsOf(leftOnly)).toEqual(['Dreams', 'Goals', 'Groups', 'Add task']);
+	});
+
+	it('puts the one page left before the add button', async () => {
+		const matrixOnly = await mountAt('/matrix', ['tasks', 'dreams', 'goals', 'groups']);
+		expect(labelsOf(matrixOnly)).toEqual(['Matrix', 'Add task']);
+
+		const tasksOnly = await mountAt('/tasks', ['matrix', 'dreams', 'goals', 'groups']);
+		expect(labelsOf(tasksOnly)).toEqual(['Tasks', 'Add task']);
+	});
+
+	it('shows Tasks alone once every page is switched off', async () => {
+		const wrapper = await mountAt('/tasks', ['dreams', 'goals', 'groups', 'tasks', 'matrix']);
+
+		expect(labelsOf(wrapper)).toEqual(['Tasks', 'Add task']);
 	});
 
 	it('brings a page back when it is shown again', async () => {

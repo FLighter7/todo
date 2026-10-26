@@ -436,7 +436,9 @@ describe('SyncFlow settings mode', () => {
 		createOffer.mockResolvedValue('1oc.offer');
 		acceptAnswer.mockResolvedValue(undefined);
 		exchange.mockResolvedValue(
-			remoteSettingsPayload({ pages: { dreams: false, goals: true, groups: false } }),
+			remoteSettingsPayload({
+				pages: { tasks: true, matrix: false, dreams: false, goals: true, groups: false },
+			}),
 		);
 
 		await loadStores([], [], []);
@@ -455,7 +457,13 @@ describe('SyncFlow settings mode', () => {
 		await clickButtonByText(wrapper, 'Replace');
 		await flushPromises();
 
-		expect(settings.general.pages).toEqual({ dreams: false, goals: true, groups: false });
+		expect(settings.general.pages).toEqual({
+			tasks: true,
+			matrix: false,
+			dreams: false,
+			goals: true,
+			groups: false,
+		});
 		expect(settings.general.fontScale).toBe(1.25);
 	});
 

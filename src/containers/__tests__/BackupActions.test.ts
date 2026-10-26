@@ -136,7 +136,7 @@ describe('BackupActions import', () => {
 				startPage: 'matrix',
 				cleanupDays: 90,
 				fontScale: 1.25,
-				pages: { dreams: false, goals: true, groups: false },
+				pages: { tasks: true, matrix: false, dreams: false, goals: true, groups: false },
 			},
 			dreams: { rows: 2, confirmDone: true, confirmReopen: true, sortOrder: 'az' },
 			goals: { rows: 2, confirmDone: true, confirmReopen: true, sortOrder: 'az' },
@@ -160,7 +160,13 @@ describe('BackupActions import', () => {
 		expect(settings.general.theme).toBe('light');
 		expect(settings.general.locale).toBe('ru');
 		expect(settings.general.fontScale).toBe(1.25);
-		expect(settings.general.pages).toEqual({ dreams: false, goals: true, groups: false });
+		expect(settings.general.pages).toEqual({
+			tasks: true,
+			matrix: false,
+			dreams: false,
+			goals: true,
+			groups: false,
+		});
 		expect(settings.dreams.rows).toBe(2);
 	});
 

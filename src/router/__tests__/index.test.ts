@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { RouteLocationNormalized } from 'vue-router';
-import { DEFAULT_SETTINGS, cloneSettings, type OptionalPage } from '@/types';
+import { DEFAULT_SETTINGS, cloneSettings, type AppPage } from '@/types';
 import { settingsService } from '@/services/settings/SettingsService';
 import { getStartPageOptions, readStoredStartPage, redirectHiddenPage } from '../index';
 
@@ -9,7 +9,7 @@ beforeEach(() => {
 	window.localStorage.clear();
 });
 
-function saveWith(startPage: string, hidden: OptionalPage[] = []): void {
+function saveWith(startPage: string, hidden: AppPage[] = []): void {
 	const settings = cloneSettings(DEFAULT_SETTINGS);
 	settings.general.startPage = startPage;
 	for (const page of hidden) {
@@ -46,6 +46,16 @@ describe('readStoredStartPage', () => {
 
 		expect(readStoredStartPage()).toBe('tasks');
 	});
+
+	it('falls back to the first page still shown when Tasks is hidden too', () => {
+		const settings = cloneSettings(DEFAULT_SETTINGS);
+		settings.general.startPage = 'goals';
+		settings.general.pages.goals = false;
+		settings.general.pages.tasks = false;
+		localStorage.setItem('todo.settings', JSON.stringify(settings));
+
+		expect(readStoredStartPage()).toBe('matrix');
+	});
 });
 
 describe('redirectHiddenPage', () => {
@@ -56,7 +66,14 @@ describe('redirectHiddenPage', () => {
 		expect(redirectHiddenPage(routeNamed('groups'))).toEqual({ name: 'matrix' });
 	});
 
-	it('lets a shown page through, and the pages that are never hidden', () => {
+	it('sends a hidden Tasks or matrix page to the start page too', () => {
+		saveWith('goals', ['tasks', 'matrix']);
+
+		expect(redirectHiddenPage(routeNamed('tasks'))).toEqual({ name: 'goals' });
+		expect(redirectHiddenPage(routeNamed('matrix'))).toEqual({ name: 'goals' });
+	});
+
+	it('lets shown pages through, and Settings and Sync, which are never hidden', () => {
 		saveWith('tasks', ['dreams', 'goals', 'groups']);
 
 		for (const name of ['tasks', 'matrix', 'settings', 'sync']) {

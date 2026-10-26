@@ -14,10 +14,11 @@ export type FontScale = (typeof FONT_SCALES)[number];
 
 /**
  * The pages that can be switched off in Settings, named after their routes.
- * Tasks and the matrix are always there.
+ * The order is the one a hidden start page falls back along: the first page
+ * still shown takes over, Tasks first.
  */
-export const OPTIONAL_PAGES = ['dreams', 'goals', 'groups'] as const;
-export type OptionalPage = (typeof OPTIONAL_PAGES)[number];
+export const APP_PAGES = ['tasks', 'matrix', 'dreams', 'goals', 'groups'] as const;
+export type AppPage = (typeof APP_PAGES)[number];
 
 export interface PageSettings {
 	rows: 1 | 2;
@@ -33,8 +34,11 @@ export interface AppSettings {
 		startPage: string;
 		cleanupDays: 30 | 60 | 90;
 		fontScale: FontScale;
-		/** Whether each optional page is shown; a hidden one is gone from the whole interface. */
-		pages: Record<OptionalPage, boolean>;
+		/**
+		 * Whether each page is shown; a hidden one is gone from the whole
+		 * interface. At least one always is, see `enforcePageRules`.
+		 */
+		pages: Record<AppPage, boolean>;
 	};
 	dreams: PageSettings;
 	goals: PageSettings;
@@ -49,7 +53,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
 		startPage: 'tasks',
 		cleanupDays: 30,
 		fontScale: 1,
-		pages: { dreams: true, goals: true, groups: true },
+		pages: { tasks: true, matrix: true, dreams: true, goals: true, groups: true },
 	},
 	dreams: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
 	goals: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
@@ -57,11 +61,29 @@ export const DEFAULT_SETTINGS: AppSettings = {
 	tasks: { rows: 1, confirmDone: false, confirmReopen: false, sortOrder: 'newest' },
 };
 
-/** True only for an optional page switched off in Settings. */
-export function isPageHidden(settings: AppSettings, page: string): boolean {
-	return (OPTIONAL_PAGES as readonly string[]).includes(page)
-		? !settings.general.pages[page as OptionalPage]
-		: false;
+function isAppPage(page: string): page is AppPage {
+	return (APP_PAGES as readonly string[]).includes(page);
+}
+
+/** True only for a page switched off in Settings; Settings and Sync themselves never are. */
+export function isPageHidden(settings: Pick<AppSettings, 'general'>, page: string): boolean {
+	return isAppPage(page) && !settings.general.pages[page];
+}
+
+/**
+ * The two rules the set of pages lives by, applied in place. With every page
+ * switched off, Tasks is the one left; and the start page is always a shown
+ * one, or the app would open on a page it refuses to show.
+ */
+export function enforcePageRules(settings: Pick<AppSettings, 'general'>): void {
+	const general = settings.general;
+	if (!APP_PAGES.some((page) => general.pages[page])) {
+		general.pages.tasks = true;
+	}
+
+	if (!isAppPage(general.startPage) || !general.pages[general.startPage]) {
+		general.startPage = APP_PAGES.find((page) => general.pages[page]) ?? 'tasks';
+	}
 }
 
 /**
@@ -148,7 +170,7 @@ function parseFontScale(value: unknown): FontScale {
 }
 
 /** Defaults when absent, for the same reason as `fontScale`. */
-function parsePages(value: unknown): Record<OptionalPage, boolean> {
+function parsePages(value: unknown): Record<AppPage, boolean> {
 	if (value === undefined) {
 		return { ...DEFAULT_SETTINGS.general.pages };
 	}
@@ -157,11 +179,16 @@ function parsePages(value: unknown): Record<OptionalPage, boolean> {
 		fail('"pages" must be an object');
 	}
 
-	return {
-		dreams: readBoolean(value, 'dreams'),
-		goals: readBoolean(value, 'goals'),
-		groups: readBoolean(value, 'groups'),
-	};
+	// Page by page, too: a document saved before a page could be switched off
+	// lacks its key, and that page is shown.
+	const pages = { ...DEFAULT_SETTINGS.general.pages };
+	for (const page of APP_PAGES) {
+		if (value[page] !== undefined) {
+			pages[page] = readBoolean(value, page);
+		}
+	}
+
+	return pages;
 }
 
 function parseRows(value: unknown): 1 | 2 {
@@ -230,11 +257,8 @@ export function parseSettings(value: unknown): AppSettings {
 		tasks: parsePageSettings(value.tasks, 'tasks'),
 	};
 
-	// The start page is never a hidden one, whichever source the document came
-	// from: the app would otherwise open on a page it refuses to show.
-	if (isPageHidden(settings, settings.general.startPage)) {
-		settings.general.startPage = DEFAULT_SETTINGS.general.startPage;
-	}
+	// Whichever source the document came from: localStorage, a backup or a sync peer.
+	enforcePageRules(settings);
 
 	return settings;
 }

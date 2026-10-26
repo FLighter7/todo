@@ -95,33 +95,39 @@ import {
 } from '@mdi/js';
 import QuickAddFab from '@/containers/QuickAddFab.vue';
 import { useSettingsStore } from '@/stores/settings';
-import type { OptionalPage } from '@/types';
+import type { AppPage } from '@/types';
 
 interface NavLink {
-	name: string;
+	name: AppPage;
 	icon: string;
 	labelKey: string;
 }
 
-const OPTIONAL_LINKS: Array<NavLink & { name: OptionalPage }> = [
+// Each side of the add button, in the order the user chose.
+const LEFT_LINKS: NavLink[] = [
 	{ name: 'dreams', icon: mdiShimmer, labelKey: 'nav.dreams' },
 	{ name: 'goals', icon: mdiBullseyeArrow, labelKey: 'nav.goals' },
 	{ name: 'groups', icon: mdiFolderOutline, labelKey: 'nav.groups' },
 ];
-const TASKS_LINK: NavLink = { name: 'tasks', icon: mdiFormatListBulleted, labelKey: 'nav.tasks' };
-const MATRIX_LINK: NavLink = { name: 'matrix', icon: mdiViewGridOutline, labelKey: 'nav.matrix' };
+const RIGHT_LINKS: NavLink[] = [
+	{ name: 'tasks', icon: mdiFormatListBulleted, labelKey: 'nav.tasks' },
+	{ name: 'matrix', icon: mdiViewGridOutline, labelKey: 'nav.matrix' },
+];
 
 const { t } = useI18n();
 const route = useRoute();
 const settings = useSettingsStore();
 
-const optional = computed(() => OPTIONAL_LINKS.filter((link) => settings.general.pages[link.name]));
+const shownLeft = computed(() => LEFT_LINKS.filter((link) => settings.general.pages[link.name]));
+const shownRight = computed(() => RIGHT_LINKS.filter((link) => settings.general.pages[link.name]));
 
-// The add button stands right before Tasks, so Tasks and the matrix keep their
-// place however many optional pages are shown. Only once none is left does
-// Tasks move to its left, which keeps the button between two pages.
-const before = computed(() => (optional.value.length > 0 ? optional.value : [TASKS_LINK]));
+// The add button stands right before Tasks and the matrix, so every page keeps
+// its side however many are shown. Only when nothing is left on its left does
+// the first page on its right move over, so the button never leads the bar.
+const before = computed(() =>
+	shownLeft.value.length > 0 ? shownLeft.value : shownRight.value.slice(0, 1),
+);
 const after = computed(() =>
-	optional.value.length > 0 ? [TASKS_LINK, MATRIX_LINK] : [MATRIX_LINK],
+	shownLeft.value.length > 0 ? shownRight.value : shownRight.value.slice(1),
 );
 </script>

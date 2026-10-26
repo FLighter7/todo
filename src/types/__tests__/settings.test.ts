@@ -124,48 +124,62 @@ describe('parseSettings', () => {
 	});
 
 	it('shows every page when "pages" is absent, as in every document saved before it', () => {
-		expect(parseSettings(validRaw()).general.pages).toEqual({
-			dreams: true,
-			goals: true,
-			groups: true,
+		expect(parseSettings(validRaw()).general.pages).toEqual(DEFAULT_SETTINGS.general.pages);
+	});
+
+	function withGeneral(general: Record<string, unknown>) {
+		return { ...validRaw(), general: { ...(validRaw().general as object), ...general } };
+	}
+
+	it('keeps a present "pages", and rejects a malformed one', () => {
+		const pages = { tasks: false, matrix: true, dreams: false, goals: true, groups: false };
+
+		expect(parseSettings(withGeneral({ pages })).general.pages).toEqual(pages);
+		expect(() => parseSettings(withGeneral({ pages: 'nope' }))).toThrow(/"pages"/);
+		expect(() => parseSettings(withGeneral({ pages: { ...pages, goals: 'yes' } }))).toThrow(
+			/"goals"/,
+		);
+	});
+
+	it('shows a page whose key is missing, as in a document saved before it could be hidden', () => {
+		const pages = { dreams: false, goals: true, groups: false };
+
+		expect(parseSettings(withGeneral({ pages })).general.pages).toEqual({
+			tasks: true,
+			matrix: true,
+			...pages,
 		});
 	});
 
-	it('keeps a present "pages", and rejects a malformed one', () => {
-		const pages = { dreams: false, goals: true, groups: false };
-		const withPages = (value: unknown) => ({
-			...validRaw(),
-			general: { ...(validRaw().general as object), pages: value },
-		});
+	it('brings Tasks back when every page is switched off', () => {
+		const pages = { tasks: false, matrix: false, dreams: false, goals: false, groups: false };
 
-		expect(parseSettings(withPages(pages)).general.pages).toEqual(pages);
-		expect(() => parseSettings(withPages('nope'))).toThrow(/"pages"/);
-		expect(() => parseSettings(withPages({ ...pages, goals: 'yes' }))).toThrow(/"goals"/);
-		expect(() => parseSettings(withPages({ dreams: true, goals: true }))).toThrow(/"groups"/);
+		expect(parseSettings(withGeneral({ pages })).general.pages).toEqual({ ...pages, tasks: true });
 	});
 
 	it('hands the start page back to tasks when it names a hidden page', () => {
-		const raw = {
-			...validRaw(),
-			general: {
-				...(validRaw().general as object),
-				startPage: 'goals',
-				pages: { dreams: true, goals: false, groups: true },
-			},
-		};
+		const raw = withGeneral({
+			startPage: 'goals',
+			pages: { dreams: true, goals: false, groups: true },
+		});
 
 		expect(parseSettings(raw).general.startPage).toBe('tasks');
 	});
 
+	it('hands the start page to the first page still shown when Tasks is hidden too', () => {
+		const raw = withGeneral({
+			startPage: 'goals',
+			pages: { tasks: false, goals: false },
+		});
+
+		expect(parseSettings(raw).general.startPage).toBe('matrix');
+	});
+
 	it('keeps a start page that names a shown page', () => {
-		const raw = {
-			...validRaw(),
-			general: {
-				...(validRaw().general as object),
-				startPage: 'goals',
-				pages: { dreams: false, goals: true, groups: false },
-			},
-		};
+		const raw = withGeneral({
+			startPage: 'goals',
+			pages: { tasks: false, matrix: false, dreams: false, goals: true, groups: false },
+		});
 
 		expect(parseSettings(raw).general.startPage).toBe('goals');
 	});
@@ -214,7 +228,7 @@ describe('parseSettings', () => {
 });
 
 describe('isPageHidden', () => {
-	it('is true only for an optional page switched off', () => {
+	it('is true only for a page switched off', () => {
 		const settings = cloneSettings(DEFAULT_SETTINGS);
 		settings.general.pages.groups = false;
 
@@ -222,6 +236,9 @@ describe('isPageHidden', () => {
 		expect(isPageHidden(settings, 'goals')).toBe(false);
 		expect(isPageHidden(settings, 'tasks')).toBe(false);
 		expect(isPageHidden(settings, 'settings')).toBe(false);
+
+		settings.general.pages.tasks = false;
+		expect(isPageHidden(settings, 'tasks')).toBe(true);
 	});
 });
 

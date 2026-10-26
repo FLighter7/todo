@@ -80,8 +80,40 @@ describe('useSettingsStore setters', () => {
 
 		store.setPageVisible('goals', false);
 
-		expect(store.general.pages).toEqual({ dreams: true, goals: false, groups: true });
+		expect(store.general.pages).toEqual({
+			tasks: true,
+			matrix: true,
+			dreams: true,
+			goals: false,
+			groups: true,
+		});
 		expect(save).toHaveBeenCalled();
+	});
+
+	it('setPageVisible brings Tasks back when it hides the last page shown', () => {
+		const store = useSettingsStore();
+		for (const page of ['tasks', 'dreams', 'goals', 'groups'] as const) {
+			store.setPageVisible(page, false);
+		}
+
+		store.setPageVisible('matrix', false);
+
+		expect(store.general.pages).toEqual({
+			tasks: true,
+			matrix: false,
+			dreams: false,
+			goals: false,
+			groups: false,
+		});
+		expect(store.general.startPage).toBe('tasks');
+	});
+
+	it('setPageVisible hands the start page to the first page still shown', () => {
+		const store = useSettingsStore();
+
+		store.setPageVisible('tasks', false);
+
+		expect(store.general.startPage).toBe('matrix');
 	});
 
 	it('setPageVisible hands the start page back to tasks when it hides that page', () => {
@@ -176,7 +208,7 @@ describe('useSettingsStore replaceAll', () => {
 				startPage: 'matrix',
 				cleanupDays: 60 as const,
 				fontScale: 1.25 as const,
-				pages: { dreams: false, goals: true, groups: false },
+				pages: { tasks: true, matrix: false, dreams: false, goals: true, groups: false },
 			},
 			dreams: {
 				rows: 2 as const,

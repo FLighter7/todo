@@ -97,12 +97,9 @@ export function getStartPageOptions(): StartPageOption[] {
 export function readStoredStartPage(): StartPage {
 	const settings = settingsService.load();
 	const stored = settings.general.startPage;
-	const options = getStartPageOptions();
-	const fallback = options[0]?.value ?? 'tasks';
+	const shown = getStartPageOptions().filter((option) => !isPageHidden(settings, option.value));
 
-	return options.some((option) => option.value === stored) && !isPageHidden(settings, stored)
-		? stored
-		: fallback;
+	return shown.some((option) => option.value === stored) ? stored : (shown[0]?.value ?? 'tasks');
 }
 
 /**

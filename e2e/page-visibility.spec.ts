@@ -47,3 +47,29 @@ test('pages switched off in Settings leave the bottom bar, the start page and th
 	await page.goto('');
 	await expect(page).toHaveURL(/\/tasks$/);
 });
+
+test('Tasks and the matrix can go too, and with every page off Tasks is the one left', async ({
+	page,
+}) => {
+	await page.goto('/');
+	await page.getByRole('button', { name: 'Settings', exact: true }).click();
+	const startPage = page.locator('.v-select').first();
+
+	for (const name of ['Dreams', 'Goals', 'Groups', 'Tasks']) {
+		await page.getByRole('checkbox', { name, exact: true }).uncheck();
+	}
+
+	await expect(startPage).toContainText('Matrix');
+	await expect.poll(() => bottomBarLabels(page)).toEqual(['Matrix', 'Add task']);
+
+	await page.getByRole('checkbox', { name: 'Matrix', exact: true }).uncheck();
+
+	const tasksBox = page.getByRole('checkbox', { name: 'Tasks', exact: true });
+	await expect(tasksBox).toBeChecked();
+	await expect(tasksBox).toBeDisabled();
+	await expect(startPage).toContainText('Tasks');
+	await expect.poll(() => bottomBarLabels(page)).toEqual(['Tasks', 'Add task']);
+
+	await page.goto('matrix');
+	await expect(page).toHaveURL(/\/tasks$/);
+});

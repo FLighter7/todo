@@ -56,7 +56,7 @@ describe('SettingsPage pages', () => {
 		return wrapper.findAllComponents({ name: 'VCheckbox' });
 	}
 
-	it('lists every page, with Tasks and the matrix ticked and disabled', () => {
+	it("lists every page in the bottom bar's order, all ticked and all free to untick", () => {
 		const boxes = checkboxes(mountPage());
 
 		expect(boxes.map((box) => box.props('label'))).toEqual([
@@ -67,12 +67,39 @@ describe('SettingsPage pages', () => {
 			'Matrix',
 		]);
 		expect(boxes.map((box) => box.props('modelValue'))).toEqual([true, true, true, true, true]);
-		expect(boxes.map((box) => box.props('disabled') === true)).toEqual([
+		expect(boxes.every((box) => box.props('disabled') !== true)).toBe(true);
+	});
+
+	it('disables Tasks only while it is the one page left', async () => {
+		const settings = useSettingsStore();
+		for (const page of ['dreams', 'goals', 'groups', 'matrix'] as const) {
+			settings.setPageVisible(page, false);
+		}
+		const wrapper = mountPage();
+
+		const disabled = () => checkboxes(wrapper).map((box) => box.props('disabled') === true);
+		expect(disabled()).toEqual([false, false, false, true, false]);
+
+		settings.setPageVisible('matrix', true);
+		await wrapper.vm.$nextTick();
+		expect(disabled()).toEqual([false, false, false, false, false]);
+	});
+
+	it('ticks Tasks again when the last other page is unticked', async () => {
+		const settings = useSettingsStore();
+		for (const page of ['dreams', 'goals', 'groups', 'tasks'] as const) {
+			settings.setPageVisible(page, false);
+		}
+		const wrapper = mountPage();
+
+		await checkboxes(wrapper)[4].vm.$emit('update:modelValue', false);
+
+		expect(checkboxes(wrapper).map((box) => box.props('modelValue'))).toEqual([
 			false,
 			false,
 			false,
 			true,
-			true,
+			false,
 		]);
 	});
 
@@ -82,7 +109,13 @@ describe('SettingsPage pages', () => {
 
 		await checkboxes(wrapper)[1].vm.$emit('update:modelValue', false);
 
-		expect(settings.general.pages).toEqual({ dreams: true, goals: false, groups: true });
+		expect(settings.general.pages).toEqual({
+			tasks: true,
+			matrix: true,
+			dreams: true,
+			goals: false,
+			groups: true,
+		});
 	});
 
 	it('offers no hidden page as the start page', () => {
@@ -114,10 +147,12 @@ describe('SettingsPage pages', () => {
 		settings.updatePageSettings('dreams', { confirmDone: true });
 		settings.setPageVisible('dreams', false);
 		settings.setPageVisible('groups', false);
+		settings.setPageVisible('tasks', false);
 		const wrapper = mountPage();
 
-		expect(wrapper.findAllComponents({ name: 'VBtnToggle' })).toHaveLength(2);
-		expect(wrapper.findAllComponents({ name: 'VSwitch' })).toHaveLength(4);
+		// Goals alone is left: its rows toggle and its two switches.
+		expect(wrapper.findAllComponents({ name: 'VBtnToggle' })).toHaveLength(1);
+		expect(wrapper.findAllComponents({ name: 'VSwitch' })).toHaveLength(2);
 		expect(settings.dreams.confirmDone).toBe(true);
 	});
 });
