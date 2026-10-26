@@ -73,6 +73,17 @@ describe('redirectHiddenPage', () => {
 		expect(redirectHiddenPage(routeNamed('matrix'))).toEqual({ name: 'goals' });
 	});
 
+	it('keeps Tasks open, and only Tasks, once every page is off', () => {
+		saveWith('matrix', ['tasks', 'matrix', 'dreams', 'goals', 'groups']);
+
+		expect(readStoredStartPage()).toBe('tasks');
+		expect(redirectHiddenPage(routeNamed('tasks'))).toBe(true);
+		for (const name of ['matrix', 'dreams', 'goals', 'groups']) {
+			expect(redirectHiddenPage(routeNamed(name))).toEqual({ name: 'tasks' });
+		}
+		expect(redirectHiddenPage(routeNamed('settings'))).toBe(true);
+	});
+
 	it('lets shown pages through, and Settings and Sync, which are never hidden', () => {
 		saveWith('tasks', ['dreams', 'goals', 'groups']);
 

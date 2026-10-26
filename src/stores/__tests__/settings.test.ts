@@ -90,22 +90,33 @@ describe('useSettingsStore setters', () => {
 		expect(save).toHaveBeenCalled();
 	});
 
-	it('setPageVisible brings Tasks back when it hides the last page shown', () => {
+	it('setPageVisible lets every page go, and Tasks becomes the start page', () => {
 		const store = useSettingsStore();
-		for (const page of ['tasks', 'dreams', 'goals', 'groups'] as const) {
+		store.setStartPage('matrix');
+
+		for (const page of ['tasks', 'matrix', 'dreams', 'goals', 'groups'] as const) {
 			store.setPageVisible(page, false);
 		}
 
-		store.setPageVisible('matrix', false);
-
 		expect(store.general.pages).toEqual({
-			tasks: true,
+			tasks: false,
 			matrix: false,
 			dreams: false,
 			goals: false,
 			groups: false,
 		});
 		expect(store.general.startPage).toBe('tasks');
+	});
+
+	it('setPageVisible hands the start page on in the order Tasks, matrix, Goals, Dreams', () => {
+		const store = useSettingsStore();
+
+		store.setPageVisible('tasks', false);
+		store.setPageVisible('matrix', false);
+		expect(store.general.startPage).toBe('goals');
+
+		store.setPageVisible('goals', false);
+		expect(store.general.startPage).toBe('dreams');
 	});
 
 	it('setPageVisible hands the start page to the first page still shown', () => {

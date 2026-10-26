@@ -76,10 +76,10 @@ describe('BottomNav', () => {
 		expect(labelsOf(tasksOnly)).toEqual(['Tasks', 'Add task']);
 	});
 
-	it('shows Tasks alone once every page is switched off', async () => {
+	it('leaves the add button alone once every page is switched off', async () => {
 		const wrapper = await mountAt('/tasks', ['dreams', 'goals', 'groups', 'tasks', 'matrix']);
 
-		expect(labelsOf(wrapper)).toEqual(['Tasks', 'Add task']);
+		expect(labelsOf(wrapper)).toEqual(['Add task']);
 	});
 
 	it('brings a page back when it is shown again', async () => {

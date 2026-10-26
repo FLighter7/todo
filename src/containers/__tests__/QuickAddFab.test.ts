@@ -5,7 +5,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { ItemType, Status, type Dream, type Goal, type Group } from '@/types';
+import { ItemType, Status, type AppPage, type Dream, type Goal, type Group } from '@/types';
 import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
 import { loadItems } from '@/vitestHelpers';
@@ -127,7 +127,7 @@ describe('QuickAddFab with pages switched off', () => {
 });
 
 describe('QuickAddFab with Tasks or the matrix switched off', () => {
-	async function taskTabShown(hidden: Array<'tasks' | 'matrix'>): Promise<boolean> {
+	async function taskTabShown(hidden: AppPage[]): Promise<boolean> {
 		// Saved settings would otherwise carry over from the previous call.
 		window.localStorage.clear();
 		const wrapper = await mountAt('/dreams');
@@ -146,6 +146,10 @@ describe('QuickAddFab with Tasks or the matrix switched off', () => {
 
 	it('drops the task tab once neither page is shown', async () => {
 		expect(await taskTabShown(['tasks', 'matrix'])).toBe(false);
+	});
+
+	it('keeps the task tab once every page is off, since Tasks is then the one page left', async () => {
+		expect(await taskTabShown(['tasks', 'matrix', 'dreams', 'goals', 'groups'])).toBe(true);
 	});
 });
 

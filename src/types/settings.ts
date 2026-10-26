@@ -14,10 +14,10 @@ export type FontScale = (typeof FONT_SCALES)[number];
 
 /**
  * The pages that can be switched off in Settings, named after their routes.
- * The order is the one a hidden start page falls back along: the first page
- * still shown takes over, Tasks first.
+ * The order is the one a hidden start page falls back along (the user's
+ * choice): the first page still shown takes over.
  */
-export const APP_PAGES = ['tasks', 'matrix', 'dreams', 'goals', 'groups'] as const;
+export const APP_PAGES = ['tasks', 'matrix', 'goals', 'dreams', 'groups'] as const;
 export type AppPage = (typeof APP_PAGES)[number];
 
 export interface PageSettings {
@@ -36,7 +36,7 @@ export interface AppSettings {
 		fontScale: FontScale;
 		/**
 		 * Whether each page is shown; a hidden one is gone from the whole
-		 * interface. At least one always is, see `enforcePageRules`.
+		 * interface. All of them may be off, see `isPageHidden`.
 		 */
 		pages: Record<AppPage, boolean>;
 	};
@@ -65,24 +65,38 @@ function isAppPage(page: string): page is AppPage {
 	return (APP_PAGES as readonly string[]).includes(page);
 }
 
-/** True only for a page switched off in Settings; Settings and Sync themselves never are. */
+/**
+ * True only for a page that cannot be opened; Settings and Sync themselves
+ * never are. A page switched off in Settings is, except that with every page
+ * off, Tasks stays as the one page left: not in the bottom bar, which then
+ * holds the add button alone, but the page the app opens on and returns to.
+ */
 export function isPageHidden(settings: Pick<AppSettings, 'general'>, page: string): boolean {
-	return isAppPage(page) && !settings.general.pages[page];
+	if (!isAppPage(page)) {
+		return false;
+	}
+
+	const pages = settings.general.pages;
+	if (page === 'tasks' && !APP_PAGES.some((other) => pages[other])) {
+		return false;
+	}
+
+	return !pages[page];
+}
+
+/** The page a hidden start page hands its role to. Never undefined: see `isPageHidden`. */
+export function firstShownPage(settings: Pick<AppSettings, 'general'>): AppPage {
+	return APP_PAGES.find((page) => !isPageHidden(settings, page)) ?? 'tasks';
 }
 
 /**
- * The two rules the set of pages lives by, applied in place. With every page
- * switched off, Tasks is the one left; and the start page is always a shown
- * one, or the app would open on a page it refuses to show.
+ * Applied in place: the start page is always one that can be opened, or the
+ * app would open on a page it refuses to show.
  */
-export function enforcePageRules(settings: Pick<AppSettings, 'general'>): void {
+export function keepStartPageShown(settings: Pick<AppSettings, 'general'>): void {
 	const general = settings.general;
-	if (!APP_PAGES.some((page) => general.pages[page])) {
-		general.pages.tasks = true;
-	}
-
-	if (!isAppPage(general.startPage) || !general.pages[general.startPage]) {
-		general.startPage = APP_PAGES.find((page) => general.pages[page]) ?? 'tasks';
+	if (!isAppPage(general.startPage) || isPageHidden(settings, general.startPage)) {
+		general.startPage = firstShownPage(settings);
 	}
 }
 
@@ -258,7 +272,7 @@ export function parseSettings(value: unknown): AppSettings {
 	};
 
 	// Whichever source the document came from: localStorage, a backup or a sync peer.
-	enforcePageRules(settings);
+	keepStartPageShown(settings);
 
 	return settings;
 }

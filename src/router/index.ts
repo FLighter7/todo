@@ -14,7 +14,7 @@ import {
 } from '@mdi/js';
 import TasksPage from '@/pages/TasksPage/TasksPage.vue';
 import { settingsService } from '@/services/settings/SettingsService';
-import { isPageHidden } from '@/types';
+import { firstShownPage, isPageHidden } from '@/types';
 
 declare module 'vue-router' {
 	interface RouteMeta {
@@ -97,9 +97,9 @@ export function getStartPageOptions(): StartPageOption[] {
 export function readStoredStartPage(): StartPage {
 	const settings = settingsService.load();
 	const stored = settings.general.startPage;
-	const shown = getStartPageOptions().filter((option) => !isPageHidden(settings, option.value));
+	const known = getStartPageOptions().some((option) => option.value === stored);
 
-	return shown.some((option) => option.value === stored) ? stored : (shown[0]?.value ?? 'tasks');
+	return known && !isPageHidden(settings, stored) ? stored : firstShownPage(settings);
 }
 
 /**

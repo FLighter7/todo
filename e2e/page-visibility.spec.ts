@@ -48,7 +48,7 @@ test('pages switched off in Settings leave the bottom bar, the start page and th
 	await expect(page).toHaveURL(/\/tasks$/);
 });
 
-test('Tasks and the matrix can go too, and with every page off Tasks is the one left', async ({
+test('Tasks and the matrix can go too, and with every page off only Tasks can be opened', async ({
 	page,
 }) => {
 	await page.goto('/');
@@ -64,12 +64,20 @@ test('Tasks and the matrix can go too, and with every page off Tasks is the one 
 
 	await page.getByRole('checkbox', { name: 'Matrix', exact: true }).uncheck();
 
-	const tasksBox = page.getByRole('checkbox', { name: 'Tasks', exact: true });
-	await expect(tasksBox).toBeChecked();
-	await expect(tasksBox).toBeDisabled();
+	// Every page off: the bar holds the add button alone, and Tasks is the one page left.
+	await expect(page.getByRole('checkbox', { name: 'Tasks', exact: true })).not.toBeChecked();
+	await expect(page.getByRole('checkbox', { name: 'Matrix', exact: true })).not.toBeChecked();
 	await expect(startPage).toContainText('Tasks');
-	await expect.poll(() => bottomBarLabels(page)).toEqual(['Tasks', 'Add task']);
+	await expect.poll(() => bottomBarLabels(page)).toEqual(['Add task']);
 
-	await page.goto('matrix');
-	await expect(page).toHaveURL(/\/tasks$/);
+	for (const address of ['matrix', 'goals', '']) {
+		await page.goto(address);
+		await expect(page).toHaveURL(/\/tasks$/);
+	}
+
+	await page.reload();
+	await expect.poll(() => bottomBarLabels(page)).toEqual(['Add task']);
+	await page.getByRole('button', { name: 'Add task' }).click();
+	await expect(page.getByRole('dialog').getByLabel('Name')).toBeVisible();
+	await expect(page.getByRole('dialog').getByRole('tab')).toHaveCount(0);
 });

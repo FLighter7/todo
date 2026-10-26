@@ -2,7 +2,7 @@ import { reactive, toRefs } from 'vue';
 import { defineStore } from 'pinia';
 import {
 	cloneSettings,
-	enforcePageRules,
+	keepStartPageShown,
 	type AppPage,
 	type AppSettings,
 	type AppTheme,
@@ -74,13 +74,10 @@ export const useSettingsStore = defineStore('settings', () => {
 		persist();
 	}
 
-	/**
-	 * Hiding the last shown page brings Tasks back, and hiding the start page
-	 * hands that role to the first page still shown.
-	 */
+	/** Hiding the start page hands that role to the first page still shown. */
 	function setPageVisible(page: AppPage, visible: boolean): void {
 		state.general.pages[page] = visible;
-		enforcePageRules(state);
+		keepStartPageShown(state);
 		persist();
 	}
 

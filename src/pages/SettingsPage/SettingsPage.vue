@@ -38,13 +38,11 @@
 
 			<VListSubheader>{{ t('settings.pages') }}</VListSubheader>
 			<div class="mx-4 mb-4">
-				<!-- Tasks alone cannot be switched off: with nothing left, Tasks comes back. -->
 				<VCheckbox
 					v-for="page in PAGE_CHECKBOXES"
 					:key="page"
 					:model-value="settings.general.pages[page]"
 					:label="t(`nav.${page}`)"
-					:disabled="page === 'tasks' && onlyTasksShown"
 					color="primary"
 					density="compact"
 					hide-details
@@ -136,7 +134,7 @@ import BackupActions from '@/containers/BackupActions.vue';
 import MockDataActions from '@/containers/MockDataActions.vue';
 import { getStartPageOptions, type StartPage } from '@/router';
 import { useSettingsStore, type SettingsEntity } from '@/stores/settings';
-import { APP_PAGES, FONT_SCALES, isPageHidden, type AppPage } from '@/types';
+import { FONT_SCALES, isPageHidden, type AppPage } from '@/types';
 
 const emit = defineEmits<{ notify: [message: string] }>();
 
@@ -146,10 +144,6 @@ const settings = useSettingsStore();
 const ENTITIES: SettingsEntity[] = ['dreams', 'goals', 'groups', 'tasks'];
 // In the bottom bar's order.
 const PAGE_CHECKBOXES: AppPage[] = ['dreams', 'goals', 'groups', 'tasks', 'matrix'];
-
-const onlyTasksShown = computed(() =>
-	APP_PAGES.every((page) => settings.general.pages[page] === (page === 'tasks')),
-);
 
 // A hidden page's own preferences stay in the document, ready for when it is
 // switched back on; only their block leaves this page.

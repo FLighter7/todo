@@ -124,6 +124,7 @@ const shownRight = computed(() => RIGHT_LINKS.filter((link) => settings.general.
 // The add button stands right before Tasks and the matrix, so every page keeps
 // its side however many are shown. Only when nothing is left on its left does
 // the first page on its right move over, so the button never leads the bar.
+// With every page off it stands alone, and Tasks is reached only as the start page.
 const before = computed(() =>
 	shownLeft.value.length > 0 ? shownLeft.value : shownRight.value.slice(0, 1),
 );

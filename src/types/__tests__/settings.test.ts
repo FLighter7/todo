@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	APP_PAGES,
 	DEFAULT_SETTINGS,
 	SettingsFormatError,
 	cloneSettings,
@@ -151,10 +152,18 @@ describe('parseSettings', () => {
 		});
 	});
 
-	it('brings Tasks back when every page is switched off', () => {
+	it('keeps every page off, and makes Tasks the start page', () => {
 		const pages = { tasks: false, matrix: false, dreams: false, goals: false, groups: false };
+		const settings = parseSettings(withGeneral({ startPage: 'goals', pages }));
 
-		expect(parseSettings(withGeneral({ pages })).general.pages).toEqual({ ...pages, tasks: true });
+		expect(settings.general.pages).toEqual(pages);
+		expect(settings.general.startPage).toBe('tasks');
+	});
+
+	it('hands the start page to Goals before Dreams once Tasks and the matrix are hidden', () => {
+		const raw = withGeneral({ startPage: 'tasks', pages: { tasks: false, matrix: false } });
+
+		expect(parseSettings(raw).general.startPage).toBe('goals');
 	});
 
 	it('hands the start page back to tasks when it names a hidden page', () => {
@@ -239,6 +248,17 @@ describe('isPageHidden', () => {
 
 		settings.general.pages.tasks = false;
 		expect(isPageHidden(settings, 'tasks')).toBe(true);
+	});
+
+	it('keeps Tasks open as the one page left once every page is off', () => {
+		const settings = cloneSettings(DEFAULT_SETTINGS);
+		for (const page of APP_PAGES) {
+			settings.general.pages[page] = false;
+		}
+
+		expect(isPageHidden(settings, 'tasks')).toBe(false);
+		expect(isPageHidden(settings, 'matrix')).toBe(true);
+		expect(isPageHidden(settings, 'goals')).toBe(true);
 	});
 });
 

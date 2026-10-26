@@ -70,22 +70,7 @@ describe('SettingsPage pages', () => {
 		expect(boxes.every((box) => box.props('disabled') !== true)).toBe(true);
 	});
 
-	it('disables Tasks only while it is the one page left', async () => {
-		const settings = useSettingsStore();
-		for (const page of ['dreams', 'goals', 'groups', 'matrix'] as const) {
-			settings.setPageVisible(page, false);
-		}
-		const wrapper = mountPage();
-
-		const disabled = () => checkboxes(wrapper).map((box) => box.props('disabled') === true);
-		expect(disabled()).toEqual([false, false, false, true, false]);
-
-		settings.setPageVisible('matrix', true);
-		await wrapper.vm.$nextTick();
-		expect(disabled()).toEqual([false, false, false, false, false]);
-	});
-
-	it('ticks Tasks again when the last other page is unticked', async () => {
+	it('lets the last page be unticked too, leaving Tasks as the only start page', async () => {
 		const settings = useSettingsStore();
 		for (const page of ['dreams', 'goals', 'groups', 'tasks'] as const) {
 			settings.setPageVisible(page, false);
@@ -98,9 +83,13 @@ describe('SettingsPage pages', () => {
 			false,
 			false,
 			false,
-			true,
+			false,
 			false,
 		]);
+		expect(checkboxes(wrapper).every((box) => box.props('disabled') !== true)).toBe(true);
+		const [startPageSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		expect(startPageSelect.props('items')).toHaveLength(1);
+		expect(startPageSelect.props('modelValue')).toBe('tasks');
 	});
 
 	it('switches a page off through the settings store', async () => {

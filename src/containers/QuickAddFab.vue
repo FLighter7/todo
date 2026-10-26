@@ -24,7 +24,7 @@
 		:show-dream="settings.general.pages.dreams"
 		:show-goal="settings.general.pages.goals"
 		:show-group="settings.general.pages.groups"
-		:show-task="settings.general.pages.tasks || settings.general.pages.matrix"
+		:show-task="!isPageHidden(settings, 'tasks') || !isPageHidden(settings, 'matrix')"
 		@save-dream="handleDreamSave"
 		@save-goal="handleGoalSave"
 		@save-group="handleGroupSave"
@@ -40,6 +40,7 @@ import { mdiPlus } from '@mdi/js';
 import AddEntityDialog from '@/components/AddEntityDialog.vue';
 import {
 	ItemType,
+	isPageHidden,
 	type DreamDraft,
 	type GoalDraft,
 	type GroupDraft,
