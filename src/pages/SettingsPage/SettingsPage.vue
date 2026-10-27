@@ -16,7 +16,8 @@
 
 <template>
 	<VContainer :class="$style.container">
-		<VTabs v-model="activeTab" color="primary" grow :class="$style.tabs">
+		<!-- Arrows on a phone as well: there the bar scrolls Dreams and Groups out of sight. -->
+		<VTabs v-model="activeTab" color="primary" grow show-arrows :class="$style.tabs">
 			<VTab :id="tabId('general')" value="general">{{ t('settings.general') }}</VTab>
 			<VTab v-for="page in PAGE_TABS" :id="tabId(page)" :key="page" :value="page">
 				{{ t(`nav.${page}`) }}

@@ -54,15 +54,32 @@ interface AckFrame {
 /** A text message as read off the wire, before any of it is trusted. */
 type IncomingFrame = Partial<Record<keyof HeaderFrame, unknown>>;
 
+/** What went wrong in a sync, for the interface to say in the user's language. */
+export type SyncErrorCode =
+	| 'unexpected'
+	| 'connectTimeout'
+	| 'notAnInvite'
+	| 'notAnAnswer'
+	| 'sentNothing'
+	| 'stoppedSending'
+	| 'versionMismatch'
+	| 'modeMismatch'
+	| 'closedEarly'
+	| 'closedWhileSending';
+
+/** The message is English, for a developer; `code` is what the interface translates. */
 export class SyncError extends Error {
-	constructor(message: string) {
+	constructor(
+		message: string,
+		readonly code: SyncErrorCode,
+	) {
 		super(message);
 		this.name = 'SyncError';
 	}
 }
 
 function unexpected(): SyncError {
-	return new SyncError('The other device sent something unexpected');
+	return new SyncError('The other device sent something unexpected', 'unexpected');
 }
 
 function joinChunks(chunks: Uint8Array[], length: number): Uint8Array {
@@ -155,7 +172,7 @@ export class SyncConnection {
 
 		this.channelReady = new Promise<RTCDataChannel>((resolve, reject) => {
 			const timer = setTimeout(
-				() => reject(new SyncError('The other device did not connect in time')),
+				() => reject(new SyncError('The other device did not connect in time', 'connectTimeout')),
 				CONNECT_TIMEOUT_MS,
 			);
 
@@ -196,7 +213,7 @@ export class SyncConnection {
 	async acceptOffer(code: string): Promise<string> {
 		const signal = syncSignal.decode(code);
 		if (signal.type !== 'offer') {
-			throw new SyncError('That code is an answer, not an invitation');
+			throw new SyncError('That code is an answer, not an invitation', 'notAnInvite');
 		}
 
 		await this.peer.setRemoteDescription({ type: 'offer', sdp: signal.sdp });
@@ -210,7 +227,7 @@ export class SyncConnection {
 	async acceptAnswer(code: string): Promise<void> {
 		const signal = syncSignal.decode(code);
 		if (signal.type !== 'answer') {
-			throw new SyncError('That code is an invitation, not an answer');
+			throw new SyncError('That code is an invitation, not an answer', 'notAnAnswer');
 		}
 
 		await this.peer.setRemoteDescription({ type: 'answer', sdp: signal.sdp });
@@ -258,8 +275,9 @@ export class SyncConnection {
 				clearTimeout(timer);
 				timer = setTimeout(() => {
 					if (theirs) finish();
-					else if (expected === null) finish(new SyncError('The other device sent nothing'));
-					else finish(new SyncError('The other device stopped sending'));
+					else if (expected === null)
+						finish(new SyncError('The other device sent nothing', 'sentNothing'));
+					else finish(new SyncError('The other device stopped sending', 'stoppedSending'));
 				}, CONNECT_TIMEOUT_MS);
 			};
 
@@ -268,7 +286,10 @@ export class SyncConnection {
 				// device on an older build would merge a shape it does not
 				// understand and destroy data on both sides.
 				if (frame.schema !== SYNC_SCHEMA) {
-					throw new SyncError('The other device runs a different version. Update it and retry.');
+					throw new SyncError(
+						'The other device runs a different version. Update it and retry.',
+						'versionMismatch',
+					);
 				}
 
 				if (frame.frame === 'ack') {
@@ -287,6 +308,7 @@ export class SyncConnection {
 				if (frame.kind !== payload.kind) {
 					throw new SyncError(
 						'The other device is set to sync something different. Pick the same mode on both sides and retry.',
+						'modeMismatch',
 					);
 				}
 
@@ -328,7 +350,10 @@ export class SyncConnection {
 
 			const onClose = (): void => {
 				if (theirs) finish();
-				else finish(new SyncError('The connection closed before the other device finished'));
+				else
+					finish(
+						new SyncError('The connection closed before the other device finished', 'closedEarly'),
+					);
 			};
 
 			const send = async (): Promise<void> => {
@@ -352,7 +377,9 @@ export class SyncConnection {
 			open.addEventListener('message', onMessage);
 			open.addEventListener('close', onClose);
 			armTimer();
-			send().catch(() => finish(new SyncError('The connection closed while sending')));
+			send().catch(() =>
+				finish(new SyncError('The connection closed while sending', 'closedWhileSending')),
+			);
 		});
 	}
 

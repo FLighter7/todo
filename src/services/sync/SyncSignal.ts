@@ -7,8 +7,15 @@ export interface Signal {
 
 export const SIGNAL_VERSION = 1;
 
+/** What is wrong with a pairing code, for the interface to say in the user's language. */
+export type SignalErrorCode = 'notPairingCode' | 'tooNew' | 'damaged' | 'noConnectionDetails';
+
+/** The message is English, for a developer; `code` is what the interface translates. */
 export class SignalFormatError extends Error {
-	constructor(message: string) {
+	constructor(
+		message: string,
+		readonly code: SignalErrorCode,
+	) {
 		super(message);
 		this.name = 'SignalFormatError';
 	}
@@ -135,13 +142,13 @@ export class SyncSignal {
 		const match = /^(\d)([oa])([cf])\.(.+)$/.exec(trimmed);
 
 		if (!match) {
-			throw new SignalFormatError('This is not a pairing code');
+			throw new SignalFormatError('This is not a pairing code', 'notPairingCode');
 		}
 
 		const [, version, marker, mode, payload] = match;
 
 		if (Number(version) > SIGNAL_VERSION) {
-			throw new SignalFormatError('The code is newer than this app supports');
+			throw new SignalFormatError('The code is newer than this app supports', 'tooNew');
 		}
 
 		const type: SignalType = marker === 'o' ? 'offer' : 'answer';
@@ -150,7 +157,7 @@ export class SyncSignal {
 		try {
 			decoded = fromBase64Url(payload);
 		} catch {
-			throw new SignalFormatError('The code is damaged');
+			throw new SignalFormatError('The code is damaged', 'damaged');
 		}
 
 		if (mode === 'f') {
@@ -161,11 +168,11 @@ export class SyncSignal {
 		try {
 			fields = JSON.parse(decoded);
 		} catch {
-			throw new SignalFormatError('The code is damaged');
+			throw new SignalFormatError('The code is damaged', 'damaged');
 		}
 
 		if (!isCompact(fields)) {
-			throw new SignalFormatError('The code is missing connection details');
+			throw new SignalFormatError('The code is missing connection details', 'noConnectionDetails');
 		}
 
 		return { type, sdp: rebuild(fields) };

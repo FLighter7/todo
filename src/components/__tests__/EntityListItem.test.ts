@@ -5,7 +5,13 @@ import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import EntityListItem from '../EntityListItem.vue';
 
-function mountItem(props: { name: string; note?: string; done: boolean; date?: string }) {
+function mountItem(props: {
+	name: string;
+	note?: string;
+	done: boolean;
+	cancelled?: boolean;
+	date?: string;
+}) {
 	return mount(EntityListItem, { props, global: { plugins: [vuetify, i18n] } });
 }
 
@@ -21,6 +27,22 @@ describe('EntityListItem', () => {
 		const wrapper = mountItem({ name: 'Visit Japan', done: false });
 
 		expect(wrapper.findComponent({ name: 'VListItemSubtitle' }).exists()).toBe(false);
+	});
+
+	it('says in words that a record is cancelled, which its empty checkbox does not', () => {
+		expect(mountItem({ name: 'Visit Japan', done: false }).text()).not.toContain('Cancelled');
+		expect(mountItem({ name: 'Visit Japan', done: false, cancelled: true }).text()).toContain(
+			'Cancelled',
+		);
+	});
+
+	it('names its checkbox after the record, and makes the name a button', () => {
+		const wrapper = mountItem({ name: 'Visit Japan', done: false });
+
+		expect(wrapper.get('input[type="checkbox"]').attributes('aria-label')).toBe(
+			'Done: Visit Japan',
+		);
+		expect(wrapper.get('button').text()).toBe('Visit Japan');
 	});
 
 	it('reflects the done prop on the checkbox', () => {

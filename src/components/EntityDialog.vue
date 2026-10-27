@@ -17,7 +17,6 @@
 					v-if="!editing"
 					:icon="mdiPencilOutline"
 					variant="text"
-					density="comfortable"
 					:aria-label="t('entity.edit')"
 					@click="editing = true"
 				/>
@@ -25,10 +24,12 @@
 					v-else
 					:icon="mdiCheck"
 					variant="text"
-					density="comfortable"
 					:aria-label="t('form.save')"
 					@click="emit('save')"
 				/>
+				<!-- Escape, the scrim and Back close it too, but a touch screen reader user
+				needs something to find. -->
+				<VBtn :icon="mdiClose" variant="text" :aria-label="t('form.close')" @click="open = false" />
 			</VCardTitle>
 
 			<VCardText>
@@ -48,7 +49,7 @@
 <script setup lang="ts">
 import { useId, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { mdiCheck, mdiDeleteOutline, mdiPencilOutline } from '@mdi/js';
+import { mdiCheck, mdiClose, mdiDeleteOutline, mdiPencilOutline } from '@mdi/js';
 import { useReturnFocus } from '@/composables/useKeepFocus';
 
 const props = withDefaults(

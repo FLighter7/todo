@@ -23,10 +23,12 @@ import { SUPPORTED_LOCALES, type AppLocale } from '@/i18n';
 import { mockDataService } from '@/services/mockData/MockDataService';
 import { useItemsStore } from '@/stores/items';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import { useErrorReason } from '@/composables/useErrorReason';
 
 const emit = defineEmits<{ notify: [message: string] }>();
 
 const { t, locale } = useI18n();
+const errorReason = useErrorReason();
 const items = useItemsStore();
 
 const confirmOpen = ref(false);
@@ -70,8 +72,7 @@ async function generateAndReplace(): Promise<void> {
 		await items.replaceAll(generated);
 		emit('notify', t('mockData.generated', { count: generated.length }));
 	} catch (error) {
-		const reason = error instanceof Error ? error.message : String(error);
-		emit('notify', t('mockData.failed', { reason }));
+		emit('notify', t('mockData.failed', { reason: errorReason(error) }));
 	}
 }
 </script>

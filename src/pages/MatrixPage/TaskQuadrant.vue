@@ -51,7 +51,6 @@
 			<VBtn
 				:icon="mdiPlus"
 				variant="text"
-				density="comfortable"
 				:aria-label="t('quadrant.addTo', { quadrant: t(`quadrant.${quadrant}`) })"
 				@click="emit('add', quadrant)"
 			/>

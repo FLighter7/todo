@@ -37,26 +37,17 @@
 	<VDialog v-model="open" max-width="480" :aria-label="t('form.addTitle')">
 		<VCard variant="elevated">
 			<VCardActions>
+				<!-- Escape, the scrim and Back close it too, but a touch screen reader user
+				needs something to find. -->
+				<VBtn :icon="mdiClose" variant="text" :aria-label="t('form.close')" @click="open = false" />
 				<VSpacer />
-				<VBtn
-					icon
-					variant="text"
-					density="comfortable"
-					:aria-label="t('form.saveAndNew')"
-					@click="onSaveAndNew"
-				>
+				<VBtn icon variant="text" :aria-label="t('form.saveAndNew')" @click="onSaveAndNew">
 					<span :class="$style.saveAndNewIcon">
 						<VIcon :icon="mdiCheck" />
 						<VIcon :icon="mdiPlusThick" size="16" :class="$style.saveAndNewBadge" />
 					</span>
 				</VBtn>
-				<VBtn
-					:icon="mdiCheck"
-					variant="text"
-					density="comfortable"
-					:aria-label="t('form.save')"
-					@click="onSave"
-				/>
+				<VBtn :icon="mdiCheck" variant="text" :aria-label="t('form.save')" @click="onSave" />
 			</VCardActions>
 
 			<!-- A lone tab needs no tab bar. -->
@@ -65,6 +56,7 @@
 				v-model="activeTab"
 				color="primary"
 				grow
+				show-arrows
 				:class="$style.tabs"
 			>
 				<VTab v-for="tab in visibleTabs" :key="tab" :value="tab">{{ t(`${tab}.title`) }}</VTab>
@@ -75,8 +67,7 @@
 					<VTextField
 						ref="nameField"
 						v-model="dreamName"
-						:label="t('entity.name')"
-						aria-required="true"
+						:label="t('entity.nameField')"
 						:error-messages="dreamNameError"
 						autofocus
 					/>
@@ -87,8 +78,7 @@
 					<VTextField
 						ref="nameField"
 						v-model="goalName"
-						:label="t('entity.name')"
-						aria-required="true"
+						:label="t('entity.nameField')"
 						:error-messages="goalNameError"
 						autofocus
 					/>
@@ -108,8 +98,7 @@
 					<VTextField
 						ref="nameField"
 						v-model="groupName"
-						:label="t('entity.name')"
-						aria-required="true"
+						:label="t('entity.nameField')"
 						:error-messages="groupNameError"
 						autofocus
 					/>
@@ -119,8 +108,7 @@
 					<VTextField
 						ref="nameField"
 						v-model="taskName"
-						:label="t('entity.name')"
-						aria-required="true"
+						:label="t('entity.nameField')"
 						:error-messages="taskNameError"
 						autofocus
 					/>
@@ -160,7 +148,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { mdiCheck, mdiPlusThick } from '@mdi/js';
+import { mdiCheck, mdiClose, mdiPlusThick } from '@mdi/js';
 import DeadlineField from './DeadlineField.vue';
 import ScheduleField from './ScheduleField.vue';
 import { useReturnFocus } from '@/composables/useKeepFocus';

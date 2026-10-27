@@ -27,8 +27,7 @@
 			<template v-if="editing">
 				<VTextField
 					v-model="name"
-					:label="t('entity.name')"
-					aria-required="true"
+					:label="t('entity.nameField')"
 					:error-messages="nameError"
 					autofocus
 					@keyup.enter="onSave"

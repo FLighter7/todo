@@ -5,6 +5,7 @@ import '@/assets/styles/font-scale.scss';
 import '@/assets/styles/contrast.scss';
 import '@/assets/styles/focus.scss';
 import '@/assets/styles/text-wrap.scss';
+import '@/assets/styles/fields.scss';
 import { createVuetify } from 'vuetify';
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg';
 import { en, ru, pl } from 'vuetify/locale';
@@ -35,9 +36,12 @@ export default createVuetify({
 		VAppBar: { elevation: 0, color: 'background' },
 		VBtn: { variant: 'tonal' },
 		VCard: { variant: 'outlined' },
-		VTextField: { variant: 'outlined' },
-		VSelect: { variant: 'outlined' },
-		VTextarea: { variant: 'outlined' },
+		// Messages render only once there are some: an empty area under a field is
+		// still a role="alert", and a screen reader says "alert" for each one when
+		// a dialog opens. fields.scss keeps the space it took.
+		VTextField: { variant: 'outlined', hideDetails: 'auto' },
+		VSelect: { variant: 'outlined', hideDetails: 'auto' },
+		VTextarea: { variant: 'outlined', hideDetails: 'auto' },
 	},
 	icons: {
 		defaultSet: 'mdi',

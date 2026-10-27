@@ -53,15 +53,17 @@ import { computed, ref, useId, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { mdiDownloadOutline, mdiUploadOutline } from '@mdi/js';
 import type { Backup } from '@/services/backup/BackupService';
-import { BackupFormatError, backupService } from '@/services/backup/BackupService';
+import { backupService } from '@/services/backup/BackupService';
 import { backupFile } from '@/services/backup/BackupFile';
 import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
 import { useReturnFocus } from '@/composables/useKeepFocus';
+import { useErrorReason } from '@/composables/useErrorReason';
 
 const emit = defineEmits<{ notify: [message: string] }>();
 
 const { t, locale } = useI18n();
+const errorReason = useErrorReason();
 const items = useItemsStore();
 const settings = useSettingsStore();
 
@@ -122,8 +124,7 @@ async function onFileChosen(event: Event): Promise<void> {
 		pending.value = backupService.parse(await backupFile.readText(file));
 		confirmOpen.value = true;
 	} catch (error) {
-		const reason = error instanceof BackupFormatError ? error.message : String(error);
-		emit('notify', t('backup.invalid', { reason }));
+		emit('notify', t('backup.invalid', { reason: errorReason(error) }));
 	}
 }
 
@@ -158,8 +159,7 @@ async function confirmImport(): Promise<void> {
 
 		emit('notify', t('backup.restored', { count: incomingTotal(backup) }));
 	} catch (error) {
-		const reason = error instanceof Error ? error.message : String(error);
-		emit('notify', t('backup.restoreFailed', { reason }));
+		emit('notify', t('backup.restoreFailed', { reason: errorReason(error) }));
 	}
 }
 

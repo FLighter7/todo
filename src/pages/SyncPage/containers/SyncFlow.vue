@@ -101,6 +101,7 @@ import { syncMerger } from '@/services/sync/SyncMerger';
 import { collectGarbage, pruneItem } from '@/utils';
 import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
+import { useErrorReason } from '@/composables/useErrorReason';
 
 type Step =
 	| 'idle'
@@ -116,6 +117,7 @@ type Mode = 'data' | 'settings';
 const emit = defineEmits<{ notify: [message: string] }>();
 
 const { t } = useI18n();
+const errorReason = useErrorReason();
 const items = useItemsStore();
 const settings = useSettingsStore();
 
@@ -152,7 +154,7 @@ onBeforeUnmount(() => {
 });
 
 function fail(error: unknown): void {
-	failure.value = error instanceof Error ? error.message : String(error);
+	failure.value = errorReason(error);
 	step.value = 'failed';
 }
 

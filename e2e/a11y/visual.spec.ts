@@ -186,64 +186,69 @@ interface SmallTarget {
  * Each control is scrolled to the middle first, clear of the fixed bars; with a
  * dialog open, only its own controls count, the rest sit under its scrim.
  */
-function smallTargets(page: Page): Promise<SmallTarget[]> {
-	return page.evaluate(() => {
-		const selector =
-			'button, a[href], input:not([type="hidden"]), [role="tab"], [tabindex="0"], [tabindex="-2"]';
-		const dialogs = document.querySelectorAll('.v-overlay--active[role="dialog"]');
-		const scope = dialogs.length > 0 ? dialogs[dialogs.length - 1] : document;
-		const small: SmallTarget[] = [];
+function smallTargets(
+	page: Page,
+	minimum = 24,
+	selector = 'button, a[href], input:not([type="hidden"]), [role="tab"], [tabindex="0"], [tabindex="-2"]',
+): Promise<SmallTarget[]> {
+	return page.evaluate(
+		([minimum, selector]) => {
+			const dialogs = document.querySelectorAll('.v-overlay--active[role="dialog"]');
+			const scope = dialogs.length > 0 ? dialogs[dialogs.length - 1] : document;
+			const small: SmallTarget[] = [];
 
-		function hits(element: Element, x: number, y: number): boolean {
-			const top = document.elementFromPoint(x, y);
-			return top !== null && (element === top || element.contains(top));
-		}
-
-		function run(points: Array<[number, number]>, element: Element): number {
-			let best = 0;
-			let current = 0;
-			for (const [x, y] of points) {
-				current = hits(element, x, y) ? current + 1 : 0;
-				best = Math.max(best, current);
-			}
-			return best;
-		}
-
-		for (const control of scope.querySelectorAll(selector)) {
-			if ((control as HTMLInputElement).disabled || control.closest('[aria-hidden="true"]')) {
-				continue;
+			function hits(element: Element, x: number, y: number): boolean {
+				const top = document.elementFromPoint(x, y);
+				return top !== null && (element === top || element.contains(top));
 			}
 
-			// A select or a field takes the tap on its whole box, not on the input inside.
-			const element = control.closest('.v-field') ?? control;
-
-			element.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' });
-			const rect = element.getBoundingClientRect();
-			if (rect.width === 0 || rect.height === 0) {
-				continue;
+			function run(points: Array<[number, number]>, element: Element): number {
+				let best = 0;
+				let current = 0;
+				for (const [x, y] of points) {
+					current = hits(element, x, y) ? current + 1 : 0;
+					best = Math.max(best, current);
+				}
+				return best;
 			}
 
-			const cx = rect.x + rect.width / 2;
-			const cy = rect.y + rect.height / 2;
-			const across: Array<[number, number]> = [];
-			const down: Array<[number, number]> = [];
-			for (let x = Math.floor(rect.left - 8); x <= rect.right + 8; x++) across.push([x, cy]);
-			for (let y = Math.floor(rect.top - 8); y <= rect.bottom + 8; y++) down.push([cx, y]);
-			const width = run(across, element);
-			const height = run(down, element);
-			if (width < 24 || height < 24) {
-				small.push({
-					name:
-						element.getAttribute('aria-label') ??
-						element.closest('[aria-label]')?.getAttribute('aria-label') ??
-						(element.textContent ?? '').trim().slice(0, 40),
-					width,
-					height,
-				});
+			for (const control of scope.querySelectorAll(selector)) {
+				if ((control as HTMLInputElement).disabled || control.closest('[aria-hidden="true"]')) {
+					continue;
+				}
+
+				// A select or a field takes the tap on its whole box, not on the input inside.
+				const element = control.closest('.v-field') ?? control;
+
+				element.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' });
+				const rect = element.getBoundingClientRect();
+				if (rect.width === 0 || rect.height === 0) {
+					continue;
+				}
+
+				const cx = rect.x + rect.width / 2;
+				const cy = rect.y + rect.height / 2;
+				const across: Array<[number, number]> = [];
+				const down: Array<[number, number]> = [];
+				for (let x = Math.floor(rect.left - 8); x <= rect.right + 8; x++) across.push([x, cy]);
+				for (let y = Math.floor(rect.top - 8); y <= rect.bottom + 8; y++) down.push([cx, y]);
+				const width = run(across, element);
+				const height = run(down, element);
+				if (width < minimum || height < minimum) {
+					small.push({
+						name:
+							element.getAttribute('aria-label') ??
+							element.closest('[aria-label]')?.getAttribute('aria-label') ??
+							(element.textContent ?? '').trim().slice(0, 40),
+						width,
+						height,
+					});
+				}
 			}
-		}
-		return small;
-	});
+			return small;
+		},
+		[minimum, selector] as const,
+	);
 }
 
 test.describe('target size', () => {
@@ -260,6 +265,17 @@ test.describe('target size', () => {
 			await enter(page, name);
 			const small = await smallTargets(page);
 			dump(`targets/${name}.json`, JSON.stringify(small, null, 1));
+
+			expect(small).toEqual([]);
+		});
+	}
+
+	// WCAG 2.5.5, level AAA: the icon-only buttons, which have no label to widen them.
+	for (const name of ['matrix', 'add-task', 'task-read-completions']) {
+		test(`${name} has no icon button under 44 CSS px`, async ({ page }) => {
+			await enter(page, name);
+			const small = await smallTargets(page, 44, 'button.v-btn--icon');
+			dump(`targets/${name}--aaa.json`, JSON.stringify(small, null, 1));
 
 			expect(small).toEqual([]);
 		});

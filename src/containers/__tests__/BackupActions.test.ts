@@ -210,7 +210,9 @@ describe('BackupActions import', () => {
 		]);
 		readText.mockResolvedValue(JSON.stringify(incoming));
 
-		vi.spyOn(items, 'replaceAll').mockRejectedValue(new Error('quota exceeded'));
+		const failure = new Error('quota exceeded');
+		vi.spyOn(items, 'replaceAll').mockRejectedValue(failure);
+		const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 		const wrapper = mount(BackupActions, { global: { plugins: [vuetify, i18n] } });
 
@@ -227,8 +229,10 @@ describe('BackupActions import', () => {
 
 		expect(items.records.map((t) => t.name)).toEqual(['Old task']);
 		expect(wrapper.emitted('notify')?.at(-1)).toEqual([
-			'Could not restore from the file: quota exceeded',
+			'Could not restore from the file: something unexpected went wrong',
 		]);
+		expect(logged).toHaveBeenCalledWith(failure);
+		logged.mockRestore();
 	});
 
 	it('notifies with the reason and does not touch the stores when the file is invalid', async () => {
@@ -249,6 +253,6 @@ describe('BackupActions import', () => {
 		await wrapper.vm.$nextTick();
 
 		expect(items.records.map((t) => t.name)).toEqual(['Untouched']);
-		expect(wrapper.emitted('notify')?.[0][0]).toContain('Could not read the file');
+		expect(wrapper.emitted('notify')?.[0][0]).toBe('Could not read the file: it is not valid JSON');
 	});
 });

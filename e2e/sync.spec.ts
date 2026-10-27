@@ -12,13 +12,13 @@ async function pair(pageA: Page, pageB: Page): Promise<void> {
 	const offerCode = await pageA.evaluate(() => navigator.clipboard.readText());
 
 	await pageB.getByRole('button', { name: 'This device joins' }).click();
-	await pageB.getByLabel('No camera? Paste the code here').fill(offerCode);
+	await pageB.getByLabel('Code', { exact: true }).fill(offerCode);
 	await pageB.getByRole('button', { name: 'Use this code' }).click();
 
 	await pageB.getByRole('button', { name: 'Copy code' }).click();
 	const answerCode = await pageB.evaluate(() => navigator.clipboard.readText());
 
-	await pageA.getByLabel('No camera? Paste the code here').fill(answerCode);
+	await pageA.getByLabel('Code', { exact: true }).fill(answerCode);
 	await pageA.getByRole('button', { name: 'Use this code' }).click();
 
 	await expect(pageA.getByText(/Sync finished/)).toBeVisible({ timeout: 20_000 });

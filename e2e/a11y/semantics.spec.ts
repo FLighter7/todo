@@ -108,6 +108,65 @@ test.describe('names and states', () => {
 	});
 });
 
+test.describe('dialogs and forms', () => {
+	test('a dialog opens with no empty alert in it, and an error is one', async ({ page }) => {
+		await applySettings(page);
+		await page.goto('/todo/tasks');
+		await page.getByRole('button', { name: msg('en', 'form.add'), exact: true }).click();
+		const dialog = openDialog(page);
+		await expect(dialog.getByRole('textbox', { name: msg('en', 'entity.name') })).toBeFocused();
+		await expect(dialog.getByRole('alert')).toHaveCount(0);
+
+		await dialog.getByRole('button', { name: msg('en', 'form.save'), exact: true }).click();
+		await expect(dialog.getByRole('alert')).toHaveText(msg('en', 'form.nameRequired'));
+	});
+
+	test('the name field says that it is required, to the eye and to a screen reader', async ({
+		page,
+	}) => {
+		await applySettings(page);
+		await page.goto('/todo/tasks');
+		await page.getByRole('button', { name: msg('en', 'form.add'), exact: true }).click();
+		const name = openDialog(page).getByRole('textbox', { name: msg('en', 'entity.name') });
+		// In the label only, not aria-required as well: NVDA reads the label's text
+		// whatever is hidden in it, and would say "required" twice.
+		await expect(name).toHaveAccessibleName(msg('en', 'entity.nameField'));
+		// Vuetify draws a field's label twice, resting and floating; one of them shows.
+		await expect(
+			openDialog(page).getByText(msg('en', 'entity.nameField')).filter({ visible: true }),
+		).toHaveCount(1);
+	});
+
+	test('the add and record dialogs can be closed without a keyboard', async ({ page }) => {
+		await applySettings(page);
+		await seedSampleData(page, 'en');
+		await page.goto('/todo/tasks');
+		await page.getByRole('button', { name: msg('en', 'form.add'), exact: true }).click();
+		await openDialog(page)
+			.getByRole('button', { name: msg('en', 'form.close') })
+			.click();
+		await expect(openDialog(page)).toBeHidden();
+
+		await page.locator('main [role="listitem"]').first().getByRole('button').click();
+		await openDialog(page)
+			.getByRole('button', { name: msg('en', 'form.close') })
+			.click();
+		await expect(openDialog(page)).toBeHidden();
+	});
+
+	test('a cancelled record in History says so', async ({ page }) => {
+		await applySettings(page);
+		await seedSampleData(page, 'en');
+		await page.goto('/todo/tasks');
+		await page.getByRole('button', { name: msg('en', 'entity.history') }).click();
+		await expect(
+			page
+				.locator('main [role="listitem"]')
+				.filter({ hasText: msg('en', 'entity.statusCancelled') }),
+		).not.toHaveCount(0);
+	});
+});
+
 test.describe('status messages', () => {
 	test('a live region is in place before any message arrives', async ({ page }) => {
 		await applySettings(page);

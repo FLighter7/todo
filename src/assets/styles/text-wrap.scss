@@ -4,3 +4,9 @@
 .v-card-title {
 	white-space: normal;
 }
+
+// The same for a select's chosen value: at a large text size on a phone the end of
+// "Не повторяется" went missing.
+.v-select .v-select__selection-text {
+	white-space: normal;
+}

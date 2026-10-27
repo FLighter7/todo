@@ -21,12 +21,15 @@
 		<VAlert v-if="cameraError" type="info" variant="tonal" :text="t('sync.cameraFailed')" />
 		<p v-else-if="cameraOn" class="text-center text-medium-emphasis">{{ t('sync.scanning') }}</p>
 
+		<!-- The instruction is a hint rather than the label: a label stays on one line
+		and lost its end on a phone, a hint wraps. -->
 		<VTextarea
 			v-model="pasted"
-			:label="t('sync.orPaste')"
+			:label="t('sync.codeLabel')"
+			:hint="t('sync.orPaste')"
+			persistent-hint
 			rows="2"
 			auto-grow
-			hide-details
 			class="mt-2"
 		/>
 		<VBtn :disabled="pasted.trim() === ''" variant="tonal" @click="submitPasted">

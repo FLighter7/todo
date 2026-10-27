@@ -118,6 +118,7 @@
 		"scanInvite": "Scan the code from the other device",
 		"showAnswer": "Show this code back to the other device",
 		"scanning": "Point the camera at the code",
+		"codeLabel": "Code",
 		"orPaste": "No camera? Paste the code here",
 		"copy": "Copy code",
 		"copied": "Code copied.",
@@ -176,7 +177,9 @@
 	"entity": {
 		"edit": "Edit",
 		"cancelRecord": "Cancel this record",
+		"statusCancelled": "Cancelled",
 		"name": "Name",
+		"nameField": "Name (required)",
 		"note": "Note",
 		"active": "Active",
 		"history": "History",
@@ -235,5 +238,36 @@
 		"cancelled": "Cancelled: {name}",
 		"added": "Added: {name}",
 		"saved": "Saved: {name}"
+	},
+	"errors": {
+		"backup": {
+			"notJson": "it is not valid JSON",
+			"notBackup": "it does not contain a backup",
+			"noVersion": "the backup has no version",
+			"wrongVersion": "it is backup version {found}, and this app reads version {expected} only",
+			"noItems": "the backup has no list of records",
+			"badItem": "record {number} in the file is damaged",
+			"duplicateId": "record {number} repeats the id of another one",
+			"badSettings": "the settings in the file are damaged"
+		},
+		"sync": {
+			"unexpected": "the other device sent something unexpected",
+			"connectTimeout": "the other device did not connect in time",
+			"notAnInvite": "that code is an answer, not an invitation",
+			"notAnAnswer": "that code is an invitation, not an answer",
+			"sentNothing": "the other device sent nothing",
+			"stoppedSending": "the other device stopped sending",
+			"versionMismatch": "the other device runs a different version. Update it and retry",
+			"modeMismatch": "the other device is set to sync something different. Pick the same mode on both sides and retry",
+			"closedEarly": "the connection closed before the other device finished",
+			"closedWhileSending": "the connection closed while sending"
+		},
+		"signal": {
+			"notPairingCode": "this is not a pairing code",
+			"tooNew": "the code is newer than this app supports",
+			"damaged": "the code is damaged",
+			"noConnectionDetails": "the code is missing connection details"
+		},
+		"unknown": "something unexpected went wrong"
 	}
 }

@@ -67,6 +67,10 @@
 		<VListItemTitle>
 			<button type="button" :class="$style.open">{{ name }}</button>
 		</VListItemTitle>
+		<!-- A cancelled record's checkbox is as empty as an open one's; the word says which it is. -->
+		<div v-if="cancelled" class="text-body-small text-medium-emphasis">
+			{{ t('entity.statusCancelled') }}
+		</div>
 		<VListItemSubtitle v-if="note">{{ note }}</VListItemSubtitle>
 
 		<template v-if="date" #append>
@@ -82,6 +86,7 @@ defineProps<{
 	name: string;
 	note?: string;
 	done: boolean;
+	cancelled?: boolean;
 	date?: string;
 }>();
 

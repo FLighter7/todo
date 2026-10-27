@@ -315,3 +315,14 @@ describe('AddEntityDialog saving and starting a new one', () => {
 		expect(wrapper.text()).toContain('Name is required');
 	});
 });
+
+describe('AddEntityDialog close button', () => {
+	it('closes the dialog without saving anything', async () => {
+		const wrapper = mountDialog('task');
+
+		await wrapper.get('button[aria-label="Close"]').trigger('click');
+
+		expect(wrapper.emitted('update:modelValue')).toEqual([[false]]);
+		expect(wrapper.emitted('save-task')).toBeUndefined();
+	});
+});

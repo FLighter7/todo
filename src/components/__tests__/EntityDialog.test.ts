@@ -85,3 +85,16 @@ describe('EntityDialog edit mode', () => {
 		expect(wrapper.find('button[aria-label="Edit"]').exists()).toBe(true);
 	});
 });
+
+describe('EntityDialog close button', () => {
+	it('closes the dialog, for a touch screen reader with no Escape key', async () => {
+		const wrapper = mount(EntityDialog, {
+			props: { modelValue: true, title: 'Visit Japan', mode: 'edit' },
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		await wrapper.get('button[aria-label="Close"]').trigger('click');
+
+		expect(wrapper.emitted('update:modelValue')).toEqual([[false]]);
+	});
+});

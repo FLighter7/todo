@@ -18,8 +18,28 @@ export interface Backup {
 	settings?: AppSettings;
 }
 
+/** What is wrong with a backup file, for the interface to say in the user's language. */
+export type BackupErrorCode =
+	| 'notJson'
+	| 'notBackup'
+	| 'noVersion'
+	| 'wrongVersion'
+	| 'noItems'
+	| 'badItem'
+	| 'duplicateId'
+	| 'badSettings';
+
+/**
+ * The message is English and detailed, for a developer; `code` and `params`
+ * are what the interface translates, since a reason pasted into a translated
+ * sentence would leave English in the middle of it.
+ */
 export class BackupFormatError extends Error {
-	constructor(message: string) {
+	constructor(
+		message: string,
+		readonly code: BackupErrorCode,
+		readonly params: Record<string, number> = {},
+	) {
 		super(message);
 		this.name = 'BackupFormatError';
 	}
@@ -39,7 +59,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  */
 function readItems(raw: unknown): Item[] {
 	if (!Array.isArray(raw)) {
-		throw new BackupFormatError('The backup has no "items" list');
+		throw new BackupFormatError('The backup has no "items" list', 'noItems');
 	}
 
 	const seen = new Set<string>();
@@ -50,14 +70,18 @@ function readItems(raw: unknown): Item[] {
 			item = parseItem(value);
 		} catch (error) {
 			if (error instanceof ItemFormatError) {
-				throw new BackupFormatError(`items[${index}] is invalid: ${error.message}`);
+				throw new BackupFormatError(`items[${index}] is invalid: ${error.message}`, 'badItem', {
+					number: index + 1,
+				});
 			}
 
 			throw error;
 		}
 
 		if (seen.has(item.id)) {
-			throw new BackupFormatError(`items[${index}] repeats the id "${item.id}"`);
+			throw new BackupFormatError(`items[${index}] repeats the id "${item.id}"`, 'duplicateId', {
+				number: index + 1,
+			});
 		}
 		seen.add(item.id);
 
@@ -79,7 +103,7 @@ function readSettings(raw: unknown): AppSettings | undefined {
 		return parseSettings(raw);
 	} catch (error) {
 		if (error instanceof SettingsFormatError) {
-			throw new BackupFormatError(`settings is invalid: ${error.message}`);
+			throw new BackupFormatError(`settings is invalid: ${error.message}`, 'badSettings');
 		}
 
 		throw error;
@@ -108,15 +132,15 @@ export class BackupService {
 		try {
 			raw = JSON.parse(text);
 		} catch {
-			throw new BackupFormatError('The file is not valid JSON');
+			throw new BackupFormatError('The file is not valid JSON', 'notJson');
 		}
 
 		if (!isRecord(raw)) {
-			throw new BackupFormatError('The file does not contain a backup object');
+			throw new BackupFormatError('The file does not contain a backup object', 'notBackup');
 		}
 
 		if (typeof raw.version !== 'number') {
-			throw new BackupFormatError('The backup has no version');
+			throw new BackupFormatError('The backup has no version', 'noVersion');
 		}
 
 		// Versions 1 and 2 held a single `todos` list, version 3 separate
@@ -126,6 +150,8 @@ export class BackupService {
 		if (raw.version !== BACKUP_VERSION) {
 			throw new BackupFormatError(
 				`This app reads backup version ${BACKUP_VERSION} only, and the file is version ${raw.version}`,
+				'wrongVersion',
+				{ expected: BACKUP_VERSION, found: raw.version },
 			);
 		}
 

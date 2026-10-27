@@ -20,7 +20,6 @@
 				<VBtn
 					:icon="mdiCheckCircleOutline"
 					variant="text"
-					density="comfortable"
 					:aria-label="
 						t('task.completions.markDone', { date: formatWallClock(entry.start, locale) })
 					"
@@ -29,7 +28,6 @@
 				<VBtn
 					:icon="mdiCloseCircleOutline"
 					variant="text"
-					density="comfortable"
 					:aria-label="t('task.completions.skip', { date: formatWallClock(entry.start, locale) })"
 					@click="emit('toggle-skip', entry.start, true)"
 				/>
@@ -38,7 +36,6 @@
 				v-else-if="entry.state === 'done'"
 				:icon="mdiCheckCircle"
 				variant="text"
-				density="comfortable"
 				color="primary"
 				:aria-label="
 					t('task.completions.markPending', { date: formatWallClock(entry.start, locale) })
@@ -49,7 +46,6 @@
 				v-else
 				:icon="mdiCloseCircle"
 				variant="text"
-				density="comfortable"
 				:aria-label="t('task.completions.unskip', { date: formatWallClock(entry.start, locale) })"
 				@click="emit('toggle-skip', entry.start, false)"
 			/>

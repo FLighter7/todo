@@ -85,7 +85,9 @@ describe('MockDataActions', () => {
 		await loadEmptyStores();
 		const items = useItemsStore();
 
-		vi.spyOn(items, 'replaceAll').mockRejectedValue(new Error('quota exceeded'));
+		const failure = new Error('quota exceeded');
+		vi.spyOn(items, 'replaceAll').mockRejectedValue(failure);
+		const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 		const wrapper = mount(MockDataActions, { global: { plugins: [vuetify, i18n] } });
 
@@ -94,8 +96,10 @@ describe('MockDataActions', () => {
 
 		expect(items.records).toHaveLength(0);
 		expect(wrapper.emitted('notify')?.at(-1)?.[0]).toBe(
-			'Could not generate sample data: quota exceeded',
+			'Could not generate sample data: something unexpected went wrong',
 		);
+		expect(logged).toHaveBeenCalledWith(failure);
+		logged.mockRestore();
 	});
 
 	it('leaves AppSettings untouched by generation', async () => {

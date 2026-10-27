@@ -15,7 +15,11 @@ import {
 	type Goal,
 	type Task,
 } from '@/types';
-import type { SyncDataPayload, SyncSettingsPayload } from '@/services/sync/SyncConnection';
+import {
+	SyncError,
+	type SyncDataPayload,
+	type SyncSettingsPayload,
+} from '@/services/sync/SyncConnection';
 import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
 import SyncCode from '../../SyncCode.vue';
@@ -35,8 +39,9 @@ const { createOffer, acceptOffer, acceptAnswer, exchange, close } = vi.hoisted((
 
 // SYNC_SCHEMA is re-exported here rather than pulled in through
 // vi.importActual: SyncFlow.vue imports it as a plain value, and the mocked
-// module has to supply every binding it reaches for.
-vi.mock('@/services/sync/SyncConnection', () => ({
+// module has to supply every binding it reaches for. SyncError is the real
+// class, since the failure message is translated from its code.
+vi.mock('@/services/sync/SyncConnection', async (importOriginal) => ({
 	SyncConnection: vi.fn(function () {
 		return {
 			createOffer,
@@ -46,6 +51,7 @@ vi.mock('@/services/sync/SyncConnection', () => ({
 			close,
 		};
 	}),
+	SyncError: (await importOriginal<typeof import('@/services/sync/SyncConnection')>()).SyncError,
 	SYNC_SCHEMA: 4,
 }));
 
@@ -165,7 +171,9 @@ describe('SyncFlow as initiator', () => {
 	});
 
 	it('shows the failure state when creating the offer rejects', async () => {
-		createOffer.mockRejectedValue(new Error('No camera or WebRTC unavailable'));
+		const failure = new Error('No camera or WebRTC unavailable');
+		createOffer.mockRejectedValue(failure);
+		const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 		await loadStores([], [], []);
 
@@ -175,7 +183,11 @@ describe('SyncFlow as initiator', () => {
 
 		await clickButtonByText(wrapper, 'This device starts');
 
-		expect(wrapper.text()).toContain('Sync failed');
+		// A failure the app does not describe gets a general reason in the user's
+		// language; its own English message goes to the console.
+		expect(wrapper.text()).toContain('Sync failed: something unexpected went wrong');
+		expect(logged).toHaveBeenCalledWith(failure);
+		logged.mockRestore();
 	});
 
 	it('fails instead of merging when the other device sends a mismatched schema', async () => {
@@ -185,7 +197,10 @@ describe('SyncFlow as initiator', () => {
 		// SyncFlow ever sees a payload to merge - that guard is the whole reason
 		// the envelope exists, and it must stop the merge from running at all.
 		exchange.mockRejectedValue(
-			new Error('The other device runs a different version. Update it and retry.'),
+			new SyncError(
+				'The other device runs a different version. Update it and retry.',
+				'versionMismatch',
+			),
 		);
 
 		await loadStores([makeDream()], [makeGoal()], [makeTask()]);
@@ -200,7 +215,7 @@ describe('SyncFlow as initiator', () => {
 		await flushPromises();
 
 		expect(wrapper.text()).toContain(
-			'Sync failed: The other device runs a different version. Update it and retry.',
+			'Sync failed: the other device runs a different version. Update it and retry',
 		);
 		expect(items.dreams.all.map((r) => r.id)).toEqual(['dream-local']);
 		expect(items.goals.all.map((r) => r.id)).toEqual(['goal-local']);

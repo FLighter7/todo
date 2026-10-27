@@ -118,6 +118,7 @@
 		"scanInvite": "Zeskanuj kod z drugiego urządzenia",
 		"showAnswer": "Pokaż ten kod z powrotem drugiemu urządzeniu",
 		"scanning": "Skieruj kamerę na kod",
+		"codeLabel": "Kod",
 		"orPaste": "Brak kamery? Wklej kod tutaj",
 		"copy": "Skopiuj kod",
 		"copied": "Kod skopiowany.",
@@ -176,7 +177,9 @@
 	"entity": {
 		"edit": "Edytuj",
 		"cancelRecord": "Anuluj wpis",
+		"statusCancelled": "Anulowano",
 		"name": "Nazwa",
+		"nameField": "Nazwa (wymagane)",
 		"note": "Opis",
 		"active": "Aktywne",
 		"history": "Historia",
@@ -235,5 +238,36 @@
 		"cancelled": "Anulowano: {name}",
 		"added": "Dodano: {name}",
 		"saved": "Zapisano: {name}"
+	},
+	"errors": {
+		"backup": {
+			"notJson": "to nie jest poprawny JSON",
+			"notBackup": "plik nie zawiera kopii zapasowej",
+			"noVersion": "kopia nie ma numeru wersji",
+			"wrongVersion": "to kopia w wersji {found}, a aplikacja czyta tylko wersję {expected}",
+			"noItems": "w kopii nie ma listy rekordów",
+			"badItem": "rekord {number} w pliku jest uszkodzony",
+			"duplicateId": "rekord {number} ma ten sam identyfikator co inny",
+			"badSettings": "ustawienia w pliku są uszkodzone"
+		},
+		"sync": {
+			"unexpected": "drugie urządzenie wysłało coś nieoczekiwanego",
+			"connectTimeout": "drugie urządzenie nie połączyło się na czas",
+			"notAnInvite": "to kod odpowiedzi, a nie zaproszenie",
+			"notAnAnswer": "to kod zaproszenia, a nie odpowiedź",
+			"sentNothing": "drugie urządzenie nic nie wysłało",
+			"stoppedSending": "drugie urządzenie przestało wysyłać dane",
+			"versionMismatch": "drugie urządzenie ma inną wersję aplikacji. Zaktualizuj ją i spróbuj ponownie",
+			"modeMismatch": "drugie urządzenie synchronizuje coś innego. Wybierz ten sam tryb na obu i spróbuj ponownie",
+			"closedEarly": "połączenie zamknęło się, zanim drugie urządzenie skończyło",
+			"closedWhileSending": "połączenie zamknęło się podczas wysyłania"
+		},
+		"signal": {
+			"notPairingCode": "to nie jest kod parowania",
+			"tooNew": "kod pochodzi z nowszej wersji aplikacji",
+			"damaged": "kod jest uszkodzony",
+			"noConnectionDetails": "w kodzie brakuje danych połączenia"
+		},
+		"unknown": "wystąpił nieoczekiwany błąd"
 	}
 }
