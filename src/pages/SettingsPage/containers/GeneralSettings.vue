@@ -1,4 +1,21 @@
 <style lang="scss" module>
+// Vuetify's subheader is 14px at medium emphasis, and Alegreya's small x-height
+// makes it read smaller still: the section titles get full contrast and a size
+// that holds its own next to the fields. They wrap rather than lose their end
+// at a large text size.
+.list {
+	:global(.v-list-subheader) {
+		color: rgb(var(--v-theme-on-surface));
+		font-size: 1.125rem;
+		font-weight: 600;
+		line-height: 1.3;
+	}
+
+	:global(.v-list-subheader__text) {
+		white-space: normal;
+	}
+}
+
 .fontScale {
 	display: flex;
 	align-items: center;
@@ -12,7 +29,7 @@
 </style>
 
 <template>
-	<VList>
+	<VList :class="$style.list">
 		<VListSubheader>{{ t('settings.fontScale') }}</VListSubheader>
 		<div :class="$style.fontScale" class="mx-4 mb-4">
 			<VBtn
