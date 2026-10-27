@@ -24,6 +24,7 @@
 		"src/**/*.vue",
 		"vite.config.ts",
 		"playwright.config.ts",
+		"playwright.sr.config.ts",
 		"e2e/**/*.ts"
 	]
 }
