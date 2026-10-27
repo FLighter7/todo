@@ -1,0 +1,14 @@
+// Vuetify draws a field's label and the hint or message under an input at
+// medium emphasis, 60% of the text colour in the light theme, which on this
+// palette's warm surface reads as faint grey. They are raised to the emphasis of
+// the text typed into the field.
+//
+// The variable is swapped rather than the opacity set outright: these rules sit
+// outside Vuetify's cascade layers, so an `opacity` here would override every
+// state Vuetify gives them — a focused or failing field's label, a disabled or
+// failing input's message — and a selection control's label, which Vuetify
+// already shows in full. Its own rules read the variable, so they all still hold.
+.v-label,
+.v-messages {
+	--v-medium-emphasis-opacity: var(--v-high-emphasis-opacity);
+}

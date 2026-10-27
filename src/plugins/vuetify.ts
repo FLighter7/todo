@@ -2,6 +2,7 @@ import 'vuetify/styles';
 import '@/assets/fonts/fonts.scss';
 import '@/assets/styles/touch-hover.scss';
 import '@/assets/styles/font-scale.scss';
+import '@/assets/styles/contrast.scss';
 import { createVuetify } from 'vuetify';
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg';
 import { en, ru, pl } from 'vuetify/locale';
