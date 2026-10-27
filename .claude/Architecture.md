@@ -66,8 +66,10 @@ src/
 	composables/             — Vue-tied reusable logic, e.g. useCascadeCancel.ts (cascading-cancel
 	                            counting/execution, shared by the Dreams and Goals page containers)
 	                            and useToggleConfirm.ts (Done/Reopen confirm gating, shared by all
-	                            three page containers), and useKeepFocus.ts (focus back to a
+	                            three page containers), useKeepFocus.ts (focus back to a
 	                            dialog's trigger, or to the next row when a row leaves a list)
+	                            and useErrorReason.ts (a service error's code as a reason in the
+	                            user's language)
 	utils/                   — pure, Vue-independent utility functions, one per file, e.g.
 	                            collectGarbage.ts (closed-record and stale-completion pruning),
 	                            quadrants.ts, sectionByParent.ts and intl.ts (one shared

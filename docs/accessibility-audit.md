@@ -1,8 +1,8 @@
 # Accessibility audit
 
-An audit of the whole app against **WCAG 2.2 level AA**, carried out on 2026-10-27, and what was fixed as a result. Level AAA points that matter in practice (44px touch targets) are noted as advice, not as failures.
+An audit of the whole app against **WCAG 2.2 level AA**, carried out on 2026-10-27, and what was fixed as a result; the findings first left in a backlog were fixed the day after. Level AAA points that matter in practice (44px touch targets) are noted as advice, not as failures.
 
-**Outcome.** 42 findings: 29 fixed, 1 partly fixed, 1 accepted as it is, 8 left in the backlog, and 3 notes on things that need no change. Before the fixes, 37 of 70 axe scans failed a WCAG rule, the keyboard focus was too faint to see on 108 of 114 tab stops, and NVDA found no heading on any page. After them, no axe scan fails a WCAG rule (66 scans), every tab stop shows a focus ring of 3:1 or more, and NVDA announces page titles, headings, dialog names, record names and every status change probed. One limitation was accepted as it is: [A11Y-24](#a11y-24), bottom bar labels that do not grow with the app's own text size.
+**Outcome.** 42 findings: 38 fixed, 1 accepted as it is, and 3 notes on things that need no change; nothing is left in a backlog. Before the fixes, 37 of 70 axe scans failed a WCAG rule, the keyboard focus was too faint to see on 108 of 114 tab stops, and NVDA found no heading on any page. After them, no axe scan fails a WCAG rule (66 scans), every tab stop shows a focus ring of 3:1 or more, and NVDA announces page titles, headings, dialog names, record names and every status change probed. One limitation was accepted as it is: [A11Y-24](#a11y-24), bottom bar labels that do not grow with the app's own text size.
 
 ## Scope and method
 
@@ -29,16 +29,17 @@ Setting `A11Y_DUMP_DIR` to a folder keeps every axe result, accessibility tree, 
 
 ## Results before and after
 
-| Measure                                                 | Before                                                             | After                                                              |
-| ------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| axe scans failing a WCAG A/AA rule                      | 37 of 70                                                           | 0 of 66                                                            |
-| axe WCAG violations (nodes)                             | 161 (`color-contrast` 141, `label` 12, `aria-required-children` 8) | 0                                                                  |
-| Dialogs without an accessible name (`aria-dialog-name`) | 44                                                                 | 0                                                                  |
-| Tab stops with a 3:1 focus indicator                    | 6 of 114                                                           | all                                                                |
-| Dialogs that hand the focus back on close               | 1 of 4 probed                                                      | 4 of 4                                                             |
-| Semantics checks passing                                | 0 of 20                                                            | 18 of 18 (2 sync checks dropped, see scope)                        |
-| Text nodes drawn in a fallback font (pl)                | 24                                                                 | 0                                                                  |
-| NVDA: headings found per page                           | 0                                                                  | `h1` on every page, `h2` per quadrant, Settings section and dialog |
+| Measure                                                 | Before                                                             | After                                                                     |
+| ------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| axe scans failing a WCAG A/AA rule                      | 37 of 70                                                           | 0 of 66                                                                   |
+| axe WCAG violations (nodes)                             | 161 (`color-contrast` 141, `label` 12, `aria-required-children` 8) | 0                                                                         |
+| Dialogs without an accessible name (`aria-dialog-name`) | 44                                                                 | 0                                                                         |
+| Tab stops with a 3:1 focus indicator                    | 6 of 114                                                           | all                                                                       |
+| Dialogs that hand the focus back on close               | 1 of 4 probed                                                      | 4 of 4                                                                    |
+| Semantics checks passing                                | 0 of 20                                                            | 22 of 22 (2 sync checks dropped, see scope; 4 added with the later fixes) |
+| Text nodes drawn in a fallback font (pl)                | 24                                                                 | 0                                                                         |
+| Empty alerts NVDA announces as the add dialog opens     | 4                                                                  | 0                                                                         |
+| NVDA: headings found per page                           | 0                                                                  | `h1` on every page, `h2` per quadrant, Settings section and dialog        |
 
 ## WCAG 2.2 AA conformance
 
@@ -48,7 +49,7 @@ Status after the fixes. N/A means the app has no content of that kind.
 | -------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1.1.1 Non-text content           | Pass                              | QR code named ([A11Y-20](#a11y-20)); icons are decorative or name their button                                                               |
 | 1.2.x Time-based media           | N/A                               |                                                                                                                                              |
-| 1.3.1 Info and relationships     | Pass                              | Headings, lists, named selects ([A11Y-04](#a11y-04), [A11Y-09](#a11y-09), [A11Y-12](#a11y-12), [A11Y-13](#a11y-13)); see [A11Y-32](#a11y-32) |
+| 1.3.1 Info and relationships     | Pass                              | Headings, lists, named selects ([A11Y-04](#a11y-04), [A11Y-09](#a11y-09), [A11Y-12](#a11y-12), [A11Y-13](#a11y-13)); and [A11Y-32](#a11y-32) |
 | 1.3.2 Meaningful sequence        | Pass                              |                                                                                                                                              |
 | 1.3.3 Sensory characteristics    | Pass                              |                                                                                                                                              |
 | 1.3.4 Orientation                | Pass                              | The manifest locks no orientation                                                                                                            |
@@ -81,16 +82,16 @@ Status after the fixes. N/A means the app has no content of that kind.
 | 2.5.3 Label in name              | Pass                              |                                                                                                                                              |
 | 2.5.4 Motion actuation           | N/A                               |                                                                                                                                              |
 | 2.5.7 Dragging movements         | N/A                               | No dragging anywhere                                                                                                                         |
-| 2.5.8 Target size (minimum)      | Pass                              | Every target reaches 24px at 360px wide; see [A11Y-39](#a11y-39) for 44px                                                                    |
+| 2.5.8 Target size (minimum)      | Pass                              | Every target reaches 24px at 360px wide; icon buttons reach 44px ([A11Y-39](#a11y-39))                                                       |
 | 3.1.1 Language of page           | Pass                              | [A11Y-02](#a11y-02)                                                                                                                          |
-| 3.1.2 Language of parts          | Pass with backlog                 | [A11Y-27](#a11y-27)                                                                                                                          |
+| 3.1.2 Language of parts          | Pass                              | [A11Y-27](#a11y-27)                                                                                                                          |
 | 3.2.1 On focus                   | Pass                              |                                                                                                                                              |
 | 3.2.2 On input                   | Pass                              | Settings apply in place; sync not tested                                                                                                     |
 | 3.2.3 Consistent navigation      | Pass                              |                                                                                                                                              |
 | 3.2.4 Consistent identification  | Pass                              |                                                                                                                                              |
 | 3.2.6 Consistent help            | N/A                               |                                                                                                                                              |
 | 3.3.1 Error identification       | Pass                              | [A11Y-31](#a11y-31)                                                                                                                          |
-| 3.3.2 Labels or instructions     | Pass with backlog                 | [A11Y-30](#a11y-30)                                                                                                                          |
+| 3.3.2 Labels or instructions     | Pass                              | [A11Y-30](#a11y-30)                                                                                                                          |
 | 3.3.3 Error suggestion           | Pass                              | Messages say what to enter                                                                                                                   |
 | 3.3.4 Error prevention           | Pass                              | Closing a record is reversible from History; restore and sample data ask first                                                               |
 | 3.3.7 Redundant entry            | Pass                              |                                                                                                                                              |
@@ -130,19 +131,19 @@ Severity: **serious** blocks or badly hinders a group of users and fails a crite
 | <a id="a11y-24"></a>A11Y-24 | Bottom bar labels shrink as the text size grows                                                                                | 1.4.4          | serious  | accepted (2026-10-27)        |
 | <a id="a11y-25"></a>A11Y-25 | Polish letters (ą, ć, ę, ł, ń, ś, ź, ż) drawn in Segoe UI or Georgia mid-word                                                  | —              | moderate | fixed                        |
 | <a id="a11y-26"></a>A11Y-26 | Three sync strings untranslated in Polish                                                                                      | 3.1.2          | minor    | fixed                        |
-| <a id="a11y-27"></a>A11Y-27 | Error reasons from `BackupService`, `SyncConnection` and the parsers are English inside localized messages                     | 3.1.2          | minor    | backlog                      |
+| <a id="a11y-27"></a>A11Y-27 | Error reasons from `BackupService`, `SyncConnection` and the parsers are English inside localized messages                     | 3.1.2          | minor    | fixed                        |
 | <a id="a11y-28"></a>A11Y-28 | Language names in the language menu had no `lang`                                                                              | 3.1.2          | minor    | fixed                        |
 | <a id="a11y-29"></a>A11Y-29 | Theme, language and sort menus did not expose the current choice                                                               | 4.1.2          | moderate | fixed                        |
-| <a id="a11y-30"></a>A11Y-30 | The required Name field is not marked as required                                                                              | 3.3.2          | moderate | partly fixed                 |
+| <a id="a11y-30"></a>A11Y-30 | The required Name field is not marked as required                                                                              | 3.3.2          | moderate | fixed                        |
 | <a id="a11y-31"></a>A11Y-31 | An unusable deadline year or schedule number was dropped without a word                                                        | 3.3.1          | serious  | fixed                        |
-| <a id="a11y-32"></a>A11Y-32 | In History a cancelled record looks like an open one: an empty checkbox and nothing else                                       | 1.3.1          | moderate | backlog                      |
-| <a id="a11y-33"></a>A11Y-33 | Record dialogs have no visible Close button, only Escape, the scrim and Back                                                   | —              | moderate | backlog                      |
-| <a id="a11y-34"></a>A11Y-34 | On a phone the Settings tab bar scrolls Dreams and Groups out of sight with no arrows                                          | —              | minor    | backlog                      |
-| <a id="a11y-35"></a>A11Y-35 | Every field carries an empty `role="alert"`, which NVDA announces as "alert" when a dialog opens                               | —              | minor    | backlog                      |
-| <a id="a11y-36"></a>A11Y-36 | At 150% on a 320px screen the schedule's "Doesn't repeat" select clips its value                                               | 1.4.10         | minor    | backlog                      |
-| <a id="a11y-37"></a>A11Y-37 | At 320px the sync paste field clips its label                                                                                  | 1.4.10         | minor    | backlog                      |
+| <a id="a11y-32"></a>A11Y-32 | In History a cancelled record looks like an open one: an empty checkbox and nothing else                                       | 1.3.1          | moderate | fixed                        |
+| <a id="a11y-33"></a>A11Y-33 | Record dialogs have no visible Close button, only Escape, the scrim and Back                                                   | —              | moderate | fixed                        |
+| <a id="a11y-34"></a>A11Y-34 | On a phone the Settings tab bar scrolls Dreams and Groups out of sight with no arrows                                          | —              | minor    | fixed                        |
+| <a id="a11y-35"></a>A11Y-35 | Every field carries an empty `role="alert"`, which NVDA announces as "alert" when a dialog opens                               | —              | minor    | fixed                        |
+| <a id="a11y-36"></a>A11Y-36 | At 150% on a 320px screen the schedule's "Doesn't repeat" select clips its value                                               | 1.4.10         | minor    | fixed                        |
+| <a id="a11y-37"></a>A11Y-37 | At 320px the sync paste field clips its label                                                                                  | 1.4.10         | minor    | fixed                        |
 | <a id="a11y-38"></a>A11Y-38 | An empty matrix quadrant was a disabled row at 3.1:1                                                                           | 1.4.3          | moderate | fixed                        |
-| <a id="a11y-39"></a>A11Y-39 | Icon buttons are 36px, below the 44px of AAA 2.5.5                                                                             | 2.5.5 (AAA)    | advice   | backlog                      |
+| <a id="a11y-39"></a>A11Y-39 | Icon buttons are 36px, below the 44px of AAA 2.5.5                                                                             | 2.5.5 (AAA)    | advice   | fixed                        |
 | <a id="a11y-40"></a>A11Y-40 | Reduced motion: Vuetify already drops its dialog transitions                                                                   | 2.3.3 (AAA)    | —        | no change                    |
 | <a id="a11y-41"></a>A11Y-41 | WebKit axe flags the selected add-dialog tab as 79×20; it is 79×48 and fully reachable                                         | —              | —        | false positive               |
 | <a id="a11y-42"></a>A11Y-42 | The matrix cannot open a task; moving a task between quadrants goes through its dialog on the Tasks page                       | —              | —        | same for everyone, no change |
@@ -162,6 +163,14 @@ Severity: **serious** blocks or badly hinders a group of users and fails a crite
 **Settings (A11Y-12, -13).** The General tab is a column of sections under `h2` headings that also name their select. The action rows are `role="button"` and take a tab stop. The tab content sits in a `tabpanel` labelled by its tab.
 
 **Fonts (A11Y-25).** Manrope and Alegreya now ship a Latin Extended subset as well, taken from Google Fonts under the same OFL.
+
+**Forms (A11Y-30, -31, -35).** A text field, select or textarea renders its message area only once it has a message (`hideDetails: 'auto'` as Vuetify's default), because the empty area was a `role="alert"` that NVDA announced four times over as a dialog opened; `src/assets/styles/fields.scss` keeps the space it took, so the form neither tightens nor jumps when an error appears. Name says "(required)" as part of its label; it carries no `aria-required` besides, since NVDA reads a label's whole text and said "required" twice. An unusable deadline year or schedule number is reported under its field.
+
+**Dialogs and History (A11Y-32, -33).** The record and add dialogs have a Close button: Escape, the scrim and Back already closed them, but a touch screen reader user needs something to find. A cancelled record in History says "Cancelled" under its name, since its empty checkbox looks and reads like an open record's.
+
+**Error reasons (A11Y-27).** `BackupFormatError`, `SyncError` and `SignalFormatError` carry a `code` next to their English message, and `useErrorReason` (`src/composables/useErrorReason.ts`) turns it into a reason in the user's language. Anything else gets a general reason, and its own message goes to the console.
+
+**Clipped text and targets (A11Y-34, -36, -37, -39).** Scrolling tab bars show arrows on phones too; a select's value wraps; the sync paste field is labelled "Code" with its instruction as a hint, which wraps. Icon buttons are 48px, the copy-code button 44px.
 
 ## Screen reader (NVDA)
 
@@ -185,28 +194,16 @@ Dialogs and announcements, after the fixes, with every phrase captured (Guidepup
 
 - Space on a row checkbox, confirmations on: "checked. Mark as done?, dialog, Mark Call the bank as done?", then the dialog's heading and buttons.
 - Confirm: "Done: Call the bank", and the focus lands on the row that took its place: "Done: Confirm the reservation, check box, not checked".
-- The add button: "alert. alert. alert. alert. New record, dialog. Name, edit, required, blank". The four empty alerts are [A11Y-35](#a11y-35).
+- The add button: "alert. alert. alert. alert. New record, dialog. Name, edit, required, blank" at first; after [A11Y-35](#a11y-35) and [A11Y-30](#a11y-30), "New record, dialog. Name (required), edit, blank". Save with an empty name: "alert, Name is required".
 - Save with a name: "Added: Call the plumber", the focus back on "Add, button".
 
 ## Accepted limitation
 
 **A11Y-24, bottom bar labels.** The `22cqi` cap (see `docs/decisions.md`, Settings) keeps five labels and the add button inside a phone's width, but it makes the labels shrink as the app's text size grows: 10.0 → 9.2px at 320px and 11.8 → 11.0px at 360px going from 100% to 150%, because the add button grows and leaves each label less room. Browser zoom and pinch zoom still enlarge them, so 1.4.4 holds through the browser, but a user who raises the app's own text size gets smaller navigation. Kept as it is by decision on 2026-10-27. The option weighed and set aside was Material 3's "label on the current page only" once the five labels no longer fit at full size.
 
-## Backlog
-
-Ordered by value.
-
-1. **A11Y-33, a visible Close button** in the record dialogs. Escape, the scrim and Back cover keyboards and TalkBack; VoiceOver users on iOS rely on a scrub gesture that should be checked on a device.
-2. **A11Y-32, cancelled records in History.** Show their status in text (for example a "Cancelled" label after the name) rather than an empty checkbox that reads the same as an open record.
-3. **A11Y-30, a visible required marker** on Name. `aria-required` already tells a screen reader.
-4. **A11Y-35, the empty alerts** Vuetify renders under every field. `hide-details="auto"` would remove them but packs the form tighter; it needs a look at the spacing.
-5. **A11Y-27, English error reasons** inside translated messages: map service errors to message keys.
-6. **A11Y-34, A11Y-36, A11Y-37**: arrows for the Settings tab bar on phones, and two clipped field texts at 320px.
-7. **A11Y-39**: 44px icon buttons, if the layout allows.
-
 ## Residual risk
 
-No phone was available, so VoiceOver on iOS and TalkBack on Android were not tried. The fixes rely on standard ARIA that both support, but these are worth a check on a real device: the order of announcements when a dialog opens (VoiceOver tends to read the whole dialog), the hidden `h1` as the first thing on each page, the row's checkbox and name button as two swipe stops, the live region during a page change, and closing a record dialog without a keyboard (A11Y-33). The sync flow was not exercised beyond its first screen.
+No phone was available, so VoiceOver on iOS and TalkBack on Android were not tried. The fixes rely on standard ARIA that both support, but these are worth a check on a real device: the order of announcements when a dialog opens (VoiceOver tends to read the whole dialog), the hidden `h1` as the first thing on each page, the row's checkbox and name button as two swipe stops, the live region during a page change, and the Close button as the way out of a dialog. The sync flow was not exercised beyond its first screen.
 
 ## Rerunning the audit
 
