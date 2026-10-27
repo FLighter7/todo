@@ -16,7 +16,8 @@ Folder structure and architectural rules are documented in [.claude/Architecture
 | `npm test`              | Unit tests                                            |
 | `npm run lint`          | ESLint                                                |
 | `npm run format`        | Prettier                                              |
-| `npm run test:e2e`      | Playwright e2e tests                                  |
+| `npm run test:e2e`      | Playwright e2e tests, accessibility probes included   |
+| `npm run test:sr`       | NVDA screen reader scenarios, Windows only            |
 
 ## Where the data lives and when it disappears
 
@@ -86,3 +87,5 @@ Deployment is automatic: the `deploy` job in [.github/workflows/ci.yml](.github/
 ## Documentation
 
 Durable rationale and conventions from finished build stages live in [docs/decisions.md](docs/decisions.md).
+
+The accessibility audit (WCAG 2.2 AA), its findings, the backlog it left, and how to rerun it are in [docs/accessibility-audit.md](docs/accessibility-audit.md).

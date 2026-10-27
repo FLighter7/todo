@@ -17,8 +17,9 @@ Every file in the repository is written in English — code, comments, docs, com
 | `npm run lint`     | ESLint                                |
 | `npm run format`   | Prettier                              |
 | `npm run test:e2e` | Playwright e2e tests                  |
+| `npm run test:sr`  | NVDA screen reader scenarios          |
 
-Before calling work finished, run all four: `npm test`, `npm run lint`, `npm run build`, and `npm run test:e2e`.
+Before calling work finished, run all four: `npm test`, `npm run lint`, `npm run build`, and `npm run test:e2e`. Work that changes what a screen reader hears (names, roles, headings, dialogs, announcements) also runs `npm run test:sr`, on Windows only, with the machine left alone: see [docs/accessibility-audit.md](../docs/accessibility-audit.md#rerunning-the-audit).
 
 ## Conventions
 
@@ -95,10 +96,14 @@ The IndexedDB schema is at version 4: one object store, `items`, keyed by `id`, 
 
 **The mock-data content pools must stay out of vue-i18n's precompilation.** `vite.config.ts`'s `vueI18n({ include: [...] })` glob for the locale message catalogs has to stay non-recursive (`./src/i18n/locales/*.json`), never `**` — `src/i18n/locales/mockData/{en,ru,pl}.json` (consumed by `src/services/mockData/pools.ts`) are plain sample-content word pools, not vue-i18n message catalogs, and a recursive glob would silently precompile every pool string into vue-i18n's compiled-message AST format instead of leaving it a plain string, corrupting the mock-data generator's output with no compile-time signal — JSON-import typing doesn't catch it. Separately, the generator's GC-safety (a page reload right after generating must never silently drop what the user just saw, regardless of `cleanupDays`) is enforced by `withinLastDays` in `src/services/mockData/MockDataService.ts` re-validating every emitted timestamp/occurrence/exdate entry against the true `now` at generation time — not by an argument that the recurrence math is naturally bounded, which turned out to be a documentation trap of its own.
 
+**`npm run test:sr` drives the real keyboard.** Guidepup presses Tab, Enter, Escape and Alt+Esc at the OS level for the length of the run, so whatever window has the focus gets them too — an editor or a terminal included, where an Escape interrupts what is running. Start it only with the machine left alone, and never alongside other work in the same session.
+
 ## Process
 
 Rationale and durable conventions from finished build stages live in [docs/decisions.md](../docs/decisions.md) — read it before touching sync, recurrence, completions, deadlines, settings, or PWA/offline behaviour, since it records tradeoffs and invariants that aren't obvious from the code alone.
 
 Stages 1–5 are done and merged into `main`: core, list, matrix, PWA/offline, export-import, sync. Stage 6 — reworking the data model into dreams, goals and tasks — is on `main` too; work now happens directly on `main`. The data layer and UI cutover onto it are done, and so is the settings sub-project (theme, locale, start page, cleanup window, per-page list preferences, wired into backup and sync), dedicated dream and goal pages, the tasks page rework (`/tasks` replaces `/list` with Active/History tabs, task-under-goal grouping, a `goalId` picker, and a single tabbed `AddEntityDialog`), deadline UI (`DeadlineField` in `GoalDialog`/`AddEntityDialog`), recurrence UI (`ScheduleField` in `TaskDialog`/`AddEntityDialog`, backed by the `src/utils/schedule.ts` adapter), and completion history (`TaskCompletions` in `TaskDialog`'s read view, backed by the `setOccurrenceDone`/`setOccurrenceSkipped` store actions). On top of that, the three collections were folded into the one `Item` collection described above; the reasoning, the 10 000-record load analysis and the follow-ups it surfaced are in [docs/decisions.md](../docs/decisions.md#single-item-collection). Of those, sync now sends payloads in pieces with no size cap, and parsing, deadline labels and sorting are cached; list virtualization is deliberately deferred. Groups have their page too — `/groups`, between Goals and the add button in the bottom bar — with a `Task.groupId` picker in the task dialogs, the cascade on cancel, and their own tab in Settings; see [docs/decisions.md](../docs/decisions.md#dreamgoalgrouptask-pages--dialogs). Every page can be switched off in Settings, down to the add button alone with Tasks as the one page left; see [docs/decisions.md](../docs/decisions.md#settings). Settings itself is tabbed — General, then one tab per page, each starting with that page's switch.
+
+The app was audited against WCAG 2.2 AA on 2026-10-27 and the serious findings fixed: the report and its backlog are in [docs/accessibility-audit.md](../docs/accessibility-audit.md), the conventions it settled in [docs/decisions.md](../docs/decisions.md#accessibility).
 
 Deployment is live: the `deploy` job in [.github/workflows/ci.yml](../.github/workflows/ci.yml) publishes `dist/` to GitHub Pages via `actions/deploy-pages` on every push to `main`, after `test` passes. See [README.md#deployment](../README.md#deployment).

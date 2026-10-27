@@ -45,7 +45,8 @@ src/
 	stores/                  — Pinia stores; the only thing that touches repositories directly.
 	                            items.ts holds every item of every type and the views over them
 	                            (per-type lists, quadrants, sections by parent); storage.ts is the
-	                            separate store for storage-wide state (`persistent`, `lastError`)
+	                            separate store for storage-wide state (`persistent`, `lastError`);
+	                            announcer.ts holds what the layout's one live region says
 
 	services/                — business logic; one class per file, exported as a singleton
 	repositories/            — data access only. Each backend implements ItemStorage:
@@ -58,13 +59,15 @@ src/
 	                            guard — not type declarations alone
 
 	i18n/                    — vue-i18n setup and locales (`locales/ru.json` is the one non-English file)
-	plugins/                 — Vuetify setup
+	plugins/                 — Vuetify setup; theme.ts holds both palettes apart from Vuetify, so
+	                            the palette contrast test can read them
 	router/                  — vue-router setup, one route per page
 
 	composables/             — Vue-tied reusable logic, e.g. useCascadeCancel.ts (cascading-cancel
 	                            counting/execution, shared by the Dreams and Goals page containers)
 	                            and useToggleConfirm.ts (Done/Reopen confirm gating, shared by all
-	                            three page containers)
+	                            three page containers), and useKeepFocus.ts (focus back to a
+	                            dialog's trigger, or to the next row when a row leaves a list)
 	utils/                   — pure, Vue-independent utility functions, one per file, e.g.
 	                            collectGarbage.ts (closed-record and stale-completion pruning),
 	                            quadrants.ts, sectionByParent.ts and intl.ts (one shared
