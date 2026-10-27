@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { RouteLocationNormalized } from 'vue-router';
 import { DEFAULT_SETTINGS, cloneSettings, type AppPage } from '@/types';
 import { settingsService } from '@/services/settings/SettingsService';
-import { getStartPageOptions, readStoredStartPage, redirectHiddenPage } from '../index';
+import { PAGE_ICONS, getStartPageOptions, readStoredStartPage, redirectHiddenPage } from '../index';
 
 beforeEach(() => {
 	window.localStorage.clear();
@@ -27,6 +27,12 @@ describe('getStartPageOptions', () => {
 		const values = getStartPageOptions().map((option) => option.value);
 
 		expect(values).toEqual(['tasks', 'matrix', 'dreams', 'goals', 'groups']);
+	});
+
+	it("gives each page the bottom bar's icon", () => {
+		for (const option of getStartPageOptions()) {
+			expect(option.icon).toBe(PAGE_ICONS[option.value as AppPage]);
+		}
 	});
 });
 

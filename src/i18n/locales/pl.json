@@ -132,10 +132,10 @@
 		"settingsDone": "Ustawienia zsynchronizowane."
 	},
 	"settings": {
+		"general": "Ogólne",
 		"fontScale": "Rozmiar tekstu",
 		"fontScaleDecrease": "Mniejszy tekst",
 		"fontScaleIncrease": "Większy tekst",
-		"pages": "Strony",
 		"startPage": "Strona początkowa",
 		"startPageDreams": "Marzenia",
 		"startPageGoals": "Cele",
@@ -150,14 +150,11 @@
 		"cleanupDays": "Przechowuj zamknięte pozycje",
 		"cleanupDaysOption": "{days} dni",
 		"cleanupDaysHint": "Skrócenie tego okresu usunie starsze zamknięte pozycje i historię wykonania szybciej.",
-		"dreams": "Marzenia",
-		"goals": "Cele",
-		"groups": "Grupy",
-		"tasks": "Zadania",
 		"rows1": "1 wiersz",
 		"rows2": "2 wiersze",
 		"confirmDone": "Potwierdzaj oznaczanie jako zrobione",
-		"confirmReopen": "Potwierdzaj wznowienie"
+		"confirmReopen": "Potwierdzaj wznowienie",
+		"showPage": "Pokazuj stronę"
 	},
 	"quadrant": {
 		"do": "Zrób",

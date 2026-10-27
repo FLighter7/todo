@@ -86,14 +86,8 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import {
-	mdiBullseyeArrow,
-	mdiFolderOutline,
-	mdiFormatListBulleted,
-	mdiShimmer,
-	mdiViewGridOutline,
-} from '@mdi/js';
 import QuickAddFab from '@/containers/QuickAddFab.vue';
+import { PAGE_ICONS } from '@/router';
 import { useSettingsStore } from '@/stores/settings';
 import type { AppPage } from '@/types';
 
@@ -105,13 +99,13 @@ interface NavLink {
 
 // Each side of the add button, in the order the user chose.
 const LEFT_LINKS: NavLink[] = [
-	{ name: 'dreams', icon: mdiShimmer, labelKey: 'nav.dreams' },
-	{ name: 'goals', icon: mdiBullseyeArrow, labelKey: 'nav.goals' },
-	{ name: 'groups', icon: mdiFolderOutline, labelKey: 'nav.groups' },
+	{ name: 'dreams', icon: PAGE_ICONS.dreams, labelKey: 'nav.dreams' },
+	{ name: 'goals', icon: PAGE_ICONS.goals, labelKey: 'nav.goals' },
+	{ name: 'groups', icon: PAGE_ICONS.groups, labelKey: 'nav.groups' },
 ];
 const RIGHT_LINKS: NavLink[] = [
-	{ name: 'tasks', icon: mdiFormatListBulleted, labelKey: 'nav.tasks' },
-	{ name: 'matrix', icon: mdiViewGridOutline, labelKey: 'nav.matrix' },
+	{ name: 'tasks', icon: PAGE_ICONS.tasks, labelKey: 'nav.tasks' },
+	{ name: 'matrix', icon: PAGE_ICONS.matrix, labelKey: 'nav.matrix' },
 ];
 
 const { t } = useI18n();

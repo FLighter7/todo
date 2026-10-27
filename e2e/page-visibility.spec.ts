@@ -12,6 +12,16 @@ function bottomBarLabels(page: Page): Promise<string[]> {
 		);
 }
 
+// Each page is switched off from its own tab in Settings.
+async function switchPageOff(page: Page, name: string): Promise<void> {
+	await page.getByRole('tab', { name, exact: true }).click();
+	await page.getByRole('checkbox', { name: 'Show this page' }).uncheck();
+}
+
+async function openGeneralTab(page: Page): Promise<void> {
+	await page.getByRole('tab', { name: 'General', exact: true }).click();
+}
+
 test('pages switched off in Settings leave the bottom bar, the start page and their address', async ({
 	page,
 }) => {
@@ -25,9 +35,10 @@ test('pages switched off in Settings leave the bottom bar, the start page and th
 	await expect(startPage).toContainText('Goals');
 
 	for (const name of ['Dreams', 'Goals', 'Groups']) {
-		await page.getByRole('checkbox', { name, exact: true }).uncheck();
+		await switchPageOff(page, name);
 	}
 
+	await openGeneralTab(page);
 	await expect(startPage).toContainText('Tasks');
 	await expect.poll(() => bottomBarLabels(page)).toEqual(['Tasks', 'Add task', 'Matrix']);
 
@@ -56,17 +67,26 @@ test('Tasks and the matrix can go too, and with every page off only Tasks can be
 	const startPage = page.locator('.v-select').first();
 
 	for (const name of ['Dreams', 'Goals', 'Groups', 'Tasks']) {
-		await page.getByRole('checkbox', { name, exact: true }).uncheck();
+		await switchPageOff(page, name);
 	}
 
+	await openGeneralTab(page);
 	await expect(startPage).toContainText('Matrix');
 	await expect.poll(() => bottomBarLabels(page)).toEqual(['Matrix', 'Add task']);
 
-	await page.getByRole('checkbox', { name: 'Matrix', exact: true }).uncheck();
+	await switchPageOff(page, 'Matrix');
 
-	// Every page off: the bar holds the add button alone, and Tasks is the one page left.
-	await expect(page.getByRole('checkbox', { name: 'Tasks', exact: true })).not.toBeChecked();
-	await expect(page.getByRole('checkbox', { name: 'Matrix', exact: true })).not.toBeChecked();
+	// Every page off: the bar holds the add button alone, and Tasks is the one page left,
+	// so its own settings stay within reach while its switch stays off.
+	const showPage = page.getByRole('checkbox', { name: 'Show this page' });
+	await expect(showPage).not.toBeChecked();
+	await page.getByRole('tab', { name: 'Tasks', exact: true }).click();
+	await expect(showPage).not.toBeChecked();
+	await expect(page.getByRole('checkbox', { name: 'Confirm before marking done' })).toBeEnabled();
+	await page.getByRole('tab', { name: 'Goals', exact: true }).click();
+	await expect(page.getByRole('checkbox', { name: 'Confirm before marking done' })).toBeDisabled();
+
+	await openGeneralTab(page);
 	await expect(startPage).toContainText('Tasks');
 	await expect.poll(() => bottomBarLabels(page)).toEqual(['Add task']);
 

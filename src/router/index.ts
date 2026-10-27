@@ -6,15 +6,15 @@ import {
 	type RouteRecordRaw,
 } from 'vue-router';
 import {
-	mdiFlagOutline,
+	mdiBullseyeArrow,
 	mdiFolderOutline,
-	mdiTelescope,
+	mdiFormatListBulleted,
+	mdiShimmer,
 	mdiViewGridOutline,
-	mdiViewListOutline,
 } from '@mdi/js';
 import TasksPage from '@/pages/TasksPage/TasksPage.vue';
 import { settingsService } from '@/services/settings/SettingsService';
-import { firstShownPage, isPageHidden } from '@/types';
+import { firstShownPage, isPageHidden, type AppPage } from '@/types';
 
 declare module 'vue-router' {
 	interface RouteMeta {
@@ -38,37 +38,46 @@ export interface StartPageOption {
 	labelKey: string;
 }
 
+/** Each page's icon, shared by the bottom bar and the start page choices. */
+export const PAGE_ICONS: Record<AppPage, string> = {
+	tasks: mdiFormatListBulleted,
+	matrix: mdiViewGridOutline,
+	dreams: mdiShimmer,
+	goals: mdiBullseyeArrow,
+	groups: mdiFolderOutline,
+};
+
 const routes: RouteRecordRaw[] = [
 	{ path: '/', redirect: () => ({ name: readStoredStartPage() }) },
 	{
 		path: '/tasks',
 		name: 'tasks',
 		component: TasksPage,
-		meta: { startPage: { icon: mdiViewListOutline, labelKey: 'settings.startPageTasks' } },
+		meta: { startPage: { icon: PAGE_ICONS.tasks, labelKey: 'settings.startPageTasks' } },
 	},
 	{
 		path: '/matrix',
 		name: 'matrix',
 		component: () => import('@/pages/MatrixPage/MatrixPage.vue'),
-		meta: { startPage: { icon: mdiViewGridOutline, labelKey: 'settings.startPageMatrix' } },
+		meta: { startPage: { icon: PAGE_ICONS.matrix, labelKey: 'settings.startPageMatrix' } },
 	},
 	{
 		path: '/dreams',
 		name: 'dreams',
 		component: () => import('@/pages/DreamsPage/DreamsPage.vue'),
-		meta: { startPage: { icon: mdiTelescope, labelKey: 'settings.startPageDreams' } },
+		meta: { startPage: { icon: PAGE_ICONS.dreams, labelKey: 'settings.startPageDreams' } },
 	},
 	{
 		path: '/goals',
 		name: 'goals',
 		component: () => import('@/pages/GoalsPage/GoalsPage.vue'),
-		meta: { startPage: { icon: mdiFlagOutline, labelKey: 'settings.startPageGoals' } },
+		meta: { startPage: { icon: PAGE_ICONS.goals, labelKey: 'settings.startPageGoals' } },
 	},
 	{
 		path: '/groups',
 		name: 'groups',
 		component: () => import('@/pages/GroupsPage/GroupsPage.vue'),
-		meta: { startPage: { icon: mdiFolderOutline, labelKey: 'settings.startPageGroups' } },
+		meta: { startPage: { icon: PAGE_ICONS.groups, labelKey: 'settings.startPageGroups' } },
 	},
 	{ path: '/sync', name: 'sync', component: () => import('@/pages/SyncPage/SyncPage.vue') },
 	{

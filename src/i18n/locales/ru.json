@@ -135,10 +135,10 @@
 		"serverStub": "Здесь скоро появятся варианты подключения к серверу."
 	},
 	"settings": {
+		"general": "Основные",
 		"fontScale": "Размер текста",
 		"fontScaleDecrease": "Уменьшить текст",
 		"fontScaleIncrease": "Увеличить текст",
-		"pages": "Страницы",
 		"startPage": "Стартовая страница",
 		"startPageDreams": "Мечты",
 		"startPageGoals": "Цели",
@@ -153,14 +153,11 @@
 		"cleanupDays": "Хранить закрытые записи",
 		"cleanupDaysOption": "{days} дней",
 		"cleanupDaysHint": "Если уменьшить срок, старые закрытые записи и история выполнения удалятся раньше.",
-		"dreams": "Мечты",
-		"goals": "Цели",
-		"groups": "Группы",
-		"tasks": "Задачи",
 		"rows1": "1 строка",
 		"rows2": "2 строки",
 		"confirmDone": "Подтверждать завершение",
-		"confirmReopen": "Подтверждать возврат"
+		"confirmReopen": "Подтверждать возврат",
+		"showPage": "Показывать страницу"
 	},
 	"quadrant": {
 		"do": "Сделать",

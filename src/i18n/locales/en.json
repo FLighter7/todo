@@ -135,10 +135,10 @@
 		"serverStub": "Server connection options will appear here soon."
 	},
 	"settings": {
+		"general": "General",
 		"fontScale": "Text size",
 		"fontScaleDecrease": "Smaller text",
 		"fontScaleIncrease": "Larger text",
-		"pages": "Pages",
 		"startPage": "Start page",
 		"startPageDreams": "Dreams",
 		"startPageGoals": "Goals",
@@ -153,14 +153,11 @@
 		"cleanupDays": "Keep closed items for",
 		"cleanupDaysOption": "{days} days",
 		"cleanupDaysHint": "Shortening this deletes older closed items and completion history sooner.",
-		"dreams": "Dreams",
-		"goals": "Goals",
-		"groups": "Groups",
-		"tasks": "Tasks",
 		"rows1": "1 row",
 		"rows2": "2 rows",
 		"confirmDone": "Confirm before marking done",
-		"confirmReopen": "Confirm before reopening"
+		"confirmReopen": "Confirm before reopening",
+		"showPage": "Show this page"
 	},
 	"quadrant": {
 		"do": "Do",
