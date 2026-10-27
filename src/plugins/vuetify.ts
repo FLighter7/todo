@@ -3,12 +3,15 @@ import '@/assets/fonts/fonts.scss';
 import '@/assets/styles/touch-hover.scss';
 import '@/assets/styles/font-scale.scss';
 import '@/assets/styles/contrast.scss';
+import '@/assets/styles/focus.scss';
+import '@/assets/styles/text-wrap.scss';
 import { createVuetify } from 'vuetify';
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg';
 import { en, ru, pl } from 'vuetify/locale';
 import type { AppTheme } from '@/types';
 import { settingsService } from '@/services/settings/SettingsService';
 import { initialLocale } from '@/i18n';
+import { THEMES } from './theme';
 
 export type ResolvedTheme = 'light' | 'dark';
 
@@ -26,34 +29,7 @@ export function resolveTheme(preference: AppTheme): ResolvedTheme {
 export default createVuetify({
 	theme: {
 		defaultTheme: resolveTheme(settingsService.load().general.theme),
-		themes: {
-			light: {
-				colors: {
-					background: '#F6F4EF',
-					surface: '#FBFAF6',
-					'surface-variant': '#EAE5D8',
-					'on-surface-variant': '#6E6A5D',
-					outline: '#D6D0C0',
-					primary: '#2F5D50',
-					'on-primary': '#F6F4EF',
-					'on-background': '#2B2A26',
-					'on-surface': '#2B2A26',
-				},
-			},
-			dark: {
-				colors: {
-					background: '#1B1A17',
-					surface: '#221F1A',
-					'surface-variant': '#332E27',
-					'on-surface-variant': '#B3AC9C',
-					outline: '#4A453B',
-					primary: '#74AC90',
-					'on-primary': '#12241D',
-					'on-background': '#EFEBE0',
-					'on-surface': '#EFEBE0',
-				},
-			},
-		},
+		themes: THEMES,
 	},
 	defaults: {
 		VAppBar: { elevation: 0, color: 'background' },

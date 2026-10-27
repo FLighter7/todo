@@ -1,0 +1,6 @@
+// Vuetify keeps a card's title on one line and cuts it off with an ellipsis. In a
+// phone-width dialog at a large text size that cut the end off a question such as
+// "Отметить как выполненное?", with nothing anywhere showing the rest. Titles wrap.
+.v-card-title {
+	white-space: normal;
+}

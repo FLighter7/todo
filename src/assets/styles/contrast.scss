@@ -12,3 +12,34 @@
 .v-messages {
 	--v-medium-emphasis-opacity: var(--v-high-emphasis-opacity);
 }
+
+// A list item's note reads its opacity on top of the item's own text colour,
+// which is already at high emphasis: 60% of 87% left notes at 3.1:1. The ratio
+// brings the note to plain medium emphasis instead.
+.v-list-item-subtitle {
+	--v-list-item-subtitle-opacity: calc(
+		var(--v-medium-emphasis-opacity) / var(--v-high-emphasis-opacity)
+	);
+}
+
+// The outline that shows where an outlined field is drew 2.2:1 against the light
+// surface; 3:1 is the floor for the parts of a control a user has to find.
+.v-field {
+	--v-field-border-opacity: 0.55;
+}
+
+// Vuetify draws an off switch as a pale track at 60% and a white thumb, 1.1:1
+// against the surface in both themes, so an off switch hardly showed at all. Off,
+// the track is drawn solid in the muted text colour and the thumb in the surface
+// colour, 5:1 apart. On stays Vuetify's own: a thumb in the switch's colour that
+// stands out from the surface around it at 6:1 or more.
+.v-selection-control:not(.v-selection-control--dirty) {
+	.v-switch__track {
+		opacity: 1;
+		background-color: rgb(var(--v-theme-on-surface-variant));
+	}
+
+	.v-switch__thumb {
+		background-color: rgb(var(--v-theme-surface));
+	}
+}
