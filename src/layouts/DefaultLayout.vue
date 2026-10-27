@@ -20,6 +20,13 @@
 	height: 100%;
 }
 
+.snackbar {
+	// Vuetify's snackbar is at least 344px wide, more than a 320px screen holds.
+	:global(.v-snackbar__wrapper) {
+		min-width: 0;
+	}
+}
+
 .logo {
 	position: absolute;
 	left: 50%;
@@ -67,6 +74,9 @@
 		</VAppBar>
 
 		<VMain scrollable :class="$style.main">
+			<!-- Focusable from code only: where the focus goes when a list empties under it. -->
+			<h1 class="d-sr-only" tabindex="-1">{{ pageTitle }}</h1>
+
 			<VAlert
 				v-if="!store.persistent"
 				type="warning"
@@ -77,17 +87,29 @@
 
 			<RouterView @notify="notice = $event" />
 
-			<VSnackbar v-model="snackbarOpen" :color="snackbarColor" location="top" timeout="5000">
-				{{ snackbarText }}
+			<!-- The live region below says the text; the snackbar's own region would say it twice. -->
+			<VSnackbar
+				v-model="snackbarOpen"
+				:class="$style.snackbar"
+				:color="snackbarColor"
+				location="top"
+				:timeout="snackbarTimeout"
+			>
+				<span aria-hidden="true">{{ snackbarText }}</span>
+				<template #actions>
+					<VBtn @click="snackbarOpen = false">{{ t('form.close') }}</VBtn>
+				</template>
 			</VSnackbar>
 		</VMain>
+
+		<div class="d-sr-only" role="status">{{ announcer.message }}</div>
 
 		<BottomNav />
 	</VApp>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useLocale } from 'vuetify';
@@ -101,6 +123,7 @@ import EntityTabs from '@/components/EntityTabs.vue';
 import { useStorageStore } from '@/stores/storage';
 import { useItemsStore } from '@/stores/items';
 import { useEntityTabsStore } from '@/stores/entityTabs';
+import { useAnnouncerStore } from '@/stores/announcer';
 
 /** Routes whose page container has an Active/History toggle to host in the app-bar extension. */
 const PAGES_WITH_TOOLBAR = ['tasks', 'groups', 'goals', 'dreams'];
@@ -110,6 +133,7 @@ const vuetifyLocale = useLocale();
 const store = useStorageStore();
 const items = useItemsStore();
 const entityTabs = useEntityTabsStore();
+const announcer = useAnnouncerStore();
 const route = useRoute();
 const router = useRouter();
 
@@ -136,16 +160,44 @@ onMounted(() => {
 	void storagePersistence.request();
 });
 
-// Vuetify keeps its own locale for built-in strings, so it has to follow ours.
-watch(locale, (value) => {
-	vuetifyLocale.current.value = value;
+// Vuetify keeps its own locale for built-in strings, so it has to follow ours. So
+// does the document's language, which picks the screen reader's voice and the
+// browser's hyphenation.
+watch(
+	locale,
+	(value) => {
+		vuetifyLocale.current.value = value;
+		document.documentElement.lang = value;
+	},
+	{ immediate: true },
+);
+
+const pageTitle = computed(() => (route.meta.titleKey === undefined ? '' : t(route.meta.titleKey)));
+
+watchEffect(() => {
+	document.title = pageTitle.value === '' ? 'TODO' : `${pageTitle.value} – TODO`;
 });
+
+// A page change moves no focus, so it is said instead.
+watch(
+	() => route.name,
+	() => announcer.announce(pageTitle.value),
+);
 
 // One snackbar for both kinds of message: store errors carry an i18n key,
 // everything else arrives already translated.
 const snackbarText = computed(() => (store.lastError === null ? notice.value : t(store.lastError)));
 
 const snackbarColor = computed(() => (store.lastError === null ? undefined : 'error'));
+
+// A notice goes by itself; an error stays until it is dismissed.
+const snackbarTimeout = computed(() => (store.lastError === null ? 5000 : -1));
+
+watch(snackbarText, (text) => {
+	if (text !== '') {
+		announcer.announce(text);
+	}
+});
 
 const snackbarOpen = computed({
 	get: () => snackbarText.value !== '',

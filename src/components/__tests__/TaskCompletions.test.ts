@@ -19,8 +19,8 @@ describe('TaskCompletions', () => {
 			{ start: '2026-08-21T09:00', end: '2026-08-21T09:00', state: 'pending' },
 		]);
 
-		expect(wrapper.find('button[aria-label="Mark done"]').exists()).toBe(true);
-		expect(wrapper.find('button[aria-label="Skip"]').exists()).toBe(true);
+		expect(wrapper.find('button[aria-label^="Mark done: "]').exists()).toBe(true);
+		expect(wrapper.find('button[aria-label^="Skip: "]').exists()).toBe(true);
 	});
 
 	it('shows a mark-not-done action for a done occurrence and no skip action', () => {
@@ -28,8 +28,8 @@ describe('TaskCompletions', () => {
 			{ start: '2026-08-21T09:00', end: '2026-08-21T09:00', state: 'done' },
 		]);
 
-		expect(wrapper.find('button[aria-label="Mark not done"]').exists()).toBe(true);
-		expect(wrapper.find('button[aria-label="Skip"]').exists()).toBe(false);
+		expect(wrapper.find('button[aria-label^="Mark not done: "]').exists()).toBe(true);
+		expect(wrapper.find('button[aria-label^="Skip: "]').exists()).toBe(false);
 	});
 
 	it('shows only an un-skip action for a skipped occurrence', () => {
@@ -37,8 +37,8 @@ describe('TaskCompletions', () => {
 			{ start: '2026-08-21T09:00', end: '2026-08-21T09:00', state: 'skipped' },
 		]);
 
-		expect(wrapper.find('button[aria-label="Un-skip"]').exists()).toBe(true);
-		expect(wrapper.find('button[aria-label="Mark done"]').exists()).toBe(false);
+		expect(wrapper.find('button[aria-label^="Un-skip: "]').exists()).toBe(true);
+		expect(wrapper.find('button[aria-label^="Mark done: "]').exists()).toBe(false);
 	});
 
 	it('emits toggle-done with the occurrence and the new value', async () => {
@@ -46,7 +46,7 @@ describe('TaskCompletions', () => {
 			{ start: '2026-08-21T09:00', end: '2026-08-21T09:00', state: 'pending' },
 		]);
 
-		await wrapper.get('button[aria-label="Mark done"]').trigger('click');
+		await wrapper.get('button[aria-label^="Mark done: "]').trigger('click');
 
 		expect(wrapper.emitted('toggle-done')).toEqual([['2026-08-21T09:00', true]]);
 	});
@@ -56,7 +56,7 @@ describe('TaskCompletions', () => {
 			{ start: '2026-08-21T09:00', end: '2026-08-21T09:00', state: 'done' },
 		]);
 
-		await wrapper.get('button[aria-label="Mark not done"]').trigger('click');
+		await wrapper.get('button[aria-label^="Mark not done: "]').trigger('click');
 
 		expect(wrapper.emitted('toggle-done')).toEqual([['2026-08-21T09:00', false]]);
 	});
@@ -66,7 +66,7 @@ describe('TaskCompletions', () => {
 			{ start: '2026-08-21T09:00', end: '2026-08-21T09:00', state: 'pending' },
 		]);
 
-		await wrapper.get('button[aria-label="Skip"]').trigger('click');
+		await wrapper.get('button[aria-label^="Skip: "]').trigger('click');
 
 		expect(wrapper.emitted('toggle-skip')).toEqual([['2026-08-21T09:00', true]]);
 	});
@@ -76,7 +76,7 @@ describe('TaskCompletions', () => {
 			{ start: '2026-08-21T09:00', end: '2026-08-21T09:00', state: 'skipped' },
 		]);
 
-		await wrapper.get('button[aria-label="Un-skip"]').trigger('click');
+		await wrapper.get('button[aria-label^="Un-skip: "]').trigger('click');
 
 		expect(wrapper.emitted('toggle-skip')).toEqual([['2026-08-21T09:00', false]]);
 	});

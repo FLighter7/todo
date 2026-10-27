@@ -1,19 +1,20 @@
 <style lang="scss" module>
-// Vuetify's subheader is 14px at medium emphasis, and Alegreya's small x-height
-// makes it read smaller still: the section titles get full contrast and a size
-// that holds its own next to the fields. They wrap rather than lose their end
-// at a large text size.
-.list {
-	:global(.v-list-subheader) {
-		color: rgb(var(--v-theme-on-surface));
-		font-size: 1.125rem;
-		font-weight: 600;
-		line-height: 1.3;
-	}
+// Each setting is a section under a heading, which also names its field. Vuetify's
+// list subheader they used to be is 14px at medium emphasis, and Alegreya's small
+// x-height makes it read smaller still: the headings get full contrast and a size
+// that holds its own next to the fields.
+.heading {
+	padding: 0.625rem 1rem;
+	color: rgb(var(--v-theme-on-surface));
+	font-family: var(--font-display);
+	font-size: 1.125rem;
+	font-weight: 600;
+	line-height: 1.3;
+}
 
-	:global(.v-list-subheader__text) {
-		white-space: normal;
-	}
+// The action rows wrap rather than lose their end at a large text size.
+.settings :global(.v-list-item-title) {
+	white-space: normal;
 }
 
 .fontScale {
@@ -29,8 +30,8 @@
 </style>
 
 <template>
-	<VList :class="$style.list">
-		<VListSubheader>{{ t('settings.fontScale') }}</VListSubheader>
+	<div :class="$style.settings" class="py-2">
+		<h2 :class="$style.heading">{{ t('settings.fontScale') }}</h2>
 		<div :class="$style.fontScale" class="mx-4 mb-4">
 			<VBtn
 				:icon="mdiFormatFontSizeDecrease"
@@ -47,9 +48,10 @@
 			/>
 		</div>
 
-		<VListSubheader>{{ t('settings.startPage') }}</VListSubheader>
+		<h2 :id="startPageId" :class="$style.heading">{{ t('settings.startPage') }}</h2>
 		<VSelect
 			v-model="startPage"
+			:aria-labelledby="startPageId"
 			:items="startPageItems"
 			item-title="title"
 			item-value="value"
@@ -67,9 +69,10 @@
 			</template>
 		</VSelect>
 
-		<VListSubheader>{{ t('settings.cleanupDays') }}</VListSubheader>
+		<h2 :id="cleanupDaysId" :class="$style.heading">{{ t('settings.cleanupDays') }}</h2>
 		<VSelect
 			v-model="cleanupDays"
+			:aria-labelledby="cleanupDaysId"
 			:items="cleanupDaysItems"
 			variant="outlined"
 			:hint="t('settings.cleanupDaysHint')"
@@ -77,17 +80,17 @@
 			class="mx-4 mb-4"
 		/>
 
-		<VListSubheader>{{ t('backup.title') }}</VListSubheader>
+		<h2 :class="$style.heading">{{ t('backup.title') }}</h2>
 
 		<BackupActions @notify="emit('notify', $event)" />
 
-		<VListSubheader>{{ t('mockData.title') }}</VListSubheader>
+		<h2 :class="$style.heading">{{ t('mockData.title') }}</h2>
 		<MockDataActions @notify="emit('notify', $event)" />
-	</VList>
+	</div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, useId } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { mdiFormatFontSizeDecrease, mdiFormatFontSizeIncrease } from '@mdi/js';
 import BackupActions from '@/containers/BackupActions.vue';
@@ -100,6 +103,9 @@ const emit = defineEmits<{ notify: [message: string] }>();
 
 const { t, locale } = useI18n();
 const settings = useSettingsStore();
+
+const startPageId = useId();
+const cleanupDaysId = useId();
 
 const fontScaleIndex = computed(() => FONT_SCALES.indexOf(settings.general.fontScale));
 

@@ -1,46 +1,52 @@
 <template>
-	<p v-if="rows.length === 0" class="text-medium-emphasis pa-4">
-		{{ emptyText }}
-	</p>
+	<div ref="root">
+		<p v-if="rows.length === 0" class="text-medium-emphasis pa-4">
+			{{ emptyText }}
+		</p>
 
-	<template v-else>
-		<template
-			v-for="row in rows"
-			:key="row.kind === 'section' ? `section:${row.section.key}` : `item:${row.item.id}`"
-		>
-			<EntityListSection v-if="row.kind === 'section'" :label="row.section.label">
-				<EntityListItem
-					v-for="item in row.section.items"
-					:key="item.id"
-					:name="item.name"
-					:note="showNote ? item.note : undefined"
-					:done="item.status === Status.Done"
-					:date="dateLabel?.(item)"
-					@update:done="emit('toggle', item.id, $event)"
-					@click="emit('open', item)"
-				/>
-			</EntityListSection>
+		<template v-else>
+			<template v-for="block in blocks" :key="block.key">
+				<EntityListSection v-if="block.label !== undefined" :label="block.label">
+					<div role="list">
+						<EntityListItem
+							v-for="item in block.items"
+							:key="item.id"
+							:name="item.name"
+							:note="showNote ? item.note : undefined"
+							:done="item.status === Status.Done"
+							:date="dateLabel?.(item)"
+							@update:done="emit('toggle', item.id, $event)"
+							@click="emit('open', item)"
+						/>
+					</div>
+				</EntityListSection>
 
-			<EntityListItem
-				v-else
-				:name="row.item.name"
-				:note="showNote ? row.item.note : undefined"
-				:done="row.item.status === Status.Done"
-				:date="dateLabel?.(row.item)"
-				@update:done="emit('toggle', row.item.id, $event)"
-				@click="emit('open', row.item)"
-			/>
+				<div v-else role="list">
+					<EntityListItem
+						v-for="item in block.items"
+						:key="item.id"
+						:name="item.name"
+						:note="showNote ? item.note : undefined"
+						:done="item.status === Status.Done"
+						:date="dateLabel?.(item)"
+						@update:done="emit('toggle', item.id, $event)"
+						@click="emit('open', item)"
+					/>
+				</div>
+			</template>
 		</template>
-	</template>
+	</div>
 </template>
 
 <script setup lang="ts" generic="T extends ItemBase">
+import { computed, useTemplateRef } from 'vue';
 import EntityListSection from './EntityListSection.vue';
 import EntityListItem from './EntityListItem.vue';
 import { Status, type ItemBase } from '@/types';
 import type { EntityRow } from '@/utils/sortEntities';
+import { useKeepFocusInList } from '@/composables/useKeepFocus';
 
-defineProps<{
+const props = defineProps<{
 	rows: EntityRow<T>[];
 	emptyText: string;
 	showNote: boolean;
@@ -51,4 +57,33 @@ const emit = defineEmits<{
 	toggle: [id: string, done: boolean];
 	open: [item: T];
 }>();
+
+/**
+ * The rows as lists: one per section, and one per run of records outside any
+ * section, so that a screen reader can say how many rows a list holds and jump
+ * from list to list. A label marks a section.
+ */
+const blocks = computed(() => {
+	const result: Array<{ key: string; label?: string; items: T[] }> = [];
+	for (const row of props.rows) {
+		if (row.kind === 'section') {
+			result.push({
+				key: `section:${row.section.key}`,
+				label: row.section.label,
+				items: row.section.items,
+			});
+			continue;
+		}
+
+		const last = result.at(-1);
+		if (last !== undefined && last.label === undefined) {
+			last.items.push(row.item);
+		} else {
+			result.push({ key: `run:${row.item.id}`, items: [row.item] });
+		}
+	}
+	return result;
+});
+
+useKeepFocusInList(useTemplateRef<HTMLElement>('root'));
 </script>

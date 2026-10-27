@@ -23,7 +23,7 @@
 				:icon="quadrantMeta[key].icon"
 				:accent="quadrantMeta[key].accent"
 				@add="openFor"
-				@done="items.close($event, Status.Done)"
+				@done="onDone"
 			/>
 		</div>
 
@@ -35,13 +35,14 @@
 			:group-options="groupOptions"
 			:show-goal="settings.general.pages.goals"
 			:show-group="settings.general.pages.groups"
-			@save="items.add(ItemType.Task, $event)"
+			@save="onSave"
 		/>
 	</VContainer>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
 	mdiAccountArrowRightOutline,
 	mdiCalendarClockOutline,
@@ -50,13 +51,16 @@ import {
 } from '@mdi/js';
 import TaskDialog from '@/components/TaskDialog.vue';
 import TaskQuadrant from '../TaskQuadrant.vue';
-import { ItemType, Status } from '@/types';
+import { ItemType, Status, type TaskDraft } from '@/types';
 import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
+import { useAnnouncerStore } from '@/stores/announcer';
 import { QUADRANT_KEYS, quadrantFlags, type QuadrantKey } from '@/utils/quadrants';
 
+const { t } = useI18n();
 const items = useItemsStore();
 const settings = useSettingsStore();
+const announcer = useAnnouncerStore();
 
 const dialogOpen = ref(false);
 const initialFlags = ref<{ important: boolean; urgent: boolean } | undefined>(undefined);
@@ -74,6 +78,18 @@ const quadrantMeta: Record<QuadrantKey, { icon: string; accent?: boolean }> = {
 	delegate: { icon: mdiAccountArrowRightOutline },
 	eliminate: { icon: mdiTrashCanOutline },
 };
+
+// The task leaves the quadrant with nothing on screen to say why; a screen reader says it.
+function onDone(id: string): void {
+	const name = items.byId.get(id)?.name ?? '';
+	void items.close(id, Status.Done);
+	announcer.announce(t('announce.done', { name }));
+}
+
+function onSave(draft: TaskDraft): void {
+	void items.add(ItemType.Task, draft);
+	announcer.announce(t('announce.added', { name: draft.name }));
+}
 
 function openFor(quadrant: QuadrantKey): void {
 	initialFlags.value = quadrantFlags(quadrant);

@@ -45,6 +45,7 @@ import { storeToRefs } from 'pinia';
 import { ItemType, Status, isGoal, isGroup, isTask, type Task, type TaskDraft } from '@/types';
 import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
+import { useAnnouncerStore } from '@/stores/announcer';
 import { useEntityTabsStore } from '@/stores/entityTabs';
 import { useToggleConfirm } from '@/composables/useToggleConfirm';
 import { useSortedEntityRows } from '@/composables/useSortedEntityRows';
@@ -55,6 +56,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue';
 const { t } = useI18n();
 const items = useItemsStore();
 const settings = useSettingsStore();
+const announcer = useAnnouncerStore();
 const { tab } = storeToRefs(useEntityTabsStore());
 const showNote = computed(() => settings.tasks.rows === 2);
 
@@ -144,6 +146,7 @@ async function handleSave(draft: TaskDraft): Promise<void> {
 	}
 
 	await items.update(ItemType.Task, editingId.value, draft);
+	announcer.announce(t('announce.saved', { name: draft.name }));
 	editingId.value = null;
 }
 
@@ -153,7 +156,9 @@ function onCancel(): void {
 		return;
 	}
 
+	const name = items.byId.get(id)?.name ?? '';
 	void items.close(id, Status.Cancelled);
+	announcer.announce(t('announce.cancelled', { name }));
 	dialogOpen.value = false;
 	editingId.value = null;
 }

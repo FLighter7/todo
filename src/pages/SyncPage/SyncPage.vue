@@ -12,7 +12,7 @@
 			<VTab value="server" :disabled="isBusy">{{ t('sync.tabServer') }}</VTab>
 		</VTabs>
 
-		<SyncFlow v-if="activeTab === 'qr'" ref="syncFlowRef" />
+		<SyncFlow v-if="activeTab === 'qr'" ref="syncFlowRef" @notify="emit('notify', $event)" />
 		<p v-else class="text-medium-emphasis">{{ t('sync.serverStub') }}</p>
 	</VContainer>
 </template>
@@ -21,6 +21,8 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SyncFlow from './containers/SyncFlow.vue';
+
+const emit = defineEmits<{ notify: [message: string] }>();
 
 const { t } = useI18n();
 

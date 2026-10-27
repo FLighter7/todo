@@ -12,6 +12,7 @@
 				v-for="option in options"
 				:key="option.value"
 				:active="settings[settingsEntity].sortOrder === option.value"
+				:aria-current="settings[settingsEntity].sortOrder === option.value ? 'true' : undefined"
 				color="primary"
 				:title="t(option.labelKey)"
 				:append-icon="settings[settingsEntity].sortOrder === option.value ? mdiCheck : undefined"

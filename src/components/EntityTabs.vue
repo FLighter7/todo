@@ -20,8 +20,8 @@
 <template>
 	<VContainer class="py-0" :class="$style.root">
 		<VBtnToggle v-model="model" mandatory color="primary" :class="$style.tabs">
-			<VBtn value="active">{{ t('entity.active') }}</VBtn>
-			<VBtn value="history">{{ t('entity.history') }}</VBtn>
+			<VBtn value="active" :aria-pressed="model === 'active'">{{ t('entity.active') }}</VBtn>
+			<VBtn value="history" :aria-pressed="model === 'history'">{{ t('entity.history') }}</VBtn>
 		</VBtnToggle>
 		<SortMenu />
 	</VContainer>

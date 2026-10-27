@@ -17,8 +17,10 @@
 
 		<div v-if="step === 'idle'" :class="$style.choices">
 			<VBtnToggle v-model="mode" mandatory color="primary" class="mb-2">
-				<VBtn value="data">{{ t('sync.modeData') }}</VBtn>
-				<VBtn value="settings">{{ t('sync.modeSettings') }}</VBtn>
+				<VBtn value="data" :aria-pressed="mode === 'data'">{{ t('sync.modeData') }}</VBtn>
+				<VBtn value="settings" :aria-pressed="mode === 'settings'">
+					{{ t('sync.modeSettings') }}
+				</VBtn>
 			</VBtnToggle>
 			<VBtn color="primary" size="large" @click="startAsInitiator">
 				{{ t('sync.startHere') }}

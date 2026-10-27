@@ -1,5 +1,10 @@
 <template>
-	<VListItem :prepend-icon="mdiAutoFix" :title="t('mockData.action')" @click="onClick" />
+	<VListItem
+		role="button"
+		:prepend-icon="mdiAutoFix"
+		:title="t('mockData.action')"
+		@click="onClick"
+	/>
 
 	<ConfirmDialog
 		v-model="confirmOpen"

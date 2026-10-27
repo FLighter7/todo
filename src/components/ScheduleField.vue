@@ -47,6 +47,7 @@
 				type="number"
 				min="1"
 				:label="t('task.schedule.interval')"
+				:error-messages="intervalInvalid ? t('form.wholeNumberFrom', { min: 1 }) : undefined"
 			/>
 
 			<div v-if="repeat === 'weekly'" :class="$style.weekdays">
@@ -76,6 +77,7 @@
 				type="number"
 				min="2"
 				:label="t('task.schedule.endCountField')"
+				:error-messages="countInvalid ? t('form.wholeNumberFrom', { min: 2 }) : undefined"
 			/>
 
 			<VTextField
@@ -228,6 +230,14 @@ function build(): Schedule | undefined {
 	};
 }
 
+// A number the schedule cannot use clears it, so the field says why under itself.
+const intervalInvalid = computed(
+	() => !Number.isInteger(Number(interval.value)) || Number(interval.value) < 1,
+);
+const countInvalid = computed(
+	() => !Number.isInteger(Number(count.value)) || Number(count.value) < 2,
+);
+
 function buildRRuleFromForm(): string | undefined | 'invalid' {
 	if (repeat.value === 'none') {
 		return undefined;
@@ -237,7 +247,7 @@ function buildRRuleFromForm(): string | undefined | 'invalid' {
 		return customRRule.value;
 	}
 
-	if (!Number.isInteger(Number(interval.value)) || Number(interval.value) < 1) {
+	if (intervalInvalid.value) {
 		return 'invalid';
 	}
 
@@ -245,7 +255,7 @@ function buildRRuleFromForm(): string | undefined | 'invalid' {
 		return 'invalid';
 	}
 
-	if (endType.value === 'count' && count.value < 2) {
+	if (endType.value === 'count' && countInvalid.value) {
 		return 'invalid';
 	}
 

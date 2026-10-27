@@ -21,7 +21,7 @@ test('the app shell still loads after going offline', async ({ page, context }) 
 	await context.setOffline(true);
 	await page.reload();
 
-	await expect(page.getByRole('button', { name: 'Add task' })).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeVisible();
 
 	await context.setOffline(false);
 });

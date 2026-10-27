@@ -9,6 +9,7 @@
 		"groups": "Grupy",
 		"tasks": "Zadania",
 		"matrix": "Macierz",
+		"label": "Strony",
 		"settings": "Ustawienia"
 	},
 	"storage": {
@@ -23,6 +24,7 @@
 		"important": "Ważne",
 		"urgent": "Pilne",
 		"done": "Zrobione",
+		"doneNamed": "Zrobione: {name}",
 		"actions": "Czynności",
 		"cancel": "Anuluj zadanie",
 		"title": "Zadanie",
@@ -66,20 +68,23 @@
 		},
 		"completions": {
 			"label": "Wykonania",
-			"markDone": "Oznacz jako wykonane",
-			"markPending": "Cofnij wykonanie",
-			"skip": "Pomiń",
-			"unskip": "Cofnij pominięcie",
+			"markDone": "Oznacz jako wykonane: {date}",
+			"markPending": "Cofnij wykonanie: {date}",
+			"skip": "Pomiń: {date}",
+			"unskip": "Cofnij pominięcie: {date}",
 			"doneCount": "Wykonano {n} raz | Wykonano {n} razy | Wykonano {n} razy"
 		}
 	},
 	"form": {
-		"add": "Nowe zadanie",
+		"add": "Dodaj",
+		"addTitle": "Nowy wpis",
 		"edit": "Edytuj zadanie",
 		"save": "Zapisz",
 		"saveAndNew": "Zapisz i dodaj nowe",
 		"cancel": "Anuluj",
-		"nameRequired": "Nazwa jest wymagana"
+		"close": "Zamknij",
+		"nameRequired": "Nazwa jest wymagana",
+		"wholeNumberFrom": "Wpisz liczbę całkowitą, co najmniej {min}"
 	},
 	"backup": {
 		"title": "Kopia zapasowa",
@@ -116,6 +121,7 @@
 		"orPaste": "Brak kamery? Wklej kod tutaj",
 		"copy": "Skopiuj kod",
 		"copied": "Kod skopiowany.",
+		"qrLabel": "Kod QR dla drugiego urządzenia",
 		"paste": "Zastosuj kod",
 		"cameraFailed": "Kamera jest niedostępna. Wklej kod ręcznie.",
 		"connecting": "Łączenie…",
@@ -129,7 +135,10 @@
 		"confirmSettingsBody": "Drugie urządzenie przesłało swoje ustawienia. Zastąpić nimi lokalne?",
 		"confirmSettingsAccept": "Zastąp",
 		"confirmSettingsDecline": "Zachowaj swoje",
-		"settingsDone": "Ustawienia zsynchronizowane."
+		"settingsDone": "Ustawienia zsynchronizowane.",
+		"tabQr": "Kod QR",
+		"tabServer": "Serwer",
+		"serverStub": "Opcje połączenia z serwerem wkrótce pojawią się tutaj."
 	},
 	"settings": {
 		"general": "Ogólne",
@@ -161,7 +170,8 @@
 		"schedule": "Zaplanuj",
 		"delegate": "Deleguj",
 		"eliminate": "Usuń",
-		"empty": "Pusto"
+		"empty": "Pusto",
+		"addTo": "Nowe zadanie w „{quadrant}”"
 	},
 	"entity": {
 		"edit": "Edytuj",
@@ -211,11 +221,19 @@
 			"seasonWinter": "Zima",
 			"seasonSpring": "Wiosna",
 			"seasonSummer": "Lato",
-			"seasonAutumn": "Jesień"
+			"seasonAutumn": "Jesień",
+			"yearInvalid": "Wpisz rok od 1 do 9999"
 		}
 	},
 	"group": {
 		"title": "Grupa",
 		"empty": "Brak grup."
+	},
+	"announce": {
+		"done": "Zrobione: {name}",
+		"reopened": "Wznowiono: {name}",
+		"cancelled": "Anulowano: {name}",
+		"added": "Dodano: {name}",
+		"saved": "Zapisano: {name}"
 	}
 }

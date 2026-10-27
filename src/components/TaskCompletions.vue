@@ -9,25 +9,28 @@
 
 <template>
 	<div>
-		<p class="text-title-small mt-4">{{ t('task.completions.label') }}</p>
+		<h3 class="text-title-small mt-4">{{ t('task.completions.label') }}</h3>
 		<p v-if="doneCount > 0" class="text-body-small text-medium-emphasis">
 			{{ t('task.completions.doneCount', { n: doneCount }, { plural: doneCount }) }}
 		</p>
 		<div v-for="entry in occurrences" :key="entry.start" :class="$style.row">
 			<span>{{ formatWallClock(entry.start, locale) }}</span>
+			<!-- Each button names its date: heard on its own, "Skip" says nothing of which one. -->
 			<template v-if="entry.state === 'pending'">
 				<VBtn
 					:icon="mdiCheckCircleOutline"
 					variant="text"
 					density="comfortable"
-					:aria-label="t('task.completions.markDone')"
+					:aria-label="
+						t('task.completions.markDone', { date: formatWallClock(entry.start, locale) })
+					"
 					@click="emit('toggle-done', entry.start, true)"
 				/>
 				<VBtn
 					:icon="mdiCloseCircleOutline"
 					variant="text"
 					density="comfortable"
-					:aria-label="t('task.completions.skip')"
+					:aria-label="t('task.completions.skip', { date: formatWallClock(entry.start, locale) })"
 					@click="emit('toggle-skip', entry.start, true)"
 				/>
 			</template>
@@ -37,7 +40,9 @@
 				variant="text"
 				density="comfortable"
 				color="primary"
-				:aria-label="t('task.completions.markPending')"
+				:aria-label="
+					t('task.completions.markPending', { date: formatWallClock(entry.start, locale) })
+				"
 				@click="emit('toggle-done', entry.start, false)"
 			/>
 			<VBtn
@@ -45,7 +50,7 @@
 				:icon="mdiCloseCircle"
 				variant="text"
 				density="comfortable"
-				:aria-label="t('task.completions.unskip')"
+				:aria-label="t('task.completions.unskip', { date: formatWallClock(entry.start, locale) })"
 				@click="emit('toggle-skip', entry.start, false)"
 			/>
 		</div>

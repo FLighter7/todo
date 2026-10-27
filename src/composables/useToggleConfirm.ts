@@ -2,6 +2,7 @@ import { computed, ref, shallowRef, type ComputedRef, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Status, type ItemBase } from '@/types';
 import { useSettingsStore, type SettingsEntity } from '@/stores/settings';
+import { useAnnouncerStore } from '@/stores/announcer';
 
 export interface ToggleableStore<T extends ItemBase> {
 	records: T[];
@@ -32,6 +33,7 @@ export function useToggleConfirm<T extends ItemBase>(
 	tab: Ref<'active' | 'history'>,
 ): UseToggleConfirm {
 	const settings = useSettingsStore();
+	const announcer = useAnnouncerStore();
 	const { t } = useI18n();
 
 	const pendingToggle = shallowRef<{ record: T; done: boolean } | null>(null);
@@ -55,10 +57,13 @@ export function useToggleConfirm<T extends ItemBase>(
 		{ key: 'yes', label: t('entity.confirm'), color: 'primary' },
 	]);
 
+	// The row leaves the tab it was on with nothing on screen to say why; a screen reader says it.
 	async function applyToggle(record: T, done: boolean): Promise<void> {
 		if (done) {
+			announcer.announce(t('announce.done', { name: record.name }));
 			await store.close(record.id, Status.Done);
 		} else {
+			announcer.announce(t('announce.reopened', { name: record.name }));
 			await store.reopen(record.id);
 		}
 	}

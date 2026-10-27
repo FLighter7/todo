@@ -48,11 +48,13 @@ import {
 } from '@/types';
 import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
+import { useAnnouncerStore } from '@/stores/announcer';
 
 const { t } = useI18n();
 const route = useRoute();
 const items = useItemsStore();
 const settings = useSettingsStore();
+const announcer = useAnnouncerStore();
 
 const dialogOpen = ref(false);
 
@@ -84,17 +86,21 @@ const groupOptions = computed(() =>
 
 async function handleTaskSubmit(draft: TaskDraft): Promise<void> {
 	await items.add(ItemType.Task, draft);
+	announcer.announce(t('announce.added', { name: draft.name }));
 }
 
 async function handleDreamSave(draft: DreamDraft): Promise<void> {
 	await items.add(ItemType.Dream, draft);
+	announcer.announce(t('announce.added', { name: draft.name }));
 }
 
 async function handleGoalSave(draft: GoalDraft): Promise<void> {
 	await items.add(ItemType.Goal, draft);
+	announcer.announce(t('announce.added', { name: draft.name }));
 }
 
 async function handleGroupSave(draft: GroupDraft): Promise<void> {
 	await items.add(ItemType.Group, draft);
+	announcer.announce(t('announce.added', { name: draft.name }));
 }
 </script>

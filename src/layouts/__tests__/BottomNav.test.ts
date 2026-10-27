@@ -42,44 +42,44 @@ describe('BottomNav', () => {
 	it('renders all five pages plus the add button, Groups right after Goals', async () => {
 		const wrapper = await mountAt('/dreams');
 
-		expect(labelsOf(wrapper)).toEqual(['Dreams', 'Goals', 'Groups', 'Add task', 'Tasks', 'Matrix']);
+		expect(labelsOf(wrapper)).toEqual(['Dreams', 'Goals', 'Groups', 'Add', 'Tasks', 'Matrix']);
 		expect(wrapper.findComponent({ name: 'QuickAddFab' }).exists()).toBe(true);
 	});
 
 	it('leaves out a hidden page and keeps the add button right before Tasks', async () => {
 		const withoutDreams = await mountAt('/tasks', ['dreams']);
-		expect(labelsOf(withoutDreams)).toEqual(['Goals', 'Groups', 'Add task', 'Tasks', 'Matrix']);
+		expect(labelsOf(withoutDreams)).toEqual(['Goals', 'Groups', 'Add', 'Tasks', 'Matrix']);
 
 		const goalsOnly = await mountAt('/tasks', ['dreams', 'groups']);
-		expect(labelsOf(goalsOnly)).toEqual(['Goals', 'Add task', 'Tasks', 'Matrix']);
+		expect(labelsOf(goalsOnly)).toEqual(['Goals', 'Add', 'Tasks', 'Matrix']);
 	});
 
 	it('puts Tasks before the add button once every optional page is hidden', async () => {
 		const wrapper = await mountAt('/tasks', ['dreams', 'goals', 'groups']);
 
-		expect(labelsOf(wrapper)).toEqual(['Tasks', 'Add task', 'Matrix']);
+		expect(labelsOf(wrapper)).toEqual(['Tasks', 'Add', 'Matrix']);
 	});
 
 	it('keeps the pages left of the add button in place when Tasks or the matrix is hidden', async () => {
 		const withoutTasks = await mountAt('/dreams', ['tasks']);
-		expect(labelsOf(withoutTasks)).toEqual(['Dreams', 'Goals', 'Groups', 'Add task', 'Matrix']);
+		expect(labelsOf(withoutTasks)).toEqual(['Dreams', 'Goals', 'Groups', 'Add', 'Matrix']);
 
 		const leftOnly = await mountAt('/dreams', ['tasks', 'matrix']);
-		expect(labelsOf(leftOnly)).toEqual(['Dreams', 'Goals', 'Groups', 'Add task']);
+		expect(labelsOf(leftOnly)).toEqual(['Dreams', 'Goals', 'Groups', 'Add']);
 	});
 
 	it('puts the one page left before the add button', async () => {
 		const matrixOnly = await mountAt('/matrix', ['tasks', 'dreams', 'goals', 'groups']);
-		expect(labelsOf(matrixOnly)).toEqual(['Matrix', 'Add task']);
+		expect(labelsOf(matrixOnly)).toEqual(['Matrix', 'Add']);
 
 		const tasksOnly = await mountAt('/tasks', ['matrix', 'dreams', 'goals', 'groups']);
-		expect(labelsOf(tasksOnly)).toEqual(['Tasks', 'Add task']);
+		expect(labelsOf(tasksOnly)).toEqual(['Tasks', 'Add']);
 	});
 
 	it('leaves the add button alone once every page is switched off', async () => {
 		const wrapper = await mountAt('/tasks', ['dreams', 'goals', 'groups', 'tasks', 'matrix']);
 
-		expect(labelsOf(wrapper)).toEqual(['Add task']);
+		expect(labelsOf(wrapper)).toEqual(['Add']);
 	});
 
 	it('brings a page back when it is shown again', async () => {
@@ -88,7 +88,7 @@ describe('BottomNav', () => {
 		useSettingsStore().setPageVisible('groups', true);
 		await wrapper.vm.$nextTick();
 
-		expect(labelsOf(wrapper)).toEqual(['Dreams', 'Goals', 'Groups', 'Add task', 'Tasks', 'Matrix']);
+		expect(labelsOf(wrapper)).toEqual(['Dreams', 'Goals', 'Groups', 'Add', 'Tasks', 'Matrix']);
 	});
 
 	it('highlights the Groups button on the groups page', async () => {

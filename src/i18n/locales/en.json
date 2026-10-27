@@ -9,6 +9,7 @@
 		"groups": "Groups",
 		"tasks": "Tasks",
 		"matrix": "Matrix",
+		"label": "Pages",
 		"settings": "Settings"
 	},
 	"storage": {
@@ -23,6 +24,7 @@
 		"important": "Important",
 		"urgent": "Urgent",
 		"done": "Done",
+		"doneNamed": "Done: {name}",
 		"actions": "Actions",
 		"cancel": "Cancel this task",
 		"title": "Task",
@@ -66,20 +68,23 @@
 		},
 		"completions": {
 			"label": "Completions",
-			"markDone": "Mark done",
-			"markPending": "Mark not done",
-			"skip": "Skip",
-			"unskip": "Un-skip",
+			"markDone": "Mark done: {date}",
+			"markPending": "Mark not done: {date}",
+			"skip": "Skip: {date}",
+			"unskip": "Un-skip: {date}",
 			"doneCount": "{n} time done | {n} times done"
 		}
 	},
 	"form": {
-		"add": "Add task",
+		"add": "Add",
+		"addTitle": "New record",
 		"edit": "Edit task",
 		"save": "Save",
 		"saveAndNew": "Save & New",
 		"cancel": "Cancel",
-		"nameRequired": "Name is required"
+		"close": "Close",
+		"nameRequired": "Name is required",
+		"wholeNumberFrom": "Enter a whole number, {min} or more"
 	},
 	"backup": {
 		"title": "Backup",
@@ -116,6 +121,7 @@
 		"orPaste": "No camera? Paste the code here",
 		"copy": "Copy code",
 		"copied": "Code copied.",
+		"qrLabel": "QR code for the other device",
 		"paste": "Use this code",
 		"cameraFailed": "The camera is unavailable. Paste the code instead.",
 		"connecting": "Connecting…",
@@ -164,7 +170,8 @@
 		"schedule": "Schedule",
 		"delegate": "Delegate",
 		"eliminate": "Eliminate",
-		"empty": "Empty"
+		"empty": "Empty",
+		"addTo": "Add a task to {quadrant}"
 	},
 	"entity": {
 		"edit": "Edit",
@@ -214,11 +221,19 @@
 			"seasonWinter": "Winter",
 			"seasonSpring": "Spring",
 			"seasonSummer": "Summer",
-			"seasonAutumn": "Autumn"
+			"seasonAutumn": "Autumn",
+			"yearInvalid": "Enter a year from 1 to 9999"
 		}
 	},
 	"group": {
 		"title": "Group",
 		"empty": "No groups yet."
+	},
+	"announce": {
+		"done": "Done: {name}",
+		"reopened": "Reopened: {name}",
+		"cancelled": "Cancelled: {name}",
+		"added": "Added: {name}",
+		"saved": "Saved: {name}"
 	}
 }

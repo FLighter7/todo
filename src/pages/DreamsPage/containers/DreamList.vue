@@ -47,6 +47,7 @@ import { storeToRefs } from 'pinia';
 import { ItemType, Status, type Dream, type DreamDraft } from '@/types';
 import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
+import { useAnnouncerStore } from '@/stores/announcer';
 import { useEntityTabsStore } from '@/stores/entityTabs';
 import { useCascadeCancel } from '@/composables/useCascadeCancel';
 import { useToggleConfirm } from '@/composables/useToggleConfirm';
@@ -59,6 +60,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue';
 const { t } = useI18n();
 const items = useItemsStore();
 const settings = useSettingsStore();
+const announcer = useAnnouncerStore();
 const { tab } = storeToRefs(useEntityTabsStore());
 const cascade = useCascadeCancel();
 
@@ -91,6 +93,7 @@ async function handleSave(draft: DreamDraft): Promise<void> {
 	}
 
 	await items.update(ItemType.Dream, editing.value.id, draft);
+	announcer.announce(t('announce.saved', { name: draft.name }));
 	editing.value = null;
 }
 
@@ -127,6 +130,7 @@ function onCancel(): void {
 	const counts = cascade.countDreamDescendants(dream.id);
 	if (counts.goals === 0 && counts.tasks === 0) {
 		void items.close(dream.id, Status.Cancelled);
+		announcer.announce(t('announce.cancelled', { name: dream.name }));
 		dialogOpen.value = false;
 		editing.value = null;
 		return;
@@ -146,6 +150,7 @@ async function onCascadeChoice(key: string): Promise<void> {
 		return;
 	}
 
+	announcer.announce(t('announce.cancelled', { name: dream.name }));
 	if (key === 'branch') {
 		await Promise.all([
 			items.close(dream.id, Status.Cancelled),

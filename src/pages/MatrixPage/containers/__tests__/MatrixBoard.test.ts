@@ -47,7 +47,7 @@ describe('MatrixBoard', () => {
 		const wrapper = mount(MatrixBoard, { global: { plugins: [vuetify, i18n] } });
 
 		// The four quadrant add buttons render in QUADRANT_KEYS order: do, schedule, delegate, eliminate.
-		const addButtons = wrapper.findAll('button[aria-label="Add task"]');
+		const addButtons = wrapper.findAll('button[aria-label^="Add a task to "]');
 		await addButtons[2].trigger('click'); // delegate: urgent, not important
 
 		await wrapper.get('input').setValue('Call the bank');

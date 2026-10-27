@@ -3,15 +3,16 @@
 <template>
 	<VBtn :icon="themeIcon" variant="text" :aria-label="t('app.toggleTheme')" @click="open = true" />
 
-	<VDialog v-model="open" max-width="360">
+	<VDialog v-model="open" max-width="360" :aria-labelledby="titleId">
 		<VCard variant="elevated">
-			<VCardTitle>{{ t('settings.theme') }}</VCardTitle>
+			<VCardTitle :id="titleId" tag="h2">{{ t('settings.theme') }}</VCardTitle>
 
 			<VList>
 				<VListItem
 					v-for="option in options"
 					:key="option.value"
 					:active="settings.general.theme === option.value"
+					:aria-current="settings.general.theme === option.value ? 'true' : undefined"
 					color="primary"
 					:prepend-icon="option.icon"
 					:title="t(option.labelKey)"
@@ -24,19 +25,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, useId, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useTheme } from 'vuetify';
 import { mdiCheck, mdiThemeLightDark, mdiWeatherNight, mdiWeatherSunny } from '@mdi/js';
 import type { AppTheme } from '@/types';
 import { resolveTheme } from '@/plugins/vuetify';
 import { useSettingsStore } from '@/stores/settings';
+import { useReturnFocus } from '@/composables/useKeepFocus';
 
 const { t } = useI18n();
 const theme = useTheme();
 const settings = useSettingsStore();
 
 const open = ref(false);
+const titleId = useId();
+
+useReturnFocus(open);
 
 const options: Array<{ value: AppTheme; labelKey: string; icon: string }> = [
 	{ value: 'system', labelKey: 'settings.themeSystem', icon: mdiThemeLightDark },

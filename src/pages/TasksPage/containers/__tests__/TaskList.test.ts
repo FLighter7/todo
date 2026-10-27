@@ -349,7 +349,7 @@ describe('TaskList completions', () => {
 		await wrapper.get('.v-list-item').trigger('click');
 		expect(wrapper.text()).not.toContain('time done');
 
-		await wrapper.get('button[aria-label="Mark done"]').trigger('click');
+		await wrapper.get('button[aria-label^="Mark done: "]').trigger('click');
 
 		expect(items.tasks.all[0].completions).toHaveLength(1);
 		expect(items.tasks.all[0].completions?.[0].done).toBe(true);
@@ -361,7 +361,7 @@ describe('TaskList completions', () => {
 		const { wrapper, items } = await mountWithData([], [makeTask({ schedule })]);
 
 		await wrapper.get('.v-list-item').trigger('click');
-		await wrapper.get('button[aria-label="Skip"]').trigger('click');
+		await wrapper.get('button[aria-label^="Skip: "]').trigger('click');
 
 		expect(items.tasks.all[0].schedule?.exdate).toHaveLength(1);
 	});

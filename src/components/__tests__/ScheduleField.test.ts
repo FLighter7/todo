@@ -333,3 +333,19 @@ describe('ScheduleField custom-rule fallback', () => {
 		});
 	});
 });
+
+describe('ScheduleField numbers it cannot use', () => {
+	it('says so under the interval instead of clearing the schedule without a word', async () => {
+		const wrapper = mountField(undefined);
+
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+		await wrapper.get('input[type="datetime-local"]').setValue('2026-08-21T09:00');
+		const [repeatSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		await repeatSelect.vm.$emit('update:modelValue', 'daily');
+		await wrapper.vm.$nextTick();
+		await wrapper.get('input[type="number"]').setValue('0');
+
+		expect(wrapper.text()).toContain('Enter a whole number, 1 or more');
+		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([undefined]);
+	});
+});

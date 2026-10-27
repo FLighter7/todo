@@ -17,17 +17,21 @@
 <template>
 	<VContainer :class="$style.container">
 		<VTabs v-model="activeTab" color="primary" grow :class="$style.tabs">
-			<VTab value="general">{{ t('settings.general') }}</VTab>
-			<VTab v-for="page in PAGE_TABS" :key="page" :value="page">{{ t(`nav.${page}`) }}</VTab>
+			<VTab :id="tabId('general')" value="general">{{ t('settings.general') }}</VTab>
+			<VTab v-for="page in PAGE_TABS" :id="tabId(page)" :key="page" :value="page">
+				{{ t(`nav.${page}`) }}
+			</VTab>
 		</VTabs>
 
-		<GeneralSettings v-if="activeTab === 'general'" @notify="emit('notify', $event)" />
-		<PageSettings v-else :page="activeTab" />
+		<div role="tabpanel" :aria-labelledby="tabId(activeTab)">
+			<GeneralSettings v-if="activeTab === 'general'" @notify="emit('notify', $event)" />
+			<PageSettings v-else :page="activeTab" />
+		</div>
 	</VContainer>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, useId } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { AppPage } from '@/types';
 import GeneralSettings from './containers/GeneralSettings.vue';
@@ -41,4 +45,10 @@ const { t } = useI18n();
 const PAGE_TABS: AppPage[] = ['tasks', 'matrix', 'goals', 'dreams', 'groups'];
 
 const activeTab = ref<'general' | AppPage>('general');
+
+const idPrefix = useId();
+
+function tabId(tab: 'general' | AppPage): string {
+	return `${idPrefix}-${tab}`;
+}
 </script>

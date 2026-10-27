@@ -71,17 +71,17 @@ test('a task added on one device reaches the other after pairing', async ({ brow
 	const pageB = await openDevice(browser);
 
 	await pageA.goto('/');
-	await pageA.getByRole('button', { name: 'Add task' }).click();
+	await pageA.getByRole('button', { name: 'Add', exact: true }).click();
 	await pageA.getByLabel('Name').fill('Buy milk');
 	await pageA.getByRole('button', { name: 'Save', exact: true }).click();
-	await expect(pageA.getByText('Buy milk')).toBeVisible();
+	await expect(pageA.locator('main').getByText('Buy milk')).toBeVisible();
 
 	await pageA.goto('/todo/sync');
 	await pageB.goto('/todo/sync');
 	await pair(pageA, pageB);
 
 	await pageB.goto('/');
-	await expect(pageB.getByText('Buy milk')).toBeVisible();
+	await expect(pageB.locator('main').getByText('Buy milk')).toBeVisible();
 
 	await pageA.context().close();
 	await pageB.context().close();

@@ -77,7 +77,7 @@ describe('QuickAddFab default tab', () => {
 	it('defaults to Dream on /dreams', async () => {
 		const wrapper = await mountAt('/dreams');
 
-		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		await wrapper.get('button[aria-label="Add"]').trigger('click');
 
 		expect(wrapper.findComponent({ name: 'VTabs' }).props('modelValue')).toBe('dream');
 	});
@@ -85,7 +85,7 @@ describe('QuickAddFab default tab', () => {
 	it('defaults to Goal on /goals', async () => {
 		const wrapper = await mountAt('/goals');
 
-		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		await wrapper.get('button[aria-label="Add"]').trigger('click');
 
 		expect(wrapper.findComponent({ name: 'VTabs' }).props('modelValue')).toBe('goal');
 	});
@@ -93,7 +93,7 @@ describe('QuickAddFab default tab', () => {
 	it('defaults to Group on /groups', async () => {
 		const wrapper = await mountAt('/groups');
 
-		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		await wrapper.get('button[aria-label="Add"]').trigger('click');
 
 		expect(wrapper.findComponent({ name: 'VTabs' }).props('modelValue')).toBe('group');
 	});
@@ -101,7 +101,7 @@ describe('QuickAddFab default tab', () => {
 	it('defaults to Task everywhere else', async () => {
 		const wrapper = await mountAt('/tasks');
 
-		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		await wrapper.get('button[aria-label="Add"]').trigger('click');
 
 		expect(wrapper.findComponent({ name: 'VTabs' }).props('modelValue')).toBe('task');
 	});
@@ -113,7 +113,7 @@ describe('QuickAddFab with pages switched off', () => {
 		useSettingsStore().setPageVisible('dreams', false);
 		useSettingsStore().setPageVisible('groups', false);
 
-		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		await wrapper.get('button[aria-label="Add"]').trigger('click');
 		const dialog = wrapper.findComponent({ name: 'AddEntityDialog' });
 
 		expect(dialog.props('showDream')).toBe(false);
@@ -135,7 +135,7 @@ describe('QuickAddFab with Tasks or the matrix switched off', () => {
 			useSettingsStore().setPageVisible(page, false);
 		}
 
-		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		await wrapper.get('button[aria-label="Add"]').trigger('click');
 		return wrapper.findComponent({ name: 'AddEntityDialog' }).props('showTask');
 	}
 
@@ -158,7 +158,7 @@ describe('QuickAddFab creating a dream', () => {
 		const wrapper = await mountAt('/dreams');
 		const items = useItemsStore();
 
-		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		await wrapper.get('button[aria-label="Add"]').trigger('click');
 		await wrapper.get('input').setValue('Visit Japan');
 		await wrapper.get('button[aria-label="Save"]').trigger('click');
 
@@ -172,7 +172,7 @@ describe('QuickAddFab creating a goal', () => {
 		const wrapper = await mountAt('/goals', { dreams: [makeDream({ name: 'Visit Japan' })] });
 		const items = useItemsStore();
 
-		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		await wrapper.get('button[aria-label="Add"]').trigger('click');
 		await wrapper.get('input').setValue('Learn Japanese');
 		const [select] = wrapper.findAllComponents({ name: 'VSelect' });
 		await select.vm.$emit('update:modelValue', 'dream-1');
@@ -188,7 +188,7 @@ describe('QuickAddFab creating a group', () => {
 		const wrapper = await mountAt('/groups');
 		const items = useItemsStore();
 
-		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		await wrapper.get('button[aria-label="Add"]').trigger('click');
 		await wrapper.get('input').setValue('Errands');
 		await wrapper.get('button[aria-label="Save"]').trigger('click');
 
@@ -203,7 +203,7 @@ describe('QuickAddFab creating a task', () => {
 		const wrapper = await mountAt('/tasks', { goals: [makeGoal({ name: 'Learn Japanese' })] });
 		const items = useItemsStore();
 
-		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		await wrapper.get('button[aria-label="Add"]').trigger('click');
 		await wrapper.get('input').setValue('Do Duolingo');
 		const [select] = wrapper.findAllComponents({ name: 'VSelect' });
 		await select.vm.$emit('update:modelValue', 'goal-1');
@@ -223,7 +223,7 @@ describe('QuickAddFab creating a task', () => {
 		});
 		const items = useItemsStore();
 
-		await wrapper.get('button[aria-label="Add task"]').trigger('click');
+		await wrapper.get('button[aria-label="Add"]').trigger('click');
 		await wrapper.get('input').setValue('Buy stamps');
 		const [goalSelect, groupSelect] = wrapper.findAllComponents({ name: 'VSelect' });
 		expect(groupSelect.props('items')).toEqual([

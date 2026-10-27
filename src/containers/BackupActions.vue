@@ -5,20 +5,31 @@
 </style>
 
 <template>
-	<VListItem :prepend-icon="mdiDownloadOutline" :title="t('backup.export')" @click="exportFile" />
-	<VListItem :prepend-icon="mdiUploadOutline" :title="t('backup.import')" @click="pickFile" />
+	<VListItem
+		role="button"
+		:prepend-icon="mdiDownloadOutline"
+		:title="t('backup.export')"
+		@click="exportFile"
+	/>
+	<VListItem
+		role="button"
+		:prepend-icon="mdiUploadOutline"
+		:title="t('backup.import')"
+		@click="pickFile"
+	/>
 
 	<input
 		ref="fileInput"
 		type="file"
 		accept="application/json,.json"
+		:aria-label="t('backup.import')"
 		:class="$style.hidden"
 		@change="onFileChosen"
 	/>
 
-	<VDialog v-model="confirmOpen" max-width="440">
+	<VDialog v-model="confirmOpen" max-width="440" :aria-labelledby="titleId">
 		<VCard variant="elevated">
-			<VCardTitle>{{ t('backup.confirmTitle') }}</VCardTitle>
+			<VCardTitle :id="titleId" tag="h2">{{ t('backup.confirmTitle') }}</VCardTitle>
 
 			<VCardText>
 				<p>
@@ -29,8 +40,7 @@
 				</p>
 			</VCardText>
 
-			<VCardActions>
-				<VSpacer />
+			<VCardActions class="flex-wrap justify-end">
 				<VBtn variant="text" @click="cancelImport">{{ t('form.cancel') }}</VBtn>
 				<VBtn color="error" variant="flat" @click="confirmImport">{{ t('backup.replace') }}</VBtn>
 			</VCardActions>
@@ -39,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from 'vue';
+import { computed, ref, useId, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { mdiDownloadOutline, mdiUploadOutline } from '@mdi/js';
 import type { Backup } from '@/services/backup/BackupService';
@@ -47,6 +57,7 @@ import { BackupFormatError, backupService } from '@/services/backup/BackupServic
 import { backupFile } from '@/services/backup/BackupFile';
 import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
+import { useReturnFocus } from '@/composables/useKeepFocus';
 
 const emit = defineEmits<{ notify: [message: string] }>();
 
@@ -57,6 +68,9 @@ const settings = useSettingsStore();
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput');
 const pending = ref<Backup | null>(null);
 const confirmOpen = ref(false);
+const titleId = useId();
+
+useReturnFocus(confirmOpen);
 
 const incomingCount = computed(() => {
 	const backup = pending.value;

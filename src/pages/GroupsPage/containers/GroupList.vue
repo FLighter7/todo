@@ -47,6 +47,7 @@ import { storeToRefs } from 'pinia';
 import { ItemType, Status, type Group, type GroupDraft } from '@/types';
 import { useItemsStore } from '@/stores/items';
 import { useEntityTabsStore } from '@/stores/entityTabs';
+import { useAnnouncerStore } from '@/stores/announcer';
 import { useCascadeCancel } from '@/composables/useCascadeCancel';
 import { useToggleConfirm } from '@/composables/useToggleConfirm';
 import { useSortedEntityRows } from '@/composables/useSortedEntityRows';
@@ -57,6 +58,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
 const { t } = useI18n();
 const items = useItemsStore();
+const announcer = useAnnouncerStore();
 const { tab } = storeToRefs(useEntityTabsStore());
 const cascade = useCascadeCancel();
 
@@ -83,6 +85,7 @@ async function handleSave(draft: GroupDraft): Promise<void> {
 	}
 
 	await items.update(ItemType.Group, editing.value.id, draft);
+	announcer.announce(t('announce.saved', { name: draft.name }));
 	editing.value = null;
 }
 
@@ -114,6 +117,7 @@ function onCancel(): void {
 	const count = cascade.countGroupTasks(group.id);
 	if (count === 0) {
 		void items.close(group.id, Status.Cancelled);
+		announcer.announce(t('announce.cancelled', { name: group.name }));
 		dialogOpen.value = false;
 		editing.value = null;
 		return;
@@ -133,6 +137,7 @@ async function onCascadeChoice(key: string): Promise<void> {
 		return;
 	}
 
+	announcer.announce(t('announce.cancelled', { name: group.name }));
 	if (key === 'branch') {
 		await Promise.all([
 			items.close(group.id, Status.Cancelled),

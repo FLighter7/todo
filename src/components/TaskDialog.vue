@@ -28,6 +28,7 @@
 				<VTextField
 					v-model="name"
 					:label="t('entity.name')"
+					aria-required="true"
 					:error-messages="nameError"
 					autofocus
 					@keyup.enter="onSave"

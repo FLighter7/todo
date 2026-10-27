@@ -1,5 +1,5 @@
 <template>
-	<VList>
+	<div class="py-2">
 		<VSwitch
 			:model-value="settings.general.pages[page]"
 			:label="t('settings.showPage')"
@@ -21,8 +21,12 @@
 				class="mx-4 mb-2"
 				@update:model-value="update({ rows: $event === 2 ? 2 : 1 })"
 			>
-				<VBtn :value="1">{{ t('settings.rows1') }}</VBtn>
-				<VBtn :value="2">{{ t('settings.rows2') }}</VBtn>
+				<VBtn :value="1" :aria-pressed="settings[entity].rows === 1">
+					{{ t('settings.rows1') }}
+				</VBtn>
+				<VBtn :value="2" :aria-pressed="settings[entity].rows === 2">
+					{{ t('settings.rows2') }}
+				</VBtn>
 			</VBtnToggle>
 			<VSwitch
 				:model-value="settings[entity].confirmDone"
@@ -43,7 +47,7 @@
 				@update:model-value="update({ confirmReopen: $event ?? false })"
 			/>
 		</template>
-	</VList>
+	</div>
 </template>
 
 <script setup lang="ts">

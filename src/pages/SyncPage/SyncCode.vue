@@ -19,7 +19,8 @@
 
 <template>
 	<div :class="$style.wrap">
-		<canvas ref="canvas" :class="$style.canvas" />
+		<!-- The code itself is for the camera; "Copy code" below hands it over as text. -->
+		<canvas ref="canvas" :class="$style.canvas" role="img" :aria-label="t('sync.qrLabel')" />
 		<VBtn :prepend-icon="mdiContentCopy" variant="tonal" size="small" @click="copy">
 			{{ t('sync.copy') }}
 		</VBtn>

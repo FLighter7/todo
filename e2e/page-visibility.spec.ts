@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test';
 function bottomBarLabels(page: Page): Promise<string[]> {
 	return page
 		.locator('nav')
-		.filter({ has: page.getByRole('button', { name: 'Add task' }) })
+		.filter({ has: page.getByRole('button', { name: 'Add', exact: true }) })
 		.locator('.v-btn')
 		.evaluateAll((buttons) =>
 			buttons.map(
@@ -40,9 +40,9 @@ test('pages switched off in Settings leave the bottom bar, the start page and th
 
 	await openGeneralTab(page);
 	await expect(startPage).toContainText('Tasks');
-	await expect.poll(() => bottomBarLabels(page)).toEqual(['Tasks', 'Add task', 'Matrix']);
+	await expect.poll(() => bottomBarLabels(page)).toEqual(['Tasks', 'Add', 'Matrix']);
 
-	await page.getByRole('button', { name: 'Add task' }).click();
+	await page.getByRole('button', { name: 'Add', exact: true }).click();
 	const dialog = page.getByRole('dialog');
 	await expect(dialog.getByLabel('Name')).toBeVisible();
 	await expect(dialog.getByRole('tab')).toHaveCount(0);
@@ -53,7 +53,7 @@ test('pages switched off in Settings leave the bottom bar, the start page and th
 	await expect(page).toHaveURL(/\/tasks$/);
 
 	await page.reload();
-	await expect.poll(() => bottomBarLabels(page)).toEqual(['Tasks', 'Add task', 'Matrix']);
+	await expect.poll(() => bottomBarLabels(page)).toEqual(['Tasks', 'Add', 'Matrix']);
 
 	await page.goto('');
 	await expect(page).toHaveURL(/\/tasks$/);
@@ -72,7 +72,7 @@ test('Tasks and the matrix can go too, and with every page off only Tasks can be
 
 	await openGeneralTab(page);
 	await expect(startPage).toContainText('Matrix');
-	await expect.poll(() => bottomBarLabels(page)).toEqual(['Matrix', 'Add task']);
+	await expect.poll(() => bottomBarLabels(page)).toEqual(['Matrix', 'Add']);
 
 	await switchPageOff(page, 'Matrix');
 
@@ -88,7 +88,7 @@ test('Tasks and the matrix can go too, and with every page off only Tasks can be
 
 	await openGeneralTab(page);
 	await expect(startPage).toContainText('Tasks');
-	await expect.poll(() => bottomBarLabels(page)).toEqual(['Add task']);
+	await expect.poll(() => bottomBarLabels(page)).toEqual(['Add']);
 
 	for (const address of ['matrix', 'goals', '']) {
 		await page.goto(address);
@@ -96,8 +96,8 @@ test('Tasks and the matrix can go too, and with every page off only Tasks can be
 	}
 
 	await page.reload();
-	await expect.poll(() => bottomBarLabels(page)).toEqual(['Add task']);
-	await page.getByRole('button', { name: 'Add task' }).click();
+	await expect.poll(() => bottomBarLabels(page)).toEqual(['Add']);
+	await page.getByRole('button', { name: 'Add', exact: true }).click();
 	await expect(page.getByRole('dialog').getByLabel('Name')).toBeVisible();
 	await expect(page.getByRole('dialog').getByRole('tab')).toHaveCount(0);
 });

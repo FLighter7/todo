@@ -18,6 +18,8 @@ import { firstShownPage, isPageHidden, type AppPage } from '@/types';
 
 declare module 'vue-router' {
 	interface RouteMeta {
+		/** The page's name: its document title, its heading, and what a page change announces. */
+		titleKey?: string;
 		/** Present on routes that can be picked as the app's start page. */
 		startPage?: {
 			icon: string;
@@ -53,37 +55,58 @@ const routes: RouteRecordRaw[] = [
 		path: '/tasks',
 		name: 'tasks',
 		component: TasksPage,
-		meta: { startPage: { icon: PAGE_ICONS.tasks, labelKey: 'settings.startPageTasks' } },
+		meta: {
+			titleKey: 'nav.tasks',
+			startPage: { icon: PAGE_ICONS.tasks, labelKey: 'settings.startPageTasks' },
+		},
 	},
 	{
 		path: '/matrix',
 		name: 'matrix',
 		component: () => import('@/pages/MatrixPage/MatrixPage.vue'),
-		meta: { startPage: { icon: PAGE_ICONS.matrix, labelKey: 'settings.startPageMatrix' } },
+		meta: {
+			titleKey: 'nav.matrix',
+			startPage: { icon: PAGE_ICONS.matrix, labelKey: 'settings.startPageMatrix' },
+		},
 	},
 	{
 		path: '/dreams',
 		name: 'dreams',
 		component: () => import('@/pages/DreamsPage/DreamsPage.vue'),
-		meta: { startPage: { icon: PAGE_ICONS.dreams, labelKey: 'settings.startPageDreams' } },
+		meta: {
+			titleKey: 'nav.dreams',
+			startPage: { icon: PAGE_ICONS.dreams, labelKey: 'settings.startPageDreams' },
+		},
 	},
 	{
 		path: '/goals',
 		name: 'goals',
 		component: () => import('@/pages/GoalsPage/GoalsPage.vue'),
-		meta: { startPage: { icon: PAGE_ICONS.goals, labelKey: 'settings.startPageGoals' } },
+		meta: {
+			titleKey: 'nav.goals',
+			startPage: { icon: PAGE_ICONS.goals, labelKey: 'settings.startPageGoals' },
+		},
 	},
 	{
 		path: '/groups',
 		name: 'groups',
 		component: () => import('@/pages/GroupsPage/GroupsPage.vue'),
-		meta: { startPage: { icon: PAGE_ICONS.groups, labelKey: 'settings.startPageGroups' } },
+		meta: {
+			titleKey: 'nav.groups',
+			startPage: { icon: PAGE_ICONS.groups, labelKey: 'settings.startPageGroups' },
+		},
 	},
-	{ path: '/sync', name: 'sync', component: () => import('@/pages/SyncPage/SyncPage.vue') },
+	{
+		path: '/sync',
+		name: 'sync',
+		component: () => import('@/pages/SyncPage/SyncPage.vue'),
+		meta: { titleKey: 'sync.title' },
+	},
 	{
 		path: '/settings',
 		name: 'settings',
 		component: () => import('@/pages/SettingsPage/SettingsPage.vue'),
+		meta: { titleKey: 'nav.settings' },
 	},
 ];
 

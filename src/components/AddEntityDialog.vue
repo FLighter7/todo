@@ -34,7 +34,7 @@
 </style>
 
 <template>
-	<VDialog v-model="open" max-width="480">
+	<VDialog v-model="open" max-width="480" :aria-label="t('form.addTitle')">
 		<VCard variant="elevated">
 			<VCardActions>
 				<VSpacer />
@@ -76,6 +76,7 @@
 						ref="nameField"
 						v-model="dreamName"
 						:label="t('entity.name')"
+						aria-required="true"
 						:error-messages="dreamNameError"
 						autofocus
 					/>
@@ -87,6 +88,7 @@
 						ref="nameField"
 						v-model="goalName"
 						:label="t('entity.name')"
+						aria-required="true"
 						:error-messages="goalNameError"
 						autofocus
 					/>
@@ -107,6 +109,7 @@
 						ref="nameField"
 						v-model="groupName"
 						:label="t('entity.name')"
+						aria-required="true"
 						:error-messages="groupNameError"
 						autofocus
 					/>
@@ -117,6 +120,7 @@
 						ref="nameField"
 						v-model="taskName"
 						:label="t('entity.name')"
+						aria-required="true"
 						:error-messages="taskNameError"
 						autofocus
 					/>
@@ -159,6 +163,7 @@ import { useI18n } from 'vue-i18n';
 import { mdiCheck, mdiPlusThick } from '@mdi/js';
 import DeadlineField from './DeadlineField.vue';
 import ScheduleField from './ScheduleField.vue';
+import { useReturnFocus } from '@/composables/useKeepFocus';
 import type { Deadline, DreamDraft, GoalDraft, GroupDraft, Schedule, TaskDraft } from '@/types';
 
 const TABS = ['dream', 'goal', 'group', 'task'] as const;
@@ -193,6 +198,8 @@ const emit = defineEmits<{
 const open = defineModel<boolean>({ required: true });
 
 const { t } = useI18n();
+
+useReturnFocus(open);
 
 const visibleTabs = computed(() => {
 	const shown: Record<AddTab, boolean> = {

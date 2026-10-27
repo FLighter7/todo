@@ -188,3 +188,18 @@ describe('DeadlineField clearing and retyping the year', () => {
 		expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([{ year: 2028 }]);
 	});
 });
+
+describe('DeadlineField year it cannot use', () => {
+	it('says so under the field instead of dropping the year without a word', async () => {
+		const wrapper = mountField(undefined);
+
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+		await wrapper.get('input[type="number"]').setValue('0');
+
+		expect(wrapper.text()).toContain('Enter a year from 1 to 9999');
+
+		await wrapper.get('input[type="number"]').setValue('2027');
+
+		expect(wrapper.text()).not.toContain('Enter a year from 1 to 9999');
+	});
+});

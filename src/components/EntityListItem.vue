@@ -20,20 +20,53 @@
 		margin-block: calc((1.5rem - var(--v-selection-control-size)) / 2);
 	}
 }
+
+// A name wraps rather than losing its end to an ellipsis: on a phone at a large
+// text size most of them did, and the row was the only place to read them. The
+// title and the content box around it let the focus ring of the button inside
+// show past their edges; Vuetify clips both.
+.item :global(.v-list-item__content),
+.item :global(.v-list-item-title) {
+	overflow: visible;
+}
+
+.item :global(.v-list-item-title) {
+	white-space: normal;
+}
+
+// The name is a real button for the keyboard and a screen reader, drawn as the
+// plain title it was.
+.open {
+	display: block;
+	width: 100%;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	overflow-wrap: anywhere;
+	cursor: pointer;
+}
 </style>
 
 <template>
-	<VListItem :class="$style.item" @click="emit('click')">
+	<!-- A click anywhere on the row opens the record. For the keyboard and a screen
+	reader the row is a list item and no stop of its own: its two actions are the
+	checkbox and the name, a button, which Vuetify's row turns Enter into a click on. -->
+	<VListItem :class="$style.item" role="listitem" :tabindex="-1" @click="emit('click')">
 		<template #prepend>
 			<VCheckboxBtn
 				:model-value="done"
-				:aria-label="t('task.done')"
+				:aria-label="t('task.doneNamed', { name })"
 				@click.stop
 				@update:model-value="emit('update:done', $event ?? false)"
 			/>
 		</template>
 
-		<VListItemTitle>{{ name }}</VListItemTitle>
+		<VListItemTitle>
+			<button type="button" :class="$style.open">{{ name }}</button>
+		</VListItemTitle>
 		<VListItemSubtitle v-if="note">{{ note }}</VListItemSubtitle>
 
 		<template v-if="date" #append>

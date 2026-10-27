@@ -38,6 +38,23 @@
 	}
 }
 
+// The current page is marked by more than its colour, which alone gave it 1.3:1
+// against the others: a bar above its icon, and a heavier label. The bar is drawn
+// in the text colour, so a forced-colours theme keeps it.
+.current {
+	font-weight: 700;
+
+	&::before {
+		content: '';
+		position: absolute;
+		top: 0.25rem;
+		inset-inline: 30%;
+		height: 0.1875rem;
+		border-radius: 9999px;
+		background-color: currentColor;
+	}
+}
+
 .fabWrap {
 	position: relative;
 	top: -1.25rem;
@@ -45,13 +62,13 @@
 </style>
 
 <template>
-	<nav :class="$style.bar">
+	<nav :class="$style.bar" :aria-label="t('nav.label')">
 		<div :class="$style.row">
 			<VBtn
 				v-for="link in before"
 				:key="link.name"
 				:to="{ name: link.name }"
-				:class="$style.link"
+				:class="[$style.link, route.name === link.name && $style.current]"
 				variant="text"
 				stacked
 				size="small"
@@ -69,7 +86,7 @@
 				v-for="link in after"
 				:key="link.name"
 				:to="{ name: link.name }"
-				:class="$style.link"
+				:class="[$style.link, route.name === link.name && $style.current]"
 				variant="text"
 				stacked
 				size="small"

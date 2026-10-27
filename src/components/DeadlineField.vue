@@ -16,6 +16,7 @@
 			min="1"
 			max="9999"
 			:label="t('goal.deadline.year')"
+			:error-messages="yearInvalid ? t('goal.deadline.yearInvalid') : undefined"
 			@update:model-value="onYearInput"
 		/>
 
@@ -162,15 +163,21 @@ watch([hasDeadline, precision, year, month, day, season], () => {
 
 const yearInput = computed(() => (year.value === undefined ? '' : String(year.value)));
 
+// A year the field cannot use is said so under it, rather than dropped without a word.
+const yearInvalid = ref(false);
+
 function onYearInput(value: string): void {
 	const trimmed = value.trim();
 	if (trimmed === '') {
 		year.value = undefined;
+		yearInvalid.value = false;
 		return;
 	}
 
 	const parsed = Number(trimmed);
-	year.value = Number.isInteger(parsed) && parsed >= 1 && parsed <= 9999 ? parsed : undefined;
+	const valid = Number.isInteger(parsed) && parsed >= 1 && parsed <= 9999;
+	year.value = valid ? parsed : undefined;
+	yearInvalid.value = !valid;
 }
 
 const precisionItems = computed(() => [
