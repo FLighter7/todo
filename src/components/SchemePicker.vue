@@ -5,9 +5,10 @@
 	gap: 0.75rem;
 }
 
-// A card per scheme: a native radio, hidden, inside the label, so the arrow
+// A card per scheme: a native radio, unseen, inside the label, so the arrow
 // keys, the role and the checked state are the browser's own.
 .scheme {
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
@@ -20,6 +21,19 @@
 		outline: var(--v-app-focus-width) solid rgb(var(--v-theme-primary));
 		outline-offset: 2px;
 	}
+}
+
+// The radio covers the whole card, its border included: a tap anywhere on it
+// reaches the radio, and a screen reader's highlight shows where it is.
+.input {
+	position: absolute;
+	z-index: 1;
+	inset: -1px;
+	width: calc(100% + 2px);
+	height: calc(100% + 2px);
+	margin: 0;
+	opacity: 0;
+	cursor: pointer;
 }
 
 // Not by colour alone: the chosen card also carries a check by its name.
@@ -94,7 +108,7 @@
 				:id="`${name}-${scheme}`"
 				v-model="model"
 				type="radio"
-				class="d-sr-only"
+				:class="$style.input"
 				:name="name"
 				:value="scheme"
 				:aria-labelledby="`${name}-${scheme}-name`"

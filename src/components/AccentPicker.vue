@@ -14,6 +14,7 @@
 // would give this palette, which is the sample itself, so a forced-colours mode
 // must leave it.
 .swatch {
+	position: relative;
 	display: flex;
 	flex: none;
 	align-items: center;
@@ -61,13 +62,16 @@
 	background: #ffffff;
 }
 
-// The native colour input covers the whole row, unseen, so that a tap anywhere
-// on it opens the system's own colour picker.
-.colorInput {
+// Each native input covers its whole circle or row, unseen: a tap anywhere on
+// it reaches the input, and a screen reader's highlight shows where it is. The
+// colour input opens the system's own colour picker.
+.input {
 	position: absolute;
+	z-index: 1;
 	inset: 0;
 	width: 100%;
 	height: 100%;
+	margin: 0;
 	padding: 0;
 	border: 0;
 	opacity: 0;
@@ -82,7 +86,7 @@
 
 <template>
 	<div>
-		<!-- A native radio, hidden, inside each label: the arrow keys, the role and
+		<!-- A native radio, unseen, inside each label: the arrow keys, the role and
 		     the checked state are the browser's own. -->
 		<div role="radiogroup" :aria-labelledby="labelledby" :class="$style.swatches">
 			<label
@@ -96,7 +100,7 @@
 					:id="`${name}-${option.id}`"
 					v-model="selected"
 					type="radio"
-					class="d-sr-only"
+					:class="$style.input"
 					:name="name"
 					:value="option.id"
 				/>
@@ -118,7 +122,7 @@
 			<input
 				:id="customId"
 				type="color"
-				:class="$style.colorInput"
+				:class="$style.input"
 				:value="model ?? palette.colors.primary"
 				:aria-describedby="hintId"
 				@change="pickCustom"
