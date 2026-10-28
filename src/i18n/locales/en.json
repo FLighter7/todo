@@ -164,7 +164,32 @@
 		"rows2": "2 rows",
 		"confirmDone": "Confirm before marking done",
 		"confirmReopen": "Confirm before reopening",
-		"showPage": "Show this page"
+		"showPage": "Show this page",
+		"scheme": "Colour scheme",
+		"schemes": {
+			"standard": "Standard",
+			"neutral": "Neutral",
+			"cool": "Cool",
+			"black": "Pure black",
+			"contrast": "High contrast"
+		},
+		"schemeBlackHint": "Neutral in light mode",
+		"accent": "Accent colour",
+		"accentScheme": "The scheme's own",
+		"accentCustom": "Custom colour",
+		"accentHint": "Each colour is drawn lighter or darker where needed, so that text stays readable.",
+		"accents": {
+			"green": "Green",
+			"teal": "Teal",
+			"blue": "Blue",
+			"indigo": "Indigo",
+			"violet": "Violet",
+			"pink": "Pink",
+			"red": "Red",
+			"orange": "Orange",
+			"brown": "Brown",
+			"slate": "Slate"
+		}
 	},
 	"quadrant": {
 		"do": "Do",

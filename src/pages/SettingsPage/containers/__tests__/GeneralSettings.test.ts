@@ -139,3 +139,28 @@ describe('GeneralSettings cleanup window', () => {
 		);
 	});
 });
+
+describe('GeneralSettings appearance', () => {
+	it('names the scheme and accent groups by their headings', () => {
+		const wrapper = mountGeneral();
+
+		const names = wrapper
+			.findAll('[role="radiogroup"]')
+			.map((group) => wrapper.get(`[id="${group.attributes('aria-labelledby')}"]`).text());
+		expect(names).toEqual(['Colour scheme', 'Accent colour']);
+	});
+
+	it('picks the scheme and the accent through the settings store', async () => {
+		const settings = useSettingsStore();
+		const wrapper = mountGeneral();
+
+		await wrapper.get('input[type="radio"][value="contrast"]').setValue();
+		expect(settings.general.scheme).toBe('contrast');
+
+		await wrapper.get('input[type="radio"][value="violet"]').setValue();
+		expect(settings.general.accent).toBe('#7E57C2');
+
+		await wrapper.get('input[type="radio"][value="scheme"]').setValue();
+		expect(settings.general.accent).toBeNull();
+	});
+});

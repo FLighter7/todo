@@ -48,6 +48,23 @@
 			/>
 		</div>
 
+		<h2 :id="schemeId" :class="$style.heading">{{ t('settings.scheme') }}</h2>
+		<SchemePicker
+			v-model="scheme"
+			:accent="settings.general.accent"
+			:labelledby="schemeId"
+			class="mx-4 mb-4"
+		/>
+
+		<h2 :id="accentId" :class="$style.heading">{{ t('settings.accent') }}</h2>
+		<AccentPicker
+			v-model="accent"
+			:scheme="settings.general.scheme"
+			:mode="mode"
+			:labelledby="accentId"
+			class="mx-4 mb-4"
+		/>
+
 		<h2 :id="startPageId" :class="$style.heading">{{ t('settings.startPage') }}</h2>
 		<VSelect
 			v-model="startPage"
@@ -92,18 +109,26 @@
 <script setup lang="ts">
 import { computed, useId } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useTheme } from 'vuetify';
 import { mdiFormatFontSizeDecrease, mdiFormatFontSizeIncrease } from '@mdi/js';
+import AccentPicker from '@/components/AccentPicker.vue';
+import SchemePicker from '@/components/SchemePicker.vue';
 import BackupActions from '@/containers/BackupActions.vue';
 import MockDataActions from '@/containers/MockDataActions.vue';
 import { getStartPageOptions, type StartPage } from '@/router';
 import { useSettingsStore } from '@/stores/settings';
-import { FONT_SCALES, isPageHidden } from '@/types';
+import { FONT_SCALES, isPageHidden, type ColorScheme, type Hex } from '@/types';
+import type { ThemeMode } from '@/plugins/theme';
 
 const emit = defineEmits<{ notify: [message: string] }>();
 
 const { t, locale } = useI18n();
 const settings = useSettingsStore();
 
+const theme = useTheme();
+
+const schemeId = useId();
+const accentId = useId();
 const startPageId = useId();
 const cleanupDaysId = useId();
 
@@ -121,6 +146,19 @@ function stepFontScale(step: -1 | 1): void {
 		settings.setFontScale(next);
 	}
 }
+
+const scheme = computed({
+	get: () => settings.general.scheme,
+	set: (value: ColorScheme) => settings.setScheme(value),
+});
+
+const accent = computed({
+	get: () => settings.general.accent,
+	set: (value: Hex | null) => settings.setAccent(value),
+});
+
+// The circles show each accent as the palette on screen draws it.
+const mode = computed<ThemeMode>(() => (theme.current.value.dark ? 'dark' : 'light'));
 
 const startPage = computed({
 	get: () => settings.general.startPage,

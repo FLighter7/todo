@@ -164,7 +164,32 @@
 		"rows2": "2 wiersze",
 		"confirmDone": "Potwierdzaj oznaczanie jako zrobione",
 		"confirmReopen": "Potwierdzaj wznowienie",
-		"showPage": "Pokazuj stronę"
+		"showPage": "Pokazuj stronę",
+		"scheme": "Schemat kolorów",
+		"schemes": {
+			"standard": "Standardowy",
+			"neutral": "Neutralny",
+			"cool": "Chłodny",
+			"black": "Czysta czerń",
+			"contrast": "Wysoki kontrast"
+		},
+		"schemeBlackHint": "W trybie jasnym – neutralny",
+		"accent": "Kolor akcentu",
+		"accentScheme": "Jak w schemacie",
+		"accentCustom": "Własny kolor",
+		"accentHint": "Każdy kolor w razie potrzeby staje się jaśniejszy lub ciemniejszy, aby tekst pozostał czytelny.",
+		"accents": {
+			"green": "Zielony",
+			"teal": "Morski",
+			"blue": "Niebieski",
+			"indigo": "Indygo",
+			"violet": "Fioletowy",
+			"pink": "Różowy",
+			"red": "Czerwony",
+			"orange": "Pomarańczowy",
+			"brown": "Brązowy",
+			"slate": "Łupkowy"
+		}
 	},
 	"quadrant": {
 		"do": "Zrób",
