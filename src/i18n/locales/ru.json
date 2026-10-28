@@ -223,7 +223,13 @@
 		"cascadeOnly": "Отменить только это",
 		"cascadeBranch": "Отменить всю ветку",
 		"cascadeGoalBody": "Активных задач в этой цели: {count}.",
-		"cascadeGroupBody": "Активных задач в этой группе: {count}."
+		"cascadeGroupBody": "Активных задач в этой группе: {count}.",
+		"color": "Цвет",
+		"colorDefault": "По умолчанию",
+		"colorCustom": "Свой цвет",
+		"colorHint": "Каждый цвет становится светлее или темнее, где нужно, чтобы текст оставался читаемым.",
+		"paintItems": "Красить текст",
+		"paintItemsOn": "текст тоже"
 	},
 	"dream": {
 		"title": "Мечта",

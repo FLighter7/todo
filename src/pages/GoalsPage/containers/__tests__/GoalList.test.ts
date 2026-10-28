@@ -8,6 +8,7 @@ import { clickButtonByText, loadItems, setEntityTab } from '@/vitestHelpers';
 import { ItemType, Status, type Dream, type Goal, type Task } from '@/types';
 import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
+import EntityListSection from '@/components/EntityListSection.vue';
 import GoalList from '../GoalList.vue';
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
@@ -87,6 +88,18 @@ describe('GoalList grouping', () => {
 		);
 
 		expect(wrapper.find('legend').text()).toBe('Visit Japan');
+	});
+
+	it("draws a dream's section in the dream's colour", async () => {
+		const { wrapper } = await mountWithData(
+			[makeDream({ color: '#1E6FD9', paintItems: true })],
+			[makeGoal({ dreamId: 'dream-1' })],
+		);
+
+		expect(wrapper.findComponent(EntityListSection).props()).toMatchObject({
+			color: '#1E6FD9',
+			paintItems: true,
+		});
 	});
 
 	it('puts a dreamless goal in the ungrouped tail, with no group wrapper', async () => {
@@ -274,5 +287,19 @@ describe('GoalList deadline', () => {
 		await wrapper.get('button[aria-label="Save"]').trigger('click');
 
 		expect(items.goals.all[0].deadline).toEqual({ year: 2027 });
+	});
+
+	it('preserves its colour when an unrelated field is edited', async () => {
+		const { wrapper, items } = await mountWithData(
+			[],
+			[makeGoal({ color: '#2E7D5B', paintItems: true })],
+		);
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		await wrapper.get('input').setValue('Learn Japanese (updated)');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(items.goals.all[0]).toMatchObject({ color: '#2E7D5B', paintItems: true });
 	});
 });

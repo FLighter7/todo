@@ -56,6 +56,7 @@ import { useCascadeCancel } from '@/composables/useCascadeCancel';
 import { useToggleConfirm } from '@/composables/useToggleConfirm';
 import { useSortedEntityRows } from '@/composables/useSortedEntityRows';
 import { formatDeadline } from '@/utils/deadline';
+import type { ListSection } from '@/utils/sortEntities';
 import EntityList from '@/components/EntityList.vue';
 import GoalDialog from '@/components/GoalDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -68,9 +69,20 @@ const { tab } = storeToRefs(useEntityTabsStore());
 const cascade = useCascadeCancel();
 const showNote = computed(() => settings.goals.rows === 2);
 
-/** A goal's section is labelled by its dream whatever the dream's own status. */
-function labelFor(dreamId: string): string {
-	return items.byId.get(dreamId)?.name ?? '';
+/**
+ * A goal's section is labelled by its dream whatever the dream's own status,
+ * and drawn in the dream's colour.
+ */
+function sectionOf(dreamId: string, goals: Goal[]): ListSection<Goal> {
+	const parent = items.byId.get(dreamId);
+	const dream = parent !== undefined && isDream(parent) ? parent : undefined;
+	return {
+		key: dreamId,
+		label: parent?.name ?? '',
+		color: dream?.color,
+		paintItems: dream?.paintItems,
+		items: goals,
+	};
 }
 
 function dateLabel(goal: Goal): string | undefined {
@@ -88,11 +100,7 @@ const sections = computed(() => {
 	}
 
 	const source = tab.value === 'active' ? activeSections.value : closedSections.value;
-	return source.sections.map((section) => ({
-		key: section.parentId,
-		label: labelFor(section.parentId),
-		items: section.items,
-	}));
+	return source.sections.map((section) => sectionOf(section.parentId, section.items));
 });
 const loose = computed(() => {
 	if (!settings.general.pages.dreams) {
@@ -110,8 +118,8 @@ const initialDraft = computed<Partial<GoalDraft>>(() => {
 		return {};
 	}
 
-	const { name, note, dreamId, deadline } = editing.value;
-	return { name, note, dreamId, deadline };
+	const { name, note, dreamId, deadline, color, paintItems } = editing.value;
+	return { name, note, dreamId, deadline, color, paintItems };
 });
 
 const dreamOptions = computed(() => {

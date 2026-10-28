@@ -8,6 +8,7 @@ import { clickButtonByText, loadItems, setEntityTab } from '@/vitestHelpers';
 import { ItemType, Status, type Goal, type Group, type Schedule, type Task } from '@/types';
 import { useItemsStore } from '@/stores/items';
 import { useSettingsStore } from '@/stores/settings';
+import EntityListSection from '@/components/EntityListSection.vue';
 import TaskList from '../TaskList.vue';
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
@@ -87,6 +88,18 @@ describe('TaskList grouping', () => {
 		);
 
 		expect(wrapper.find('legend').text()).toBe('Learn Japanese');
+	});
+
+	it("draws a goal's section in the goal's colour", async () => {
+		const { wrapper } = await mountWithData(
+			[makeGoal({ color: '#2E7D5B' })],
+			[makeTask({ goalId: 'goal-1' })],
+		);
+
+		expect(wrapper.findComponent(EntityListSection).props()).toMatchObject({
+			color: '#2E7D5B',
+			paintItems: undefined,
+		});
 	});
 
 	it('puts a goalless task in the ungrouped tail, with no group wrapper', async () => {

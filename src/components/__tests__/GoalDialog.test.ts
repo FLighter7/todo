@@ -235,3 +235,56 @@ describe('GoalDialog deadline', () => {
 		expect(wrapper.get('input[type="checkbox"]').element).toHaveProperty('checked', false);
 	});
 });
+
+describe('GoalDialog colour', () => {
+	it('shows the colour in the read-only view', () => {
+		const wrapper = mount(GoalDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				initial: { name: 'Visit Japan', color: '#1E6FD9', paintItems: true },
+				dreamOptions: [],
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		expect(wrapper.text()).toContain('Blue, text inside too');
+	});
+
+	it('keeps the colour and its paint switch through an edit', async () => {
+		const wrapper = mount(GoalDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				initial: { name: 'Visit Japan', color: '#1E6FD9', paintItems: true },
+				dreamOptions: [],
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(wrapper.emitted('save')?.[0][0]).toMatchObject({ color: '#1E6FD9', paintItems: true });
+	});
+
+	it('lets the paint switch go with the colour', async () => {
+		const wrapper = mount(GoalDialog, {
+			props: {
+				modelValue: true,
+				mode: 'edit',
+				initial: { name: 'Visit Japan', color: '#1E6FD9', paintItems: true },
+				dreamOptions: [],
+			},
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		await wrapper.get('input[type="radio"][value="default"]').setValue();
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		const draft = wrapper.emitted('save')?.[0][0] as Record<string, unknown>;
+		expect(draft.color).toBeUndefined();
+		expect(draft.paintItems).toBeUndefined();
+	});
+});

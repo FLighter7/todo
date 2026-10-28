@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { COLOR_SCHEMES, type Hex } from '@/types';
+import { COLOR_SCHEMES, type ColorScheme, type Hex } from '@/types';
 import { blend, contrastRatio } from '@/utils/contrast';
 import { oklchToHex } from '@/utils/oklch';
 import {
@@ -8,8 +8,10 @@ import {
 	STATUS_COLORS,
 	THEME_MODES,
 	paletteFor,
+	sectionColorFor,
 	textRatio,
 	type PaletteColors,
+	type ThemeMode,
 } from '../theme';
 
 /** Vuetify's tonal variant: the colour at 12% over the surface, with the colour as text. */
@@ -148,6 +150,58 @@ describe('accents', () => {
 			it(`fits any colour picked by hand into the ${scheme} scheme, ${mode}`, () => {
 				for (const seed of CUSTOM_SEEDS) {
 					expectPrimaryReadable(paletteFor(scheme, mode, seed).colors, TEXT, seed);
+				}
+			});
+		}
+	}
+});
+
+/**
+ * Every pair a section colour is drawn in, on the backgrounds a list sits on:
+ * the legend and a painted row's name at full strength, its note at the
+ * opacity contrast.scss gives a note, and its empty checkbox at medium
+ * emphasis. The border is decoration; the legend names the section.
+ */
+function expectSectionReadable(
+	scheme: ColorScheme,
+	mode: ThemeMode,
+	seed: Hex,
+	label: string,
+): void {
+	const { level, [mode]: palette } = SCHEMES[scheme];
+	const text = textRatio(level);
+	const high = palette.variables['high-emphasis-opacity'];
+	const medium = palette.variables['medium-emphasis-opacity'];
+	const color = sectionColorFor(scheme, mode, seed);
+
+	for (const backdrop of [palette.colors.background, palette.colors.surface]) {
+		expect(
+			contrastRatio(color, backdrop),
+			`${label} as a legend on ${backdrop}`,
+		).toBeGreaterThanOrEqual(text);
+		expect(
+			contrastRatio(blend(color, backdrop, medium / high), backdrop),
+			`${label} as a note on ${backdrop}`,
+		).toBeGreaterThanOrEqual(text);
+		expect(
+			contrastRatio(blend(color, backdrop, medium), backdrop),
+			`${label} as an empty checkbox on ${backdrop}`,
+		).toBeGreaterThanOrEqual(CONTROL);
+	}
+}
+
+describe('section colours', () => {
+	for (const scheme of COLOR_SCHEMES) {
+		for (const mode of THEME_MODES) {
+			it(`fits every swatch into the ${scheme} scheme, ${mode}`, () => {
+				for (const { id, seed } of ACCENT_SWATCHES) {
+					expectSectionReadable(scheme, mode, seed, id);
+				}
+			});
+
+			it(`fits any colour picked by hand into the ${scheme} scheme, ${mode}`, () => {
+				for (const seed of CUSTOM_SEEDS) {
+					expectSectionReadable(scheme, mode, seed, seed);
 				}
 			});
 		}

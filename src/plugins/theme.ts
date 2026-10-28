@@ -1,6 +1,6 @@
 import type { ThemeDefinition } from 'vuetify';
 import { COLOR_SCHEMES, type ColorScheme, type Hex } from '@/types';
-import { fitAccent } from '@/utils/accent';
+import { fitAccent, fitSectionColor } from '@/utils/accent';
 
 export type ThemeMode = 'light' | 'dark';
 export const THEME_MODES: readonly ThemeMode[] = ['light', 'dark'];
@@ -324,9 +324,27 @@ export const ACCENT_SWATCHES = [
 	{ id: 'slate', seed: '#607D8B' },
 ] as const satisfies ReadonlyArray<{ id: string; seed: Hex }>;
 
+/** The swatch `seed` is, if it is one: what a picker checks and a dialog names. */
+export function findSwatch(seed: Hex): (typeof ACCENT_SWATCHES)[number]['id'] | undefined {
+	return ACCENT_SWATCHES.find((swatch) => swatch.seed.toLowerCase() === seed.toLowerCase())?.id;
+}
+
 /** The name a scheme in a mode is registered with Vuetify under. */
 export function themeName(scheme: ColorScheme, mode: ThemeMode): string {
 	return `${scheme}-${mode}`;
+}
+
+/** The scheme and mode a theme name stands for; nothing for Vuetify's own, unused, themes. */
+export function parseThemeName(name: string): { scheme: ColorScheme; mode: ThemeMode } | undefined {
+	for (const scheme of COLOR_SCHEMES) {
+		for (const mode of THEME_MODES) {
+			if (name === themeName(scheme, mode)) {
+				return { scheme, mode };
+			}
+		}
+	}
+
+	return undefined;
 }
 
 /** A scheme's palette in one mode, with `accent` fitted in place of its own primary colour. */
@@ -338,6 +356,24 @@ export function paletteFor(scheme: ColorScheme, mode: ThemeMode, accent: Hex | n
 
 	const { primary, onPrimary } = fitAccent(accent, palette.colors, textRatio(level));
 	return { ...palette, colors: { ...palette.colors, primary, 'on-primary': onPrimary } };
+}
+
+/**
+ * A section colour as a scheme in one mode draws it: the border, the legend,
+ * and the rows inside when the section paints them. A row's note shows at the
+ * opacity contrast.scss gives `--v-list-item-subtitle-opacity`, on top of the
+ * row's colour; an empty checkbox at medium emphasis.
+ */
+export function sectionColorFor(scheme: ColorScheme, mode: ThemeMode, seed: Hex): Hex {
+	const { level, [mode]: palette } = SCHEMES[scheme];
+	const high = palette.variables['high-emphasis-opacity'];
+	const medium = palette.variables['medium-emphasis-opacity'];
+	return fitSectionColor(
+		seed,
+		palette.colors,
+		{ note: medium / high, control: medium },
+		textRatio(level),
+	);
 }
 
 /**

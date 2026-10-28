@@ -223,7 +223,13 @@
 		"cascadeOnly": "Anuluj tylko to",
 		"cascadeBranch": "Anuluj całą gałąź",
 		"cascadeGoalBody": "Aktywnych zadań w tym celu: {count}.",
-		"cascadeGroupBody": "Aktywnych zadań w tej grupie: {count}."
+		"cascadeGroupBody": "Aktywnych zadań w tej grupie: {count}.",
+		"color": "Kolor",
+		"colorDefault": "Domyślny",
+		"colorCustom": "Własny kolor",
+		"colorHint": "Każdy kolor w razie potrzeby staje się jaśniejszy lub ciemniejszy, aby tekst pozostał czytelny.",
+		"paintItems": "Koloruj tekst w środku",
+		"paintItemsOn": "tekst w środku też"
 	},
 	"dream": {
 		"title": "Marzenie",

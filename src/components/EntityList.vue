@@ -6,7 +6,12 @@
 
 		<template v-else>
 			<template v-for="block in blocks" :key="block.key">
-				<EntityListSection v-if="block.label !== undefined" :label="block.label">
+				<EntityListSection
+					v-if="block.label !== undefined"
+					:label="block.label"
+					:color="block.color"
+					:paint-items="block.paintItems"
+				>
 					<div role="list">
 						<EntityListItem
 							v-for="item in block.items"
@@ -44,7 +49,7 @@
 import { computed, useTemplateRef } from 'vue';
 import EntityListSection from './EntityListSection.vue';
 import EntityListItem from './EntityListItem.vue';
-import { Status, type ItemBase } from '@/types';
+import { Status, type Hex, type ItemBase } from '@/types';
 import type { EntityRow } from '@/utils/sortEntities';
 import { useKeepFocusInList } from '@/composables/useKeepFocus';
 
@@ -66,12 +71,20 @@ const emit = defineEmits<{
  * from list to list. A label marks a section.
  */
 const blocks = computed(() => {
-	const result: Array<{ key: string; label?: string; items: T[] }> = [];
+	const result: Array<{
+		key: string;
+		label?: string;
+		color?: Hex;
+		paintItems?: boolean;
+		items: T[];
+	}> = [];
 	for (const row of props.rows) {
 		if (row.kind === 'section') {
 			result.push({
 				key: `section:${row.section.key}`,
 				label: row.section.label,
+				color: row.section.color,
+				paintItems: row.section.paintItems,
 				items: row.section.items,
 			});
 			continue;

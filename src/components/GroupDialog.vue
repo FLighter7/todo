@@ -7,15 +7,20 @@
 		@cancel="emit('cancel')"
 	>
 		<template #default="{ editing }">
-			<VTextField
-				v-if="editing"
-				v-model="name"
-				:label="t('entity.nameField')"
-				:error-messages="nameError"
-				autofocus
-				@keyup.enter="onSave"
-			/>
-			<div v-else class="text-title-large">{{ name }}</div>
+			<template v-if="editing">
+				<VTextField
+					v-model="name"
+					:label="t('entity.nameField')"
+					:error-messages="nameError"
+					autofocus
+					@keyup.enter="onSave"
+				/>
+				<SectionColorField v-model:color="color" v-model:paint-items="paintItems" />
+			</template>
+			<template v-else>
+				<div class="text-title-large">{{ name }}</div>
+				<SectionColorSummary :color="color" :paint-items="paintItems" />
+			</template>
 		</template>
 	</EntityDialog>
 </template>
@@ -24,7 +29,9 @@
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EntityDialog from './EntityDialog.vue';
-import type { GroupDraft } from '@/types';
+import SectionColorField from './SectionColorField.vue';
+import SectionColorSummary from './SectionColorSummary.vue';
+import type { GroupDraft, Hex } from '@/types';
 
 const props = withDefaults(
 	defineProps<{
@@ -41,6 +48,8 @@ const open = defineModel<boolean>({ required: true });
 const { t } = useI18n();
 
 const name = ref('');
+const color = ref<Hex | undefined>(undefined);
+const paintItems = ref(false);
 const showErrors = ref(false);
 
 const nameError = computed(() =>
@@ -55,6 +64,8 @@ watch(
 		}
 
 		name.value = props.initial.name ?? '';
+		color.value = props.initial.color;
+		paintItems.value = props.initial.paintItems ?? false;
 		showErrors.value = false;
 	},
 	{ immediate: true },
@@ -66,7 +77,11 @@ function onSave(): void {
 		return;
 	}
 
-	emit('save', { name: name.value.trim() });
+	emit('save', {
+		name: name.value.trim(),
+		color: color.value,
+		paintItems: color.value !== undefined && paintItems.value ? true : undefined,
+	});
 	open.value = false;
 }
 </script>

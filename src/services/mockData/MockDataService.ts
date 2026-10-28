@@ -242,7 +242,7 @@ export class MockDataService {
 
 		// One shared note pool, consumed in dream -> goal -> task order across
 		// every `hasNote: true` slot in all three template arrays combined.
-		// Groups take no part: a group carries a name only.
+		// Groups take no part: a group carries no note.
 		const noteSlots =
 			countNoteSlots(DREAM_TEMPLATES) +
 			countNoteSlots(GOAL_TEMPLATES) +
@@ -262,6 +262,8 @@ export class MockDataService {
 				created,
 				updated,
 				status: template.status,
+				color: template.color,
+				paintItems: template.paintItems,
 			};
 		});
 
@@ -280,6 +282,8 @@ export class MockDataService {
 					template.deadlineShape === 'none'
 						? undefined
 						: buildDeadline(template.deadlineShape, now, random),
+				color: template.color,
+				paintItems: template.paintItems,
 			};
 		});
 
@@ -292,6 +296,8 @@ export class MockDataService {
 				created,
 				updated,
 				status: template.status,
+				color: template.color,
+				paintItems: template.paintItems,
 			};
 		});
 

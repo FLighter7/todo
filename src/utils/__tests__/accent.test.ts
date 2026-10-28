@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { fitAccent, type AccentBackdrops } from '../accent';
-import { contrastRatio } from '../contrast';
+import { fitAccent, fitSectionColor, type AccentBackdrops } from '../accent';
+import { blend, contrastRatio } from '../contrast';
 import { hexToOklch } from '../oklch';
 
 const LIGHT: AccentBackdrops = {
@@ -52,5 +52,44 @@ describe('fitAccent', () => {
 	it('puts the background colour on the accent as its text', () => {
 		expect(fitAccent('#D81B60', LIGHT, 4.5).onPrimary).toBe(LIGHT.background);
 		expect(fitAccent('#D81B60', DARK, 4.5).onPrimary).toBe(DARK.background);
+	});
+});
+
+describe('fitSectionColor', () => {
+	const opacities = { note: 0.83, control: 0.72 };
+
+	it('keeps a seed whose note already reads on the background and the surface', () => {
+		expect(fitSectionColor('#2F5D50', LIGHT, opacities, 4.5)).toBe('#2F5D50');
+		expect(fitSectionColor('#74AC90', DARK, opacities, 4.5)).toBe('#74AC90');
+	});
+
+	it('darkens a seed on a light palette and lightens it on a dark one, keeping its hue', () => {
+		const orange = hexToOklch('#EF6C00');
+		const light = hexToOklch(fitSectionColor('#EF6C00', LIGHT, opacities, 4.5));
+		expect(light.l).toBeLessThan(orange.l);
+		expect(Math.abs(light.h - orange.h)).toBeLessThan(3);
+
+		const indigo = hexToOklch('#3F51B5');
+		const dark = hexToOklch(fitSectionColor('#3F51B5', DARK, opacities, 4.5));
+		expect(dark.l).toBeGreaterThan(indigo.l);
+		expect(Math.abs(dark.h - indigo.h)).toBeLessThan(3);
+	});
+
+	it('fits the note, the faintest text drawn in it, not only the colour at full strength', () => {
+		const color = fitSectionColor('#EF6C00', LIGHT, opacities, 4.5);
+		const note = blend(color, LIGHT.background, opacities.note);
+
+		expect(contrastRatio(note, LIGHT.background)).toBeGreaterThanOrEqual(4.5);
+		expect(contrastRatio(note, LIGHT.background)).toBeLessThan(4.8);
+	});
+
+	it('reaches a higher ratio when asked for one', () => {
+		const color = fitSectionColor(
+			'#1E6FD9',
+			{ background: '#FFFFFF', surface: '#FFFFFF' },
+			{ note: 1, control: 1 },
+			7,
+		);
+		expect(contrastRatio(color, '#FFFFFF')).toBeGreaterThanOrEqual(7);
 	});
 });

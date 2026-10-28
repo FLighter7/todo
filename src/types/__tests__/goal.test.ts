@@ -39,6 +39,18 @@ describe('parseGoal', () => {
 		expect(() => parseGoal(makeRaw({ type: ItemType.Dream }))).toThrow(ItemFormatError);
 	});
 
+	it('reads the colour of the section its tasks sit in, and leaves it out when absent', () => {
+		expect(parseGoal(makeRaw({ color: '#2E7D5B', paintItems: false }))).toMatchObject({
+			color: '#2E7D5B',
+			paintItems: false,
+		});
+		expect(parseGoal(makeRaw()).color).toBeUndefined();
+	});
+
+	it('rejects a colour that is not #RRGGBB', () => {
+		expect(() => parseGoal(makeRaw({ color: 'rgb(0, 0, 0)' }))).toThrow(ItemFormatError);
+	});
+
 	it('keeps the dream link', () => {
 		expect(parseGoal(makeRaw({ dreamId: 'dream-1' })).dreamId).toBe('dream-1');
 	});

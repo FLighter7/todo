@@ -1,4 +1,4 @@
-import { Status } from '@/types';
+import { Status, type Hex } from '@/types';
 
 export type DeadlineShape = 'none' | 'yearOnly' | 'yearSeason' | 'yearMonth' | 'yearMonthDay';
 export type ScheduleKind =
@@ -9,12 +9,18 @@ export type ScheduleKind =
 	| 'recurringMonthlyNoCompletions'
 	| 'recurringWeeklyWithExdate';
 
-export interface DreamTemplate {
+/** A swatch's seed for the section a record heads, and whether its rows take it too. */
+interface ColorTemplate {
+	color?: Hex;
+	paintItems?: true;
+}
+
+export interface DreamTemplate extends ColorTemplate {
 	status: Status;
 	hasNote: boolean;
 }
 
-export interface GoalTemplate {
+export interface GoalTemplate extends ColorTemplate {
 	status: Status;
 	hasNote: boolean;
 	/** Index into DREAM_TEMPLATES. Absent = standalone goal. */
@@ -22,8 +28,8 @@ export interface GoalTemplate {
 	deadlineShape: DeadlineShape;
 }
 
-/** A group carries a name only, so its template has nothing to say but its status. */
-export interface GroupTemplate {
+/** A group carries no note, so its template says nothing of one. */
+export interface GroupTemplate extends ColorTemplate {
 	status: Status;
 }
 
@@ -41,10 +47,11 @@ export interface TaskTemplate {
 
 // Dreams #3 and #4 are deliberately never referenced by any GoalTemplate.dreamIndex below —
 // they must render as orphan dreams with no linked goals. #0, #1, #2, #5 are each referenced
-// by at least one goal.
+// by at least one goal. Dream #0 and goal #0 head painted sections, dream #1 and goal #3
+// coloured ones whose rows keep the palette's text colour.
 export const DREAM_TEMPLATES: DreamTemplate[] = [
-	{ status: Status.Opened, hasNote: true }, // 0
-	{ status: Status.Opened, hasNote: false }, // 1
+	{ status: Status.Opened, hasNote: true, color: '#1E6FD9', paintItems: true }, // 0
+	{ status: Status.Opened, hasNote: false, color: '#EF6C00' }, // 1
 	{ status: Status.Done, hasNote: true }, // 2
 	{ status: Status.Cancelled, hasNote: false }, // 3
 	{ status: Status.Opened, hasNote: true }, // 4
@@ -52,10 +59,23 @@ export const DREAM_TEMPLATES: DreamTemplate[] = [
 ];
 
 export const GOAL_TEMPLATES: GoalTemplate[] = [
-	{ status: Status.Opened, hasNote: true, dreamIndex: 0, deadlineShape: 'none' }, // 0
+	{
+		status: Status.Opened,
+		hasNote: true,
+		dreamIndex: 0,
+		deadlineShape: 'none',
+		color: '#2E7D5B',
+		paintItems: true,
+	}, // 0
 	{ status: Status.Opened, hasNote: false, dreamIndex: 0, deadlineShape: 'yearOnly' }, // 1
 	{ status: Status.Cancelled, hasNote: false, dreamIndex: 0, deadlineShape: 'none' }, // 2
-	{ status: Status.Opened, hasNote: true, dreamIndex: 1, deadlineShape: 'yearSeason' }, // 3
+	{
+		status: Status.Opened,
+		hasNote: true,
+		dreamIndex: 1,
+		deadlineShape: 'yearSeason',
+		color: '#7E57C2',
+	}, // 3
 	{ status: Status.Done, hasNote: true, dreamIndex: 2, deadlineShape: 'yearMonth' }, // 4
 	{ status: Status.Opened, hasNote: false, dreamIndex: 5, deadlineShape: 'yearMonthDay' }, // 5
 	{ status: Status.Opened, hasNote: true, deadlineShape: 'none' }, // 6
@@ -67,7 +87,7 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
 // Group #2 is deliberately never referenced by any TaskTemplate.groupIndex below -- it must
 // render as an empty group. Tasks #0 and #10 sit in a goal and a group at once.
 export const GROUP_TEMPLATES: GroupTemplate[] = [
-	{ status: Status.Opened }, // 0
+	{ status: Status.Opened, color: '#D81B60' }, // 0
 	{ status: Status.Opened }, // 1
 	{ status: Status.Opened }, // 2
 	{ status: Status.Done }, // 3

@@ -6,6 +6,7 @@ import { i18n } from '@/i18n';
 import { ItemType, Status, type Dream } from '@/types';
 import type { EntityRow } from '@/utils/sortEntities';
 import EntityList from '../EntityList.vue';
+import EntityListSection from '../EntityListSection.vue';
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
 	return {
@@ -52,6 +53,30 @@ describe('EntityList sectioned rendering', () => {
 		expect(wrapper.find('legend').text()).toBe('Visit Japan');
 		expect(wrapper.text()).toContain('Learn Japanese');
 		expect(wrapper.text()).toContain('Read more');
+	});
+
+	it("hands a section its parent's colour", () => {
+		const rows: EntityRow<Dream>[] = [
+			{
+				kind: 'section',
+				section: {
+					key: 'dream-1',
+					label: 'Visit Japan',
+					color: '#1E6FD9',
+					paintItems: true,
+					items: [makeDream({ id: 'g1', name: 'Learn Japanese' })],
+				},
+			},
+		];
+		const wrapper = mount(EntityList, {
+			props: { rows, emptyText: 'Nothing here yet.', showNote: false },
+			global: { plugins: [vuetify, i18n] },
+		});
+
+		expect(wrapper.findComponent(EntityListSection).props()).toMatchObject({
+			color: '#1E6FD9',
+			paintItems: true,
+		});
 	});
 
 	it('renders item rows with no section wrapper when there are no section rows', () => {

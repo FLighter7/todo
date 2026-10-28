@@ -19,7 +19,7 @@ vi.mock('@/services/sync/SyncConnection', () => ({
 	SyncConnection: vi.fn(function () {
 		return { createOffer, acceptOffer: vi.fn(), acceptAnswer: vi.fn(), exchange, close: vi.fn() };
 	}),
-	SYNC_SCHEMA: 4,
+	SYNC_SCHEMA: 5,
 }));
 
 async function loadEmptyStores(): Promise<void> {
@@ -56,7 +56,7 @@ describe('SyncPage tabs', () => {
 
 	it('disables the Server tab while a pairing is in progress and re-enables it once it finishes', async () => {
 		createOffer.mockResolvedValue('1oc.offer');
-		exchange.mockResolvedValue({ schema: 4, kind: 'data', items: [] });
+		exchange.mockResolvedValue({ schema: 5, kind: 'data', items: [] });
 
 		await loadEmptyStores();
 		const wrapper = mountPage();

@@ -16,10 +16,12 @@
 					@keyup.enter="onSave"
 				/>
 				<VTextarea v-model="note" :label="t('entity.note')" rows="3" />
+				<SectionColorField v-model:color="color" v-model:paint-items="paintItems" />
 			</template>
 			<template v-else>
 				<div class="text-title-large">{{ name }}</div>
 				<p v-if="note" class="text-body-medium mt-2">{{ note }}</p>
+				<SectionColorSummary :color="color" :paint-items="paintItems" />
 			</template>
 		</template>
 	</EntityDialog>
@@ -29,7 +31,9 @@
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EntityDialog from './EntityDialog.vue';
-import type { DreamDraft } from '@/types';
+import SectionColorField from './SectionColorField.vue';
+import SectionColorSummary from './SectionColorSummary.vue';
+import type { DreamDraft, Hex } from '@/types';
 
 const props = withDefaults(
 	defineProps<{
@@ -47,6 +51,8 @@ const { t } = useI18n();
 
 const name = ref('');
 const note = ref('');
+const color = ref<Hex | undefined>(undefined);
+const paintItems = ref(false);
 const showErrors = ref(false);
 
 const nameError = computed(() =>
@@ -62,6 +68,8 @@ watch(
 
 		name.value = props.initial.name ?? '';
 		note.value = props.initial.note ?? '';
+		color.value = props.initial.color;
+		paintItems.value = props.initial.paintItems ?? false;
 		showErrors.value = false;
 	},
 	{ immediate: true },
@@ -75,7 +83,12 @@ function onSave(): void {
 
 	const trimmedNote = note.value.trim();
 
-	emit('save', { name: name.value.trim(), note: trimmedNote === '' ? undefined : trimmedNote });
+	emit('save', {
+		name: name.value.trim(),
+		note: trimmedNote === '' ? undefined : trimmedNote,
+		color: color.value,
+		paintItems: color.value !== undefined && paintItems.value ? true : undefined,
+	});
 	open.value = false;
 }
 </script>

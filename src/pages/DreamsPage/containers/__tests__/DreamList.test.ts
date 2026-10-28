@@ -71,6 +71,19 @@ describe('DreamList editing', () => {
 
 		expect(items.dreams.all[0].name).toBe('Visit Japan and Korea');
 	});
+
+	it('preserves its colour when an unrelated field is edited', async () => {
+		const { wrapper, items } = await mountWithDreams([
+			makeDream({ color: '#1E6FD9', paintItems: true }),
+		]);
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		await wrapper.get('input').setValue('Visit Japan and Korea');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(items.dreams.all[0]).toMatchObject({ color: '#1E6FD9', paintItems: true });
+	});
 });
 
 describe('DreamList done / reopen', () => {

@@ -16,6 +16,21 @@ describe('parseGroup', () => {
 		expect(parseGroup(raw)).toEqual({ ...raw, note: undefined });
 	});
 
+	it('reads a colour, though no list sections by group yet', () => {
+		const group = parseGroup({
+			id: 'group-1',
+			type: ItemType.Group,
+			name: 'Errands',
+			created: '2026-08-06T10:00:00.000Z',
+			updated: '2026-08-06T10:00:00.000Z',
+			status: Status.Opened,
+			color: '#D81B60',
+		});
+
+		expect(group.color).toBe('#D81B60');
+		expect(group.paintItems).toBeUndefined();
+	});
+
 	it('rejects a dream, though it has the same shape', () => {
 		expect(() =>
 			parseGroup({

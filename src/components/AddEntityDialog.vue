@@ -72,6 +72,7 @@
 						autofocus
 					/>
 					<VTextarea v-model="dreamNote" :label="t('entity.note')" rows="3" />
+					<SectionColorField v-model:color="dreamColor" v-model:paint-items="dreamPaintItems" />
 				</template>
 
 				<template v-else-if="activeTab === 'goal'">
@@ -92,6 +93,7 @@
 						:label="t('goal.dreamLabel')"
 					/>
 					<DeadlineField v-model="goalDeadline" />
+					<SectionColorField v-model:color="goalColor" v-model:paint-items="goalPaintItems" />
 				</template>
 
 				<template v-else-if="activeTab === 'group'">
@@ -102,6 +104,7 @@
 						:error-messages="groupNameError"
 						autofocus
 					/>
+					<SectionColorField v-model:color="groupColor" v-model:paint-items="groupPaintItems" />
 				</template>
 
 				<template v-else>
@@ -151,8 +154,17 @@ import { useI18n } from 'vue-i18n';
 import { mdiCheck, mdiClose, mdiPlusThick } from '@mdi/js';
 import DeadlineField from './DeadlineField.vue';
 import ScheduleField from './ScheduleField.vue';
+import SectionColorField from './SectionColorField.vue';
 import { useReturnFocus } from '@/composables/useKeepFocus';
-import type { Deadline, DreamDraft, GoalDraft, GroupDraft, Schedule, TaskDraft } from '@/types';
+import type {
+	Deadline,
+	DreamDraft,
+	GoalDraft,
+	GroupDraft,
+	Hex,
+	Schedule,
+	TaskDraft,
+} from '@/types';
 
 const TABS = ['dream', 'goal', 'group', 'task'] as const;
 type AddTab = (typeof TABS)[number];
@@ -214,13 +226,19 @@ const nameField = useTemplateRef<{ focus: () => void }>('nameField');
 
 const dreamName = ref('');
 const dreamNote = ref('');
+const dreamColor = ref<Hex | undefined>(undefined);
+const dreamPaintItems = ref(false);
 
 const goalName = ref('');
 const goalNote = ref('');
 const goalDreamId = ref('');
 const goalDeadline = ref<Deadline | undefined>(undefined);
+const goalColor = ref<Hex | undefined>(undefined);
+const goalPaintItems = ref(false);
 
 const groupName = ref('');
+const groupColor = ref<Hex | undefined>(undefined);
+const groupPaintItems = ref(false);
 
 const taskName = ref('');
 const taskNote = ref('');
@@ -265,11 +283,17 @@ watch(open, (isOpen) => {
 	showErrors.value = false;
 	dreamName.value = '';
 	dreamNote.value = '';
+	dreamColor.value = undefined;
+	dreamPaintItems.value = false;
 	goalName.value = '';
 	goalNote.value = '';
 	goalDreamId.value = '';
 	goalDeadline.value = undefined;
+	goalColor.value = undefined;
+	goalPaintItems.value = false;
 	groupName.value = '';
+	groupColor.value = undefined;
+	groupPaintItems.value = false;
 	taskName.value = '';
 	taskNote.value = '';
 	taskImportant.value = false;
@@ -278,6 +302,11 @@ watch(open, (isOpen) => {
 	taskGroupId.value = '';
 	taskSchedule.value = undefined;
 });
+
+/** Stored only while it says something: with a colour, and on. */
+function paintsItems(color: Hex | undefined, paint: boolean): true | undefined {
+	return color !== undefined && paint ? true : undefined;
+}
 
 function trySave(): boolean {
 	if (activeTab.value === 'dream') {
@@ -290,6 +319,8 @@ function trySave(): boolean {
 		emit('save-dream', {
 			name: dreamName.value.trim(),
 			note: trimmedNote === '' ? undefined : trimmedNote,
+			color: dreamColor.value,
+			paintItems: paintsItems(dreamColor.value, dreamPaintItems.value),
 		});
 		return true;
 	}
@@ -306,6 +337,8 @@ function trySave(): boolean {
 			note: trimmedNote === '' ? undefined : trimmedNote,
 			dreamId: goalDreamId.value === '' ? undefined : goalDreamId.value,
 			deadline: goalDeadline.value,
+			color: goalColor.value,
+			paintItems: paintsItems(goalColor.value, goalPaintItems.value),
 		});
 		return true;
 	}
@@ -316,7 +349,11 @@ function trySave(): boolean {
 			return false;
 		}
 
-		emit('save-group', { name: groupName.value.trim() });
+		emit('save-group', {
+			name: groupName.value.trim(),
+			color: groupColor.value,
+			paintItems: paintsItems(groupColor.value, groupPaintItems.value),
+		});
 		return true;
 	}
 

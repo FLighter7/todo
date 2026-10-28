@@ -159,10 +159,11 @@ describe('AddEntityDialog saving a goal', () => {
 });
 
 describe('AddEntityDialog saving a group', () => {
-	it('offers a name field only and emits save-group with a trimmed name', async () => {
+	it('offers a name and a colour but no note, and emits save-group with a trimmed name', async () => {
 		const wrapper = mountDialog('group');
 
-		expect(wrapper.findAll('input')).toHaveLength(1);
+		expect(wrapper.findAll('input[type="text"]')).toHaveLength(1);
+		expect(wrapper.find('[role="radiogroup"]').exists()).toBe(true);
 		expect(wrapper.find('textarea').exists()).toBe(false);
 
 		await wrapper.get('input').setValue('  Errands  ');
@@ -247,6 +248,61 @@ describe('AddEntityDialog saving a task', () => {
 				},
 			],
 		]);
+	});
+});
+
+describe('AddEntityDialog colour', () => {
+	/** The paint switch closes the form; the goal tab's deadline switch comes before it. */
+	function paintSwitch(wrapper: VueWrapper) {
+		return wrapper.findAll('input[type="checkbox"]').at(-1)!;
+	}
+
+	async function pickBlueAndPaint(wrapper: VueWrapper): Promise<void> {
+		await wrapper.get('input[type="radio"][value="blue"]').setValue();
+		await paintSwitch(wrapper).setValue(true);
+	}
+
+	it('emits the picked colour with a dream, a goal and a group', async () => {
+		for (const tab of ['dream', 'goal', 'group'] as const) {
+			const wrapper = mountDialog(tab);
+
+			await wrapper.get('input').setValue('Named');
+			await pickBlueAndPaint(wrapper);
+			await clickSave(wrapper);
+
+			expect(wrapper.emitted(`save-${tab}`)?.[0][0], tab).toMatchObject({
+				color: '#1E6FD9',
+				paintItems: true,
+			});
+		}
+	});
+
+	it('starts each opening on the default grey with the switch off', async () => {
+		const wrapper = mountDialog('dream');
+		await pickBlueAndPaint(wrapper);
+
+		await wrapper.setProps({ modelValue: false });
+		await wrapper.setProps({ modelValue: true });
+
+		expect(
+			(wrapper.get('input[type="radio"][value="default"]').element as HTMLInputElement).checked,
+		).toBe(true);
+		expect((paintSwitch(wrapper).element as HTMLInputElement).checked).toBe(false);
+	});
+
+	it('keeps the colour for the next entry on save and new', async () => {
+		const wrapper = mountDialog('goal');
+
+		await wrapper.get('input').setValue('Learn Japanese');
+		await pickBlueAndPaint(wrapper);
+		await clickSaveAndNew(wrapper);
+		await wrapper.get('input').setValue('Pass JLPT N2');
+		await clickSave(wrapper);
+
+		expect(wrapper.emitted('save-goal')?.[1][0]).toMatchObject({
+			color: '#1E6FD9',
+			paintItems: true,
+		});
 	});
 });
 

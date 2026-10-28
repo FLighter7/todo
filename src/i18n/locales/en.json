@@ -223,7 +223,13 @@
 		"cascadeOnly": "Cancel only this",
 		"cascadeBranch": "Cancel the whole branch",
 		"cascadeGoalBody": "Active tasks under this goal: {count}.",
-		"cascadeGroupBody": "Active tasks in this group: {count}."
+		"cascadeGroupBody": "Active tasks in this group: {count}.",
+		"color": "Colour",
+		"colorDefault": "Default",
+		"colorCustom": "Custom colour",
+		"colorHint": "Each colour is drawn lighter or darker where needed, so that text stays readable.",
+		"paintItems": "Colour the text inside",
+		"paintItemsOn": "text inside too"
 	},
 	"dream": {
 		"title": "Dream",

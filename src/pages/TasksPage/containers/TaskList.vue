@@ -49,6 +49,7 @@ import { useAnnouncerStore } from '@/stores/announcer';
 import { useEntityTabsStore } from '@/stores/entityTabs';
 import { useToggleConfirm } from '@/composables/useToggleConfirm';
 import { useSortedEntityRows } from '@/composables/useSortedEntityRows';
+import type { ListSection } from '@/utils/sortEntities';
 import EntityList from '@/components/EntityList.vue';
 import TaskDialog from '@/components/TaskDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -60,9 +61,20 @@ const announcer = useAnnouncerStore();
 const { tab } = storeToRefs(useEntityTabsStore());
 const showNote = computed(() => settings.tasks.rows === 2);
 
-/** A task's section is labelled by its goal whatever the goal's own status. */
-function labelFor(goalId: string): string {
-	return items.byId.get(goalId)?.name ?? '';
+/**
+ * A task's section is labelled by its goal whatever the goal's own status, and
+ * drawn in the goal's colour.
+ */
+function sectionOf(goalId: string, tasks: Task[]): ListSection<Task> {
+	const parent = items.byId.get(goalId);
+	const goal = parent !== undefined && isGoal(parent) ? parent : undefined;
+	return {
+		key: goalId,
+		label: parent?.name ?? '',
+		color: goal?.color,
+		paintItems: goal?.paintItems,
+		items: tasks,
+	};
 }
 
 const activeSections = computed(() => items.tasksByGoal.active);
@@ -76,11 +88,7 @@ const sections = computed(() => {
 	}
 
 	const source = tab.value === 'active' ? activeSections.value : closedSections.value;
-	return source.sections.map((section) => ({
-		key: section.parentId,
-		label: labelFor(section.parentId),
-		items: section.items,
-	}));
+	return source.sections.map((section) => sectionOf(section.parentId, section.items));
 });
 const loose = computed(() => {
 	if (!settings.general.pages.goals) {

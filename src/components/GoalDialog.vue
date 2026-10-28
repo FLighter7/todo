@@ -25,6 +25,7 @@
 					:label="t('goal.dreamLabel')"
 				/>
 				<DeadlineField v-model="deadline" />
+				<SectionColorField v-model:color="color" v-model:paint-items="paintItems" />
 			</template>
 			<template v-else>
 				<div class="text-title-large">{{ name }}</div>
@@ -35,6 +36,7 @@
 				<p v-if="deadline" class="text-body-medium mt-2 text-medium-emphasis">
 					{{ t('goal.deadline.label') }}: {{ formatDeadline(deadline, locale, t) }}
 				</p>
+				<SectionColorSummary :color="color" :paint-items="paintItems" />
 			</template>
 		</template>
 	</EntityDialog>
@@ -45,8 +47,10 @@ import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EntityDialog from './EntityDialog.vue';
 import DeadlineField from './DeadlineField.vue';
+import SectionColorField from './SectionColorField.vue';
+import SectionColorSummary from './SectionColorSummary.vue';
 import { formatDeadline } from '@/utils/deadline';
-import type { Deadline, GoalDraft } from '@/types';
+import type { Deadline, GoalDraft, Hex } from '@/types';
 
 const props = withDefaults(
 	defineProps<{
@@ -69,6 +73,8 @@ const name = ref('');
 const note = ref('');
 const dreamId = ref('');
 const deadline = ref<Deadline | undefined>(undefined);
+const color = ref<Hex | undefined>(undefined);
+const paintItems = ref(false);
 const showErrors = ref(false);
 
 const nameError = computed(() =>
@@ -95,6 +101,8 @@ watch(
 		note.value = props.initial.note ?? '';
 		dreamId.value = props.initial.dreamId ?? '';
 		deadline.value = props.initial.deadline;
+		color.value = props.initial.color;
+		paintItems.value = props.initial.paintItems ?? false;
 		showErrors.value = false;
 	},
 	{ immediate: true },
@@ -113,6 +121,8 @@ function onSave(): void {
 		note: trimmedNote === '' ? undefined : trimmedNote,
 		dreamId: dreamId.value === '' ? undefined : dreamId.value,
 		deadline: deadline.value,
+		color: color.value,
+		paintItems: color.value !== undefined && paintItems.value ? true : undefined,
 	});
 	open.value = false;
 }

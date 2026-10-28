@@ -70,9 +70,14 @@ const rows = useSortedEntityRows(sections, visible, 'groups');
 
 const dialogOpen = ref(false);
 const editing = ref<Group | null>(null);
-const initialDraft = computed<Partial<GroupDraft>>(() =>
-	editing.value === null ? {} : { name: editing.value.name },
-);
+const initialDraft = computed<Partial<GroupDraft>>(() => {
+	if (editing.value === null) {
+		return {};
+	}
+
+	const { name, color, paintItems } = editing.value;
+	return { name, color, paintItems };
+});
 
 function openEdit(group: Group): void {
 	editing.value = group;

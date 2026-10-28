@@ -475,7 +475,7 @@ describe('useItemsStore add', () => {
 			important: true,
 			urgent: true,
 		});
-		// A group carries a name only.
+		// A group carries a name, and a colour only when given one.
 		expect(group).toEqual({
 			id: group.id,
 			type: ItemType.Group,
@@ -490,6 +490,22 @@ describe('useItemsStore add', () => {
 			deadline: { year: 2027 },
 		});
 		expect(store.quadrants.do).toHaveLength(1);
+	});
+
+	it('keeps the colour a dream, goal or group is given, and whether it paints its rows', async () => {
+		const store = await loaded();
+
+		const dream = await store.add(ItemType.Dream, {
+			name: 'Visit Japan',
+			color: '#1E6FD9',
+			paintItems: true,
+		});
+		const goal = await store.add(ItemType.Goal, { name: 'Learn Japanese', color: '#2E7D5B' });
+		const group = await store.add(ItemType.Group, { name: 'Errands', color: '#D81B60' });
+
+		expect(dream).toMatchObject({ color: '#1E6FD9', paintItems: true });
+		expect(goal).toMatchObject({ color: '#2E7D5B' });
+		expect(group).toMatchObject({ color: '#D81B60' });
 	});
 
 	it('writes an added record through to storage', async () => {
@@ -528,6 +544,14 @@ describe('useItemsStore update', () => {
 
 		expect(store.records[0].name).toBe('Renamed');
 		expect(Date.parse(store.records[0].updated)).toBeGreaterThan(Date.parse(before));
+	});
+
+	it('takes a colour off when the patch leaves it undefined', async () => {
+		const store = await loaded([makeDream({ color: '#1E6FD9', paintItems: true })]);
+
+		await store.update(ItemType.Dream, 'dream-1', { color: undefined, paintItems: undefined });
+
+		expect(store.records[0]).toMatchObject({ color: undefined, paintItems: undefined });
 	});
 
 	it('ignores an update for an unknown id', async () => {

@@ -52,7 +52,7 @@ vi.mock('@/services/sync/SyncConnection', async (importOriginal) => ({
 		};
 	}),
 	SyncError: (await importOriginal<typeof import('@/services/sync/SyncConnection')>()).SyncError,
-	SYNC_SCHEMA: 4,
+	SYNC_SCHEMA: 5,
 }));
 
 function makeDream(overrides: Partial<Dream> = {}): Dream {
@@ -109,7 +109,7 @@ function daysAgo(days: number): string {
  */
 function remotePayload(): SyncDataPayload {
 	return {
-		schema: 4,
+		schema: 5,
 		kind: 'data',
 		items: [
 			makeDream({ updated: '2026-08-07T10:00:00.000Z' }),
@@ -124,7 +124,7 @@ function remotePayload(): SyncDataPayload {
 
 function remoteSettingsPayload(general: Partial<AppSettings['general']> = {}): SyncSettingsPayload {
 	return {
-		schema: 4,
+		schema: 5,
 		kind: 'settings',
 		settings: { ...DEFAULT_SETTINGS, general: { ...DEFAULT_SETTINGS.general, ...general } },
 	};
@@ -157,7 +157,7 @@ describe('SyncFlow as initiator', () => {
 
 		expect(acceptAnswer).toHaveBeenCalledWith('1oa.answer');
 		expect(exchange).toHaveBeenCalledWith({
-			schema: 4,
+			schema: 5,
 			kind: 'data',
 			items: [makeDream(), makeGoal(), makeTask()],
 		});
@@ -270,7 +270,7 @@ describe('SyncFlow task completions', () => {
 		});
 
 		exchange.mockResolvedValue({
-			schema: 4,
+			schema: 5,
 			kind: 'data',
 			items: [remoteTask],
 		});
@@ -381,7 +381,7 @@ describe('SyncFlow settings mode', () => {
 		await flushPromises();
 
 		expect(exchange).toHaveBeenCalledWith({
-			schema: 4,
+			schema: 5,
 			kind: 'settings',
 			settings: {
 				general: settings.general,

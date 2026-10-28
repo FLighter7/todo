@@ -1,4 +1,4 @@
-import type { ItemBase, SortOrder } from '@/types';
+import type { Hex, ItemBase, SortOrder } from '@/types';
 
 /**
  * A titled block of records inside a list -- the tasks under one goal, say.
@@ -9,6 +9,9 @@ export interface ListSection<T extends ItemBase> {
 	key: string;
 	label: string;
 	items: T[];
+	/** The colour its parent picked, as picked: the list fits it to the palette on screen. */
+	color?: Hex;
+	paintItems?: boolean;
 }
 
 export type EntityRow<T extends ItemBase> =

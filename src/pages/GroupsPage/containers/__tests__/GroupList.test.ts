@@ -74,6 +74,17 @@ describe('GroupList editing', () => {
 		expect(items.groups.all[0].name).toBe('Errands in town');
 	});
 
+	it('preserves its colour when the name is edited', async () => {
+		const { wrapper, items } = await mountWithGroups([makeGroup({ color: '#D81B60' })]);
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		await wrapper.get('input').setValue('Errands in town');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(items.groups.all[0].color).toBe('#D81B60');
+	});
+
 	it('never shows a note, even with two rows set and a note stored', async () => {
 		const { wrapper } = await mountWithGroups([makeGroup({ note: 'Left over from elsewhere' })]);
 		useSettingsStore().updatePageSettings('groups', { rows: 2 });

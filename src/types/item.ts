@@ -99,6 +99,22 @@ export function readBoolean(entry: Record<string, unknown>, key: string): boolea
 	return value;
 }
 
+export function readOptionalBoolean(
+	entry: Record<string, unknown>,
+	key: string,
+): boolean | undefined {
+	const value = entry[key];
+	if (value === undefined) {
+		return undefined;
+	}
+
+	if (typeof value !== 'boolean') {
+		fail(`"${key}" must be true or false when present`);
+	}
+
+	return value;
+}
+
 /**
  * Checks the shared fields and that the record is of the `type` the caller
  * expects: each per-type parser passes its own, so a goal handed to

@@ -98,6 +98,8 @@ const BUILDERS: { [K in ItemType]: (draft: DraftOf<K>, id: string, now: string) 
 		created: now,
 		updated: now,
 		status: Status.Opened,
+		color: draft.color,
+		paintItems: draft.paintItems,
 	}),
 	[ItemType.Goal]: (draft, id, now) => ({
 		id,
@@ -109,6 +111,8 @@ const BUILDERS: { [K in ItemType]: (draft: DraftOf<K>, id: string, now: string) 
 		status: Status.Opened,
 		dreamId: draft.dreamId,
 		deadline: draft.deadline,
+		color: draft.color,
+		paintItems: draft.paintItems,
 	}),
 	[ItemType.Dream]: (draft, id, now) => ({
 		id,
@@ -118,6 +122,8 @@ const BUILDERS: { [K in ItemType]: (draft: DraftOf<K>, id: string, now: string) 
 		created: now,
 		updated: now,
 		status: Status.Opened,
+		color: draft.color,
+		paintItems: draft.paintItems,
 	}),
 };
 

@@ -1,4 +1,5 @@
 import { ItemType, fail, isRecordObject, parseItemBase, type ItemBase } from './item';
+import { readSectionColor, type SectionColor } from './color';
 
 export enum Season {
 	Winter = 1,
@@ -22,13 +23,13 @@ export interface Deadline {
 	season?: Season;
 }
 
-export interface Goal extends ItemBase {
+export interface Goal extends ItemBase, SectionColor {
 	type: ItemType.Goal;
 	dreamId?: string;
 	deadline?: Deadline;
 }
 
-export interface GoalDraft {
+export interface GoalDraft extends SectionColor {
 	name: string;
 	note?: string;
 	dreamId?: string;
@@ -107,5 +108,6 @@ export function parseGoal(value: unknown): Goal {
 		...base,
 		dreamId,
 		deadline: entry.deadline === undefined ? undefined : parseDeadline(entry.deadline),
+		...readSectionColor(entry),
 	};
 }

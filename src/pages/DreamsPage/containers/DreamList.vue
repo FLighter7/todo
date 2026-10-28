@@ -78,8 +78,8 @@ const initialDraft = computed<Partial<DreamDraft>>(() => {
 		return {};
 	}
 
-	const { name, note } = editing.value;
-	return { name, note };
+	const { name, note, color, paintItems } = editing.value;
+	return { name, note, color, paintItems };
 });
 
 function openEdit(dream: Dream): void {
