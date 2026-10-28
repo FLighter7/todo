@@ -12,14 +12,12 @@ import { en, ru, pl } from 'vuetify/locale';
 import type { AppTheme } from '@/types';
 import { settingsService } from '@/services/settings/SettingsService';
 import { initialLocale } from '@/i18n';
-import { THEMES } from './theme';
+import { buildThemes, themeName, type ThemeMode } from './theme';
 
-export type ResolvedTheme = 'light' | 'dark';
-
-// 'system' isn't a registered Vuetify theme name -- it has to resolve to
-// whichever of 'light'/'dark' the OS currently prefers before it can be
-// handed to createVuetify() or theme.change().
-export function resolveTheme(preference: AppTheme): ResolvedTheme {
+// 'system' isn't a mode of any registered Vuetify theme -- it has to resolve to
+// whichever of 'light'/'dark' the OS currently prefers before the theme's name
+// can be handed to createVuetify().
+function resolveTheme(preference: AppTheme): ThemeMode {
 	if (preference !== 'system') {
 		return preference;
 	}
@@ -27,10 +25,14 @@ export function resolveTheme(preference: AppTheme): ResolvedTheme {
 	return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
+// The saved scheme and accent from the start, so they never flash in after the
+// standard one; from then on, useAppTheme keeps the theme in step.
+const { general } = settingsService.load();
+
 export default createVuetify({
 	theme: {
-		defaultTheme: resolveTheme(settingsService.load().general.theme),
-		themes: THEMES,
+		defaultTheme: themeName(general.scheme, resolveTheme(general.theme)),
+		themes: buildThemes(general.accent),
 	},
 	defaults: {
 		VAppBar: { elevation: 0, color: 'background' },

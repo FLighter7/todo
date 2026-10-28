@@ -8,9 +8,9 @@
 	// to itself (VBtn.js, VCard.js, etc. via `themeClasses`), and dialogs/
 	// menus/tooltips are teleported straight to `document.body` -- siblings
 	// of `.v-application`, not descendants. Targeting `.v-theme--*` reaches
-	// all of them; `.v-application` alone would miss every dialog and menu.
-	.v-theme--light,
-	.v-theme--dark {
+	// all of them, whichever scheme and mode is on; `.v-application` alone would
+	// miss every dialog and menu.
+	[class*='v-theme--'] {
 		--v-hover-opacity: 0;
 	}
 }

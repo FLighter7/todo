@@ -256,16 +256,18 @@ async function runExchange(): Promise<void> {
 /**
  * Settings sync is not a merge: both sides sent their whole document, and
  * each independently decides whether to keep it or take the other side's.
- * The one exception is the text size, which stays this device's own even on
- * accept: what reads well depends on the screen, so a phone taking a
- * desktop's settings should not take its text size too.
+ * The exceptions are the text size, the colour scheme and the accent, which
+ * stay this device's own even on accept: what reads well depends on the
+ * screen, so a phone taking a desktop's settings should not take how it looks
+ * too.
  */
 function acceptSettings(): void {
 	if (incomingSettings.value) {
 		const incoming = incomingSettings.value;
+		const { fontScale, scheme, accent } = settings.general;
 		settings.replaceAll({
 			...incoming,
-			general: { ...incoming.general, fontScale: settings.general.fontScale },
+			general: { ...incoming.general, fontScale, scheme, accent },
 		});
 	}
 	incomingSettings.value = null;

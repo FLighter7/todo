@@ -23,9 +23,10 @@
 }
 
 // The outline that shows where an outlined field is drew 2.2:1 against the light
-// surface; 3:1 is the floor for the parts of a control a user has to find.
+// surface; 3:1 is the floor for the parts of a control a user has to find. Each
+// palette sets its own in plugins/theme.ts: 0.55, or solid in high contrast.
 .v-field {
-	--v-field-border-opacity: 0.55;
+	--v-field-border-opacity: var(--v-app-field-border-opacity);
 }
 
 // Vuetify draws an off switch as a pale track at 60% and a white thumb, 1.1:1

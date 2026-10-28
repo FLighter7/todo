@@ -1,8 +1,7 @@
 // @vitest-environment happy-dom
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
-import { nextTick } from 'vue';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
 import { clickButtonByText } from '@/vitestHelpers';
@@ -18,7 +17,6 @@ function openMenu(wrapper: VueWrapper): Promise<void> {
 beforeEach(() => {
 	window.localStorage.clear();
 	setActivePinia(createPinia());
-	vuetify.theme.change('light');
 });
 
 describe('ThemeMenu', () => {
@@ -52,79 +50,12 @@ describe('ThemeMenu', () => {
 		expect(light?.props('appendIcon')).toBeFalsy();
 	});
 
-	it('applies and persists the chosen theme', async () => {
+	it('persists the chosen theme', async () => {
 		const wrapper = mount(ThemeMenu, { global: { plugins: [vuetify, i18n] } });
 
 		await openMenu(wrapper);
 		await clickButtonByText(wrapper, 'Dark');
 
 		expect(useSettingsStore().general.theme).toBe('dark');
-		expect(vuetify.theme.global.name.value).toBe('dark');
-	});
-
-	it('applies a theme change made through the store directly, without going through select()', async () => {
-		mount(ThemeMenu, { global: { plugins: [vuetify, i18n] } });
-
-		useSettingsStore().setTheme('dark');
-		await nextTick();
-
-		expect(vuetify.theme.global.name.value).toBe('dark');
-	});
-
-	describe('system preference tracking', () => {
-		let listeners: Array<(event: MediaQueryListEvent) => void>;
-		let originalMatchMedia: typeof window.matchMedia;
-
-		beforeEach(() => {
-			listeners = [];
-			originalMatchMedia = window.matchMedia;
-			window.matchMedia = ((query: string) =>
-				({
-					matches: false,
-					media: query,
-					onchange: null,
-					addListener: () => {},
-					removeListener: () => {},
-					addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => {
-						listeners.push(listener);
-					},
-					removeEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => {
-						listeners = listeners.filter((candidate) => candidate !== listener);
-					},
-					dispatchEvent: () => false,
-				}) as MediaQueryList) as typeof window.matchMedia;
-		});
-
-		afterEach(() => {
-			window.matchMedia = originalMatchMedia;
-		});
-
-		it('follows OS theme changes while "system" is selected', () => {
-			settingsService.save({
-				...DEFAULT_SETTINGS,
-				general: { ...DEFAULT_SETTINGS.general, theme: 'system' },
-			});
-			mount(ThemeMenu, { global: { plugins: [vuetify, i18n] } });
-
-			for (const listener of listeners) {
-				listener({ matches: true } as MediaQueryListEvent);
-			}
-
-			expect(vuetify.theme.global.name.value).toBe('dark');
-		});
-
-		it('ignores OS theme changes when a manual preference is selected', () => {
-			settingsService.save({
-				...DEFAULT_SETTINGS,
-				general: { ...DEFAULT_SETTINGS.general, theme: 'light' },
-			});
-			mount(ThemeMenu, { global: { plugins: [vuetify, i18n] } });
-
-			for (const listener of listeners) {
-				listener({ matches: true } as MediaQueryListEvent);
-			}
-
-			expect(vuetify.theme.global.name.value).toBe('light');
-		});
 	});
 });

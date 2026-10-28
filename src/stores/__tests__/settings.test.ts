@@ -64,6 +64,26 @@ describe('useSettingsStore setters', () => {
 		expect(save).toHaveBeenCalled();
 	});
 
+	it('setScheme updates state and persists', () => {
+		const save = vi.spyOn(settingsService, 'save');
+		const store = useSettingsStore();
+
+		store.setScheme('black');
+
+		expect(store.general.scheme).toBe('black');
+		expect(save).toHaveBeenCalled();
+	});
+
+	it("setAccent updates state and persists, and takes null back to the scheme's own", () => {
+		const store = useSettingsStore();
+
+		store.setAccent('#D81B60');
+		expect(settingsService.load().general.accent).toBe('#D81B60');
+
+		store.setAccent(null);
+		expect(settingsService.load().general.accent).toBeNull();
+	});
+
 	it('setFontScale updates state and persists', () => {
 		const save = vi.spyOn(settingsService, 'save');
 		const store = useSettingsStore();
@@ -215,6 +235,8 @@ describe('useSettingsStore replaceAll', () => {
 		const incoming = {
 			general: {
 				theme: 'dark' as const,
+				scheme: 'cool' as const,
+				accent: '#1E6FD9' as const,
 				locale: 'pl',
 				startPage: 'matrix',
 				cleanupDays: 60 as const,

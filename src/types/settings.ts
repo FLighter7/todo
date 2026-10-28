@@ -1,3 +1,4 @@
+import { isHex, type Hex } from './color';
 import { isRecordObject } from './item';
 
 export type AppTheme = 'light' | 'dark' | 'system';
@@ -11,6 +12,13 @@ export type SortOrder = (typeof SORT_ORDERS)[number];
  */
 export const FONT_SCALES = [0.875, 1, 1.125, 1.25, 1.5] as const;
 export type FontScale = (typeof FONT_SCALES)[number];
+
+/**
+ * The colour schemes, in the order Settings offers them. Each has a light and
+ * a dark version, which `theme` picks between; see plugins/theme.ts.
+ */
+export const COLOR_SCHEMES = ['standard', 'neutral', 'cool', 'black', 'contrast'] as const;
+export type ColorScheme = (typeof COLOR_SCHEMES)[number];
 
 /**
  * The pages that can be switched off in Settings, named after their routes.
@@ -30,6 +38,14 @@ export interface PageSettings {
 export interface AppSettings {
 	general: {
 		theme: AppTheme;
+		/** Picks the palette; `theme` picks its light or dark version. */
+		scheme: ColorScheme;
+		/**
+		 * The colour the user picked to replace the scheme's primary colour, or
+		 * null for the scheme's own. A seed: each palette draws it as dark or as
+		 * light as its backgrounds need, see `fitAccent`.
+		 */
+		accent: Hex | null;
 		locale: string;
 		startPage: string;
 		cleanupDays: 30 | 60 | 90;
@@ -49,6 +65,8 @@ export interface AppSettings {
 export const DEFAULT_SETTINGS: AppSettings = {
 	general: {
 		theme: 'system',
+		scheme: 'standard',
+		accent: null,
 		locale: 'en',
 		startPage: 'tasks',
 		cleanupDays: 30,
@@ -165,6 +183,32 @@ function parseCleanupDays(value: unknown): 30 | 60 | 90 {
 	return value;
 }
 
+/** Defaults when absent, for the same reason as `fontScale`. */
+function parseScheme(value: unknown): ColorScheme {
+	if (value === undefined) {
+		return 'standard';
+	}
+
+	if (typeof value !== 'string' || !(COLOR_SCHEMES as readonly string[]).includes(value)) {
+		fail(`"scheme" must be one of ${COLOR_SCHEMES.join(', ')}`);
+	}
+
+	return value as ColorScheme;
+}
+
+/** Defaults when absent, for the same reason as `fontScale`. */
+function parseAccent(value: unknown): Hex | null {
+	if (value === undefined || value === null) {
+		return null;
+	}
+
+	if (!isHex(value)) {
+		fail('"accent" must be null or a colour as #RRGGBB');
+	}
+
+	return value;
+}
+
 /**
  * Defaults when absent rather than failing: a settings document saved before
  * this field existed -- in localStorage, a backup or a sync peer -- would
@@ -259,6 +303,8 @@ export function parseSettings(value: unknown): AppSettings {
 	const settings: AppSettings = {
 		general: {
 			theme: parseTheme(general.theme),
+			scheme: parseScheme(general.scheme),
+			accent: parseAccent(general.accent),
 			locale: readNonEmptyString(general, 'locale'),
 			startPage: readNonEmptyString(general, 'startPage'),
 			cleanupDays: parseCleanupDays(general.cleanupDays),

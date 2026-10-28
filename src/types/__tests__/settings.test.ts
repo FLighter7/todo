@@ -124,6 +124,34 @@ describe('parseSettings', () => {
 		expect(() => parseSettings(raw)).toThrow(/fontScale/);
 	});
 
+	it('defaults to the standard scheme and its own accent when absent, as before schemes', () => {
+		const { general } = parseSettings(validRaw());
+
+		expect(general.scheme).toBe('standard');
+		expect(general.accent).toBeNull();
+	});
+
+	it('keeps a present scheme and accent', () => {
+		const raw = validRaw();
+		raw.general = { ...(raw.general as object), scheme: 'contrast', accent: '#D81B60' };
+
+		expect(parseSettings(raw).general).toMatchObject({ scheme: 'contrast', accent: '#D81B60' });
+	});
+
+	it.each(['blue', 42, null])('rejects a scheme of %s', (scheme) => {
+		const raw = validRaw();
+		raw.general = { ...(raw.general as object), scheme };
+
+		expect(() => parseSettings(raw)).toThrow(/scheme/);
+	});
+
+	it.each(['red', '#FFF', '#GGGGGG', 42])('rejects an accent of %s', (accent) => {
+		const raw = validRaw();
+		raw.general = { ...(raw.general as object), accent };
+
+		expect(() => parseSettings(raw)).toThrow(/accent/);
+	});
+
 	it('shows every page when "pages" is absent, as in every document saved before it', () => {
 		expect(parseSettings(validRaw()).general.pages).toEqual(DEFAULT_SETTINGS.general.pages);
 	});

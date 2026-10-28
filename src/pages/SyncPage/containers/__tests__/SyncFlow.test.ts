@@ -447,6 +447,35 @@ describe('SyncFlow settings mode', () => {
 		expect(settings.general.fontScale).toBe(1.25);
 	});
 
+	it("keeps this device's own scheme and accent when the incoming settings are accepted", async () => {
+		createOffer.mockResolvedValue('1oc.offer');
+		acceptAnswer.mockResolvedValue(undefined);
+		exchange.mockResolvedValue(
+			remoteSettingsPayload({ theme: 'dark', scheme: 'cool', accent: '#1E6FD9' }),
+		);
+
+		await loadStores([], [], []);
+		const settings = useSettingsStore();
+		settings.setScheme('contrast');
+		settings.setAccent('#D81B60');
+
+		const wrapper = mount(SyncFlow, {
+			global: { plugins: [vuetify, i18n], stubs: { SyncCode: true, SyncScanner: true } },
+		});
+
+		await clickButtonByText(wrapper, 'Settings');
+		await clickButtonByText(wrapper, 'This device starts');
+		await wrapper.findComponent(SyncScanner).vm.$emit('code', '1oa.answer');
+		await flushPromises();
+
+		await clickButtonByText(wrapper, 'Replace');
+		await flushPromises();
+
+		expect(settings.general.theme).toBe('dark');
+		expect(settings.general.scheme).toBe('contrast');
+		expect(settings.general.accent).toBe('#D81B60');
+	});
+
 	it('takes the incoming set of pages along with the rest when accepted', async () => {
 		createOffer.mockResolvedValue('1oc.offer');
 		acceptAnswer.mockResolvedValue(undefined);

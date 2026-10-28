@@ -6,7 +6,9 @@ import {
 	type AppPage,
 	type AppSettings,
 	type AppTheme,
+	type ColorScheme,
 	type FontScale,
+	type Hex,
 	type PageSettings,
 } from '@/types';
 import { settingsService } from '@/services/settings/SettingsService';
@@ -51,6 +53,16 @@ export const useSettingsStore = defineStore('settings', () => {
 
 	function setTheme(theme: AppTheme): void {
 		state.general.theme = theme;
+		persist();
+	}
+
+	function setScheme(scheme: ColorScheme): void {
+		state.general.scheme = scheme;
+		persist();
+	}
+
+	function setAccent(accent: Hex | null): void {
+		state.general.accent = accent;
 		persist();
 	}
 
@@ -99,6 +111,8 @@ export const useSettingsStore = defineStore('settings', () => {
 	return {
 		...toRefs(state),
 		setTheme,
+		setScheme,
+		setAccent,
 		setLocale,
 		setStartPage,
 		setCleanupDays,

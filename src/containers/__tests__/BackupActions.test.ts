@@ -132,6 +132,8 @@ describe('BackupActions import', () => {
 		const incoming = backupService.create([], {
 			general: {
 				theme: 'light',
+				scheme: 'contrast',
+				accent: '#D81B60',
 				locale: 'ru',
 				startPage: 'matrix',
 				cleanupDays: 90,
@@ -159,7 +161,10 @@ describe('BackupActions import', () => {
 
 		expect(settings.general.theme).toBe('light');
 		expect(settings.general.locale).toBe('ru');
+		// Unlike a sync accept, a restore takes how the app looks along with the rest.
 		expect(settings.general.fontScale).toBe(1.25);
+		expect(settings.general.scheme).toBe('contrast');
+		expect(settings.general.accent).toBe('#D81B60');
 		expect(settings.general.pages).toEqual({
 			tasks: true,
 			matrix: false,
