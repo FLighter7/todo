@@ -74,3 +74,23 @@ test('the browser bar follows the theme', async ({ page }) => {
 		new RegExp(hex, 'i'),
 	);
 });
+
+test("a section's colour is fitted anew when the mode changes", async ({ page }) => {
+	await page.emulateMedia({ colorScheme: 'light' });
+	await page.goto('/todo/settings');
+	await page.getByText('Generate sample data').click();
+	await expect(page.locator('.v-snackbar').getByText(/Sample data generated/)).toBeVisible();
+
+	// The sample data's first dream picks a colour for the goals under it.
+	await page.getByRole('link', { name: 'Goals' }).click();
+	const legend = page.locator('fieldset[style*="--section-color"] legend').first();
+	const brightness = async () => {
+		const colour = await legend.evaluate((element) => getComputedStyle(element).color);
+		return (colour.match(/\d+/g) ?? []).slice(0, 3).reduce((sum, value) => sum + Number(value), 0);
+	};
+	const light = await brightness();
+
+	await page.emulateMedia({ colorScheme: 'dark' });
+	await expect(page.locator('.v-application')).toHaveClass(/v-theme--standard-dark/);
+	expect(await brightness()).toBeGreaterThan(light);
+});

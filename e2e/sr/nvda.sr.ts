@@ -277,3 +277,45 @@ test('colour scheme and accent', async ({ page, nvda }) => {
 	expect(said.customOnRequest).toMatch(/color chooser/i);
 	expect(said.customOnRequest).toContain(msg('en', 'settings.accentHint'));
 });
+
+test('a section colour in the add dialog', async ({ page, nvda }) => {
+	await open(page, 'dreams');
+	await focusWebContent(page, nvda);
+	await page.getByRole('button', { name: msg('en', 'form.add') }).focus();
+	await nvda.press('Enter');
+	await pause(page);
+	await openDialog(page).getByLabel(msg('en', 'entity.note')).focus();
+
+	const said = { colour: '', green: '', paint: '' };
+	try {
+		await nvda.clearSpokenPhraseLog();
+		await nvda.press('Tab');
+		said.colour = await speech(nvda);
+
+		// Focus mode, as on the accent in Settings: the arrows reach the radios.
+		await nvda.clearSpokenPhraseLog();
+		await nvda.press('ArrowRight');
+		await pause(page);
+		said.green = await speech(nvda);
+
+		// Past the custom colour, onto the switch a colour makes reachable.
+		await nvda.press('Tab');
+		await nvda.clearSpokenPhraseLog();
+		await nvda.press('Tab');
+		said.paint = await speech(nvda);
+	} finally {
+		await nvda.perform(NVDAKeyCodeCommands.exitFocusMode);
+	}
+	dump(
+		'sr/section-colour.txt',
+		['## colour', said.colour, '## green', said.green, '## paint', said.paint].join('\n'),
+	);
+
+	expect(said.colour).toContain(msg('en', 'entity.color'));
+	expect(said.colour).toContain(msg('en', 'entity.colorDefault'));
+	expect(said.colour).toMatch(/radio button/i);
+	expect(said.colour).toMatch(/1 of 11/);
+	expect(said.green).toContain(msg('en', 'settings.accents.green'));
+	expect(said.paint).toContain(msg('en', 'entity.paintItems'));
+	expect(said.paint).not.toMatch(/unavailable/i);
+});

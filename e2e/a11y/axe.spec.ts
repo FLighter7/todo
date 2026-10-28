@@ -51,7 +51,16 @@ interface Run {
  * one's own on the states that show the most colours.
  */
 const LOCALE_STATES = ['tasks', 'settings-general', 'add-task-schedule', 'add-goal-deadline'];
-const COLOUR_STATES = ['tasks', 'matrix', 'settings-general', 'add-task', 'task-read', 'sync'];
+const COLOUR_STATES = [
+	'tasks',
+	'matrix',
+	'goals',
+	'settings-general',
+	'add-task',
+	'add-dream',
+	'task-read',
+	'sync',
+];
 const colourStates = STATES.filter((state) => COLOUR_STATES.includes(state.name));
 const RUNS: Run[] = [
 	{ theme: 'light', locale: 'en', states: STATES },

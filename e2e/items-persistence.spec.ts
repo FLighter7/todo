@@ -12,6 +12,8 @@ interface StoredItem {
 	deadline?: unknown;
 	schedule?: { rrule?: string };
 	completions?: Array<{ occurrence: string; done: boolean }>;
+	color?: string;
+	paintItems?: boolean;
 }
 
 const TASK = 1;
@@ -158,4 +160,47 @@ test('a group made on its page, and a task put in it, survive a reload', async (
 	await page.getByText('Buy stamps', { exact: true }).click();
 	await expect(dialog.getByText('Group: Errands')).toBeVisible();
 	expect(await stored()).toEqual({ group, task });
+});
+
+test("a dream's colour survives a reload and paints the section its goals sit in", async ({
+	page,
+}) => {
+	await page.goto('/todo/dreams');
+	const dialog = page.getByRole('dialog');
+
+	await page.getByRole('button', { name: 'Add', exact: true }).click();
+	await dialog.getByLabel('Name').fill('Visit Japan');
+	await dialog
+		.getByRole('radiogroup', { name: 'Colour' })
+		.getByRole('radio', { name: 'Orange' })
+		.check();
+	await dialog.getByLabel('Colour the text inside').check();
+	await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+	await expect(page.locator('.v-list-item', { hasText: 'Visit Japan' })).toBeVisible();
+
+	await page.getByRole('link', { name: 'Goals' }).click();
+	await page.getByRole('button', { name: 'Add', exact: true }).click();
+	await dialog.getByLabel('Name').fill('Learn Japanese');
+	await dialog.locator('.v-field', { has: page.getByLabel('Dream', { exact: true }) }).click();
+	await page.getByRole('option', { name: 'Visit Japan' }).click();
+	await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+	await expect(page.locator('.v-list-item', { hasText: 'Learn Japanese' })).toBeVisible();
+
+	const storedDream = async () => (await readItems(page)).find((item) => item.type === DREAM);
+	await expect.poll(async () => (await storedDream())?.color).toBe('#EF6C00');
+	expect((await storedDream())?.paintItems).toBe(true);
+
+	await page.reload();
+	const section = page.locator('fieldset', { hasText: 'Learn Japanese' });
+	const colourOf = (locator: ReturnType<Page['locator']>) =>
+		locator.evaluate((element) => getComputedStyle(element).color);
+	const legend = await colourOf(section.locator('legend'));
+	expect(await section.evaluate((element) => getComputedStyle(element).borderTopColor)).toBe(
+		legend,
+	);
+	expect(await colourOf(section.getByRole('button', { name: 'Learn Japanese' }))).toBe(legend);
+	const grey = await page
+		.locator('.v-application')
+		.evaluate((root) => getComputedStyle(root).getPropertyValue('--v-theme-on-surface-variant'));
+	expect(legend).not.toBe(`rgb(${grey.trim().replaceAll(',', ', ')})`);
 });
