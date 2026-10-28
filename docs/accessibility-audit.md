@@ -217,4 +217,6 @@ npm run test:sr                            # NVDA; Windows only, takes over the 
 
 `npm run test:sr` needs a one-time `npx @guidepup/setup setup` and `npx @guidepup/setup install`, which download a portable NVDA into `%LOCALAPPDATA%\guidepup`. While it runs Guidepup presses keys at the OS level, so the machine has to be left alone; an editor that has the focus receives those keys too.
 
+Since the colour schemes (2026-10-28) the axe runs also cover high contrast in both modes, every state with the AAA rules on, and the other schemes and three accents over six states; see [decisions.md](decisions.md#theming).
+
 New violations fail `e2e/a11y/axe.spec.ts`. A violation that has to stay for a while goes into `e2e/a11y/allowlist.json` with the finding that tracks it; the list is empty today.

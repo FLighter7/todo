@@ -59,8 +59,9 @@ src/
 	                            guard — not type declarations alone
 
 	i18n/                    — vue-i18n setup and locales (`locales/ru.json` is the one non-English file)
-	plugins/                 — Vuetify setup; theme.ts holds both palettes apart from Vuetify, so
-	                            the palette contrast test can read them
+	plugins/                 — Vuetify setup; theme.ts holds every colour scheme's light and
+	                            dark palettes and the accent swatches apart from Vuetify, so the
+	                            palette contrast test can read them
 	router/                  — vue-router setup, one route per page
 
 	composables/             — Vue-tied reusable logic, e.g. useCascadeCancel.ts (cascading-cancel
@@ -68,11 +69,14 @@ src/
 	                            and useToggleConfirm.ts (Done/Reopen confirm gating, shared by all
 	                            three page containers), useKeepFocus.ts (focus back to a
 	                            dialog's trigger, or to the next row when a row leaves a list)
-	                            and useErrorReason.ts (a service error's code as a reason in the
-	                            user's language)
+	                            useErrorReason.ts (a service error's code as a reason in the
+	                            user's language) and useAppTheme.ts (Vuetify's theme kept in step
+	                            with the mode, scheme and accent settings; App.vue calls it once)
 	utils/                   — pure, Vue-independent utility functions, one per file, e.g.
 	                            collectGarbage.ts (closed-record and stale-completion pruning),
-	                            quadrants.ts, sectionByParent.ts and intl.ts (one shared
+	                            quadrants.ts, sectionByParent.ts, contrast.ts, oklch.ts and
+	                            accent.ts (WCAG contrast, OKLCH conversion, and fitting an accent
+	                            into a palette) and intl.ts (one shared
 	                            Intl.DateTimeFormat per locale and options — use it for any
 	                            formatter a list calls per row)
 	assets/                  — assets imported into the build, e.g. the self-hosted webfonts under
