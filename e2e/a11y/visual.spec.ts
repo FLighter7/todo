@@ -289,6 +289,7 @@ test.describe('screenshots for review', () => {
 		'tasks',
 		'tasks-history',
 		'matrix',
+		'settings-general',
 		'settings-tasks',
 		'add-task',
 		'confirm-done',

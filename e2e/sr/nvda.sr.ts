@@ -173,7 +173,8 @@ test('settings controls', async ({ page, nvda }) => {
 	await focusWebContent(page, nvda);
 	await page.getByRole('tab', { name: msg('en', 'settings.general') }).focus();
 	await nvda.clearSpokenPhraseLog();
-	for (let index = 0; index < 8; index++) await nvda.press('Tab');
+	// Past the text size, the scheme, the accent and the custom colour.
+	for (let index = 0; index < 11; index++) await nvda.press('Tab');
 	const tabbing = await speech(nvda);
 
 	await page.getByRole('button', { name: msg('en', 'settings.fontScaleIncrease') }).focus();
@@ -198,4 +199,60 @@ test('settings controls', async ({ page, nvda }) => {
 	// The percent sign is read out in the Windows language, so only the number is matched.
 	expect(larger).toMatch(/112[.,]5/);
 	expect(toggle).toMatch(/pressed|selected/i);
+});
+
+test('colour scheme and accent', async ({ page, nvda }) => {
+	await open(page, 'settings');
+	await focusWebContent(page, nvda);
+	await page.getByRole('button', { name: msg('en', 'settings.fontScaleIncrease') }).focus();
+	await nvda.clearSpokenPhraseLog();
+	await nvda.press('Tab');
+	const scheme = await speech(nvda);
+
+	// The arrow keys go to the page itself: in browse mode NVDA would take them
+	// to move through the text rather than the radios.
+	await nvda.clearSpokenPhraseLog();
+	for (let index = 0; index < 3; index++) await page.keyboard.press('ArrowRight');
+	await pause(page);
+	const black = await speech(nvda);
+
+	await nvda.clearSpokenPhraseLog();
+	await nvda.press('Tab');
+	const accent = await speech(nvda);
+
+	await nvda.clearSpokenPhraseLog();
+	await page.keyboard.press('ArrowRight');
+	await pause(page);
+	const green = await speech(nvda);
+
+	await nvda.clearSpokenPhraseLog();
+	await nvda.press('Tab');
+	const custom = await speech(nvda);
+	dump(
+		'sr/appearance.txt',
+		[
+			'## scheme',
+			scheme,
+			'## pure black',
+			black,
+			'## accent',
+			accent,
+			'## green',
+			green,
+			'## custom',
+			custom,
+		].join('\n'),
+	);
+
+	expect(scheme).toContain(msg('en', 'settings.scheme'));
+	expect(scheme).toContain(msg('en', 'settings.schemes.standard'));
+	expect(scheme).toMatch(/radio button/i);
+	expect(scheme).toMatch(/1 of 5/);
+	expect(black).toContain(msg('en', 'settings.schemes.black'));
+	expect(black).toContain(msg('en', 'settings.schemeBlackHint'));
+	expect(accent).toContain(msg('en', 'settings.accent'));
+	expect(accent).toContain(msg('en', 'settings.accentScheme'));
+	expect(accent).toMatch(/1 of 11/);
+	expect(green).toContain(msg('en', 'settings.accents.green'));
+	expect(custom).toContain(msg('en', 'settings.accentCustom'));
 });

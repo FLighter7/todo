@@ -5,6 +5,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 export const LOCALES = ['en', 'ru', 'pl'] as const;
 export type Locale = (typeof LOCALES)[number];
 export type Theme = 'light' | 'dark';
+export type Scheme = 'standard' | 'neutral' | 'cool' | 'black' | 'contrast';
 
 type Messages = Record<string, unknown>;
 
@@ -65,13 +66,15 @@ export async function settle(page: Page): Promise<void> {
 
 export interface AuditOptions {
 	theme?: Theme;
+	scheme?: Scheme;
+	accent?: string | null;
 	locale?: Locale;
 	fontScale?: number;
 }
 
 /**
  * Written before every page load, so the app starts straight in the wanted
- * theme, locale and text size. Two rows show notes, and the confirmations are
+ * theme, scheme, accent, locale and text size. Two rows show notes, and the confirmations are
  * on so that a checkbox opens its dialog instead of closing the record.
  */
 export async function applySettings(page: Page, options: AuditOptions = {}): Promise<void> {
@@ -79,6 +82,8 @@ export async function applySettings(page: Page, options: AuditOptions = {}): Pro
 	const document = {
 		general: {
 			theme: options.theme ?? 'light',
+			scheme: options.scheme ?? 'standard',
+			accent: options.accent ?? null,
 			locale: options.locale ?? 'en',
 			startPage: 'tasks',
 			cleanupDays: 30,
