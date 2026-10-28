@@ -70,8 +70,10 @@ src/
 	                            three page containers), useKeepFocus.ts (focus back to a
 	                            dialog's trigger, or to the next row when a row leaves a list)
 	                            useErrorReason.ts (a service error's code as a reason in the
-	                            user's language) and useAppTheme.ts (Vuetify's theme kept in step
+	                            user's language), useAppTheme.ts (Vuetify's theme kept in step
 	                            with the mode, scheme and accent settings; App.vue calls it once)
+	                            and useThemeOnScreen.ts (the scheme and mode on screen, read off
+	                            Vuetify's theme, so a component with no store can fit a colour)
 	utils/                   — pure, Vue-independent utility functions, one per file, e.g.
 	                            collectGarbage.ts (closed-record and stale-completion pruning),
 	                            quadrants.ts, sectionByParent.ts, contrast.ts, oklch.ts and
