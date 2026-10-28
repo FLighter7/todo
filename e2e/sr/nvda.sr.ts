@@ -209,38 +209,56 @@ test('colour scheme and accent', async ({ page, nvda }) => {
 	await nvda.press('Tab');
 	const scheme = await speech(nvda);
 
-	// The arrow keys go to the page itself: in browse mode NVDA would take them
-	// to move through the text rather than the radios.
-	await nvda.clearSpokenPhraseLog();
-	for (let index = 0; index < 3; index++) await page.keyboard.press('ArrowRight');
-	await pause(page);
-	const black = await speech(nvda);
+	const said = { black: '', accent: '', green: '', custom: '', customOnRequest: '' };
+	try {
+		// NVDA switches to focus mode by itself once Tab lands on a radio (it marks
+		// the switch with a sound, not a word), so the arrow keys pressed through
+		// it reach the page. Arrows sent to the page past NVDA moved the radios but
+		// went unspoken.
+		await nvda.clearSpokenPhraseLog();
+		for (let index = 0; index < 3; index++) await nvda.press('ArrowRight');
+		await pause(page);
+		said.black = await speech(nvda);
 
-	await nvda.clearSpokenPhraseLog();
-	await nvda.press('Tab');
-	const accent = await speech(nvda);
+		await nvda.clearSpokenPhraseLog();
+		await nvda.press('Tab');
+		said.accent = await speech(nvda);
 
-	await nvda.clearSpokenPhraseLog();
-	await page.keyboard.press('ArrowRight');
-	await pause(page);
-	const green = await speech(nvda);
+		await nvda.clearSpokenPhraseLog();
+		await nvda.press('ArrowRight');
+		await pause(page);
+		said.green = await speech(nvda);
 
-	await nvda.clearSpokenPhraseLog();
-	await nvda.press('Tab');
-	const custom = await speech(nvda);
+		// Tabbing onto a colour input, NVDA with Chrome says only "clickable" and the
+		// value the input had when the page loaded: no name, no role, whatever the
+		// markup (a bare input with an aria-label sounds the same). What it holds
+		// is asked for with NVDA+Tab, which reads the focus in full.
+		await nvda.clearSpokenPhraseLog();
+		await nvda.press('Tab');
+		await pause(page);
+		said.custom = await speech(nvda);
+		await nvda.clearSpokenPhraseLog();
+		await nvda.perform(NVDAKeyCodeCommands.reportCurrentFocus);
+		await pause(page);
+		said.customOnRequest = await speech(nvda);
+	} finally {
+		await nvda.perform(NVDAKeyCodeCommands.exitFocusMode);
+	}
 	dump(
 		'sr/appearance.txt',
 		[
 			'## scheme',
 			scheme,
 			'## pure black',
-			black,
+			said.black,
 			'## accent',
-			accent,
+			said.accent,
 			'## green',
-			green,
+			said.green,
 			'## custom',
-			custom,
+			said.custom,
+			'## custom, read with NVDA+Tab',
+			said.customOnRequest,
 		].join('\n'),
 	);
 
@@ -248,11 +266,14 @@ test('colour scheme and accent', async ({ page, nvda }) => {
 	expect(scheme).toContain(msg('en', 'settings.schemes.standard'));
 	expect(scheme).toMatch(/radio button/i);
 	expect(scheme).toMatch(/1 of 5/);
-	expect(black).toContain(msg('en', 'settings.schemes.black'));
-	expect(black).toContain(msg('en', 'settings.schemeBlackHint'));
-	expect(accent).toContain(msg('en', 'settings.accent'));
-	expect(accent).toContain(msg('en', 'settings.accentScheme'));
-	expect(accent).toMatch(/1 of 11/);
-	expect(green).toContain(msg('en', 'settings.accents.green'));
-	expect(custom).toContain(msg('en', 'settings.accentCustom'));
+	expect(said.black).toContain(msg('en', 'settings.schemes.black'));
+	expect(said.black).toContain(msg('en', 'settings.schemeBlackHint'));
+	expect(said.accent).toContain(msg('en', 'settings.accent'));
+	expect(said.accent).toContain(msg('en', 'settings.accentScheme'));
+	expect(said.accent).toMatch(/1 of 11/);
+	expect(said.green).toContain(msg('en', 'settings.accents.green'));
+	expect(said.custom).toMatch(/clickable/i);
+	expect(said.customOnRequest).toContain(msg('en', 'settings.accentCustom'));
+	expect(said.customOnRequest).toMatch(/color chooser/i);
+	expect(said.customOnRequest).toContain(msg('en', 'settings.accentHint'));
 });
