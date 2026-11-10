@@ -1,0 +1,381 @@
+// @vitest-environment happy-dom
+import { beforeEach, describe, expect, it } from 'vitest';
+import { mount } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
+import vuetify from '@/plugins/vuetify';
+import { i18n } from '@/i18n';
+import { clickButtonByText, loadItems, setEntityTab } from '@/vitestHelpers';
+import { ItemType, Status, type Goal, type Group, type Schedule, type Task } from '@/types';
+import { useItemsStore } from '@/stores/items';
+import { useSettingsStore } from '@/stores/settings';
+import EntityListSection from '@/components/EntityListSection.vue';
+import TaskList from '../TaskList.vue';
+
+function makeGoal(overrides: Partial<Goal> = {}): Goal {
+	return {
+		type: ItemType.Goal,
+		id: 'goal-1',
+		name: 'Learn Japanese',
+		created: daysAgo(1),
+		updated: daysAgo(1),
+		status: Status.Opened,
+		...overrides,
+	};
+}
+
+function makeGroup(overrides: Partial<Group> = {}): Group {
+	return {
+		type: ItemType.Group,
+		id: 'group-1',
+		name: 'Errands',
+		created: daysAgo(1),
+		updated: daysAgo(1),
+		status: Status.Opened,
+		...overrides,
+	};
+}
+
+function makeTask(overrides: Partial<Task> = {}): Task {
+	return {
+		type: ItemType.Task,
+		id: 'task-1',
+		name: 'Do Duolingo',
+		created: daysAgo(1),
+		updated: daysAgo(1),
+		status: Status.Opened,
+		important: false,
+		urgent: false,
+		...overrides,
+	};
+}
+
+function daysAgo(days: number): string {
+	return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
+
+beforeEach(() => {
+	window.localStorage.clear();
+	setActivePinia(createPinia());
+});
+
+async function mountWithData(goals: Goal[], tasks: Task[]) {
+	await loadItems([...goals, ...tasks]);
+
+	const wrapper = mount(TaskList, { global: { plugins: [vuetify, i18n] } });
+	return { wrapper, items: useItemsStore() };
+}
+
+describe('TaskList empty state', () => {
+	it('shows the empty message when there are no tasks', async () => {
+		const { wrapper } = await mountWithData([], []);
+
+		expect(wrapper.text()).toContain('No tasks yet');
+	});
+});
+
+describe('TaskList grouping', () => {
+	it('groups a task under its goal, using the goal name as the group label', async () => {
+		const { wrapper } = await mountWithData([makeGoal()], [makeTask({ goalId: 'goal-1' })]);
+
+		expect(wrapper.find('legend').text()).toBe('Learn Japanese');
+		expect(wrapper.text()).toContain('Do Duolingo');
+	});
+
+	it('still groups and shows the goal name when the goal itself is closed', async () => {
+		const { wrapper } = await mountWithData(
+			[makeGoal({ status: Status.Done })],
+			[makeTask({ goalId: 'goal-1' })],
+		);
+
+		expect(wrapper.find('legend').text()).toBe('Learn Japanese');
+	});
+
+	it("draws a goal's section in the goal's colour", async () => {
+		const { wrapper } = await mountWithData(
+			[makeGoal({ color: '#2E7D5B' })],
+			[makeTask({ goalId: 'goal-1' })],
+		);
+
+		expect(wrapper.findComponent(EntityListSection).props()).toMatchObject({
+			color: '#2E7D5B',
+			paintItems: undefined,
+		});
+	});
+
+	it('puts a goalless task in the ungrouped tail, with no group wrapper', async () => {
+		const { wrapper } = await mountWithData([], [makeTask({ id: 't1', name: 'Read more' })]);
+
+		expect(wrapper.find('fieldset').exists()).toBe(false);
+		expect(wrapper.text()).toContain('Read more');
+	});
+});
+
+describe('TaskList with pages switched off', () => {
+	it('runs every task as one flat list when the Goals page is off, the closed ones on History', async () => {
+		useSettingsStore().setPageVisible('goals', false);
+		const { wrapper } = await mountWithData(
+			[makeGoal()],
+			[
+				makeTask({ goalId: 'goal-1' }),
+				makeTask({ id: 'task-2', name: 'Read more' }),
+				makeTask({ id: 'task-3', name: 'Old one', goalId: 'goal-1', status: Status.Done }),
+			],
+		);
+
+		expect(wrapper.find('fieldset').exists()).toBe(false);
+		expect(wrapper.text()).not.toContain('Learn Japanese');
+		expect(wrapper.text()).toContain('Do Duolingo');
+		expect(wrapper.text()).toContain('Read more');
+		expect(wrapper.text()).not.toContain('Old one');
+
+		await setEntityTab('history');
+		expect(wrapper.find('fieldset').exists()).toBe(false);
+		expect(wrapper.text()).toContain('Old one');
+	});
+
+	it('tells the task dialog which pickers to leave out', async () => {
+		const settings = useSettingsStore();
+		settings.setPageVisible('groups', false);
+		const { wrapper } = await mountWithData([], []);
+
+		const dialog = wrapper.findComponent({ name: 'TaskDialog' });
+
+		expect(dialog.props('showGoal')).toBe(true);
+		expect(dialog.props('showGroup')).toBe(false);
+	});
+});
+
+describe('TaskList goal picker options', () => {
+	it('offers only active goals as new choices', async () => {
+		const { wrapper } = await mountWithData(
+			[
+				makeGoal({ id: 'active-goal', name: 'Active goal' }),
+				makeGoal({ id: 'closed-goal', name: 'Closed goal', status: Status.Done }),
+			],
+			[makeTask({ goalId: 'active-goal' })],
+		);
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+
+		const [select] = wrapper.findAllComponents({ name: 'VSelect' });
+		const items = select.props('items') as Array<{ title: string }>;
+		expect(items.map((item) => item.title)).toEqual(['No goal', 'Active goal']);
+	});
+
+	it('keeps the currently-linked closed goal as an option when editing that task', async () => {
+		const { wrapper } = await mountWithData(
+			[makeGoal({ id: 'closed-goal', name: 'Closed goal', status: Status.Cancelled })],
+			[makeTask({ goalId: 'closed-goal' })],
+		);
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+
+		const [select] = wrapper.findAllComponents({ name: 'VSelect' });
+		expect(select.props('modelValue')).toBe('closed-goal');
+		const items = select.props('items') as Array<{ title: string }>;
+		expect(items.map((item) => item.title)).toContain('Closed goal');
+	});
+});
+
+describe('TaskList groups', () => {
+	it('keeps sections by goal only, and names the group inside the task', async () => {
+		await loadItems([
+			makeGoal(),
+			makeGroup(),
+			makeTask({ id: 'both', name: 'In goal and group', goalId: 'goal-1', groupId: 'group-1' }),
+			makeTask({ id: 'group-only', name: 'In group only', groupId: 'group-1' }),
+		]);
+		const wrapper = mount(TaskList, { global: { plugins: [vuetify, i18n] } });
+
+		const sections = wrapper.findAllComponents({ name: 'EntityListSection' });
+		expect(sections.map((section) => section.props('label'))).toEqual(['Learn Japanese']);
+		expect(sections[0].text()).toContain('In goal and group');
+		expect(sections[0].text()).not.toContain('In group only');
+
+		const groupOnly = wrapper
+			.findAll('.v-list-item')
+			.find((item) => item.text().includes('In group only'));
+		await groupOnly?.trigger('click');
+
+		expect(wrapper.text()).toContain('Group: Errands');
+	});
+
+	it('offers active groups, plus the closed one the task is already in', async () => {
+		await loadItems([
+			makeGroup({ id: 'active-group', name: 'Active group' }),
+			makeGroup({ id: 'closed-group', name: 'Closed group', status: Status.Done }),
+			makeGroup({ id: 'other-closed', name: 'Other closed', status: Status.Cancelled }),
+			makeTask({ groupId: 'closed-group' }),
+		]);
+		const wrapper = mount(TaskList, { global: { plugins: [vuetify, i18n] } });
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+
+		const [, groupSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		expect(groupSelect.props('modelValue')).toBe('closed-group');
+		const items = groupSelect.props('items') as Array<{ title: string }>;
+		expect(items.map((item) => item.title)).toEqual(['No group', 'Active group', 'Closed group']);
+	});
+
+	it('saves a group change without touching the goal', async () => {
+		await loadItems([makeGoal(), makeGroup(), makeTask({ goalId: 'goal-1' })]);
+		const items = useItemsStore();
+		const wrapper = mount(TaskList, { global: { plugins: [vuetify, i18n] } });
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		const [, groupSelect] = wrapper.findAllComponents({ name: 'VSelect' });
+		await groupSelect.vm.$emit('update:modelValue', 'group-1');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(items.tasks.all[0]).toMatchObject({ goalId: 'goal-1', groupId: 'group-1' });
+	});
+});
+
+describe('TaskList cancel', () => {
+	it('cancels immediately with no confirm dialog, since tasks have no descendants', async () => {
+		const { wrapper, items } = await mountWithData([], [makeTask()]);
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await clickButtonByText(wrapper, 'Cancel this record');
+
+		expect(items.tasks.all[0].status).toBe(Status.Cancelled);
+	});
+});
+
+describe('TaskList done / reopen', () => {
+	it('marks a task done immediately when confirmDone is off', async () => {
+		const { wrapper, items } = await mountWithData([], [makeTask()]);
+		useSettingsStore().updatePageSettings('tasks', { confirmDone: false });
+
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+
+		expect(items.tasks.all[0].status).toBe(Status.Done);
+	});
+
+	it('asks for confirmation before marking done when confirmDone is on', async () => {
+		const { wrapper, items } = await mountWithData([], [makeTask()]);
+		useSettingsStore().updatePageSettings('tasks', { confirmDone: true });
+
+		await wrapper.get('input[type="checkbox"]').setValue(true);
+
+		expect(items.tasks.all[0].status).toBe(Status.Opened);
+
+		await clickButtonByText(wrapper, 'Confirm');
+
+		expect(items.tasks.all[0].status).toBe(Status.Done);
+	});
+});
+
+describe('TaskList tabs', () => {
+	it('switches between Active and History', async () => {
+		const { wrapper } = await mountWithData(
+			[],
+			[
+				makeTask({ id: 'open', name: 'Open task' }),
+				makeTask({ id: 'done', name: 'Done task', status: Status.Done }),
+			],
+		);
+
+		expect(wrapper.text()).toContain('Open task');
+		expect(wrapper.text()).not.toContain('Done task');
+
+		await setEntityTab('history');
+
+		expect(wrapper.text()).not.toContain('Open task');
+		expect(wrapper.text()).toContain('Done task');
+	});
+});
+
+describe('TaskList schedule', () => {
+	it('preserves an existing schedule when an unrelated field is edited', async () => {
+		const schedule: Schedule = { start: '2026-08-21T09:00' };
+		const { wrapper, items } = await mountWithData([], [makeTask({ schedule })]);
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await wrapper.get('button[aria-label="Edit"]').trigger('click');
+		await wrapper.get('input').setValue('Do Duolingo (updated)');
+		await wrapper.get('button[aria-label="Save"]').trigger('click');
+
+		expect(items.tasks.all[0].schedule).toEqual(schedule);
+	});
+});
+
+describe('TaskList sorting', () => {
+	function orderedTexts(wrapper: Awaited<ReturnType<typeof mountWithData>>['wrapper']): string[] {
+		const elements = wrapper.element.querySelectorAll('legend, .v-list-item-title');
+		return Array.from(elements).map((el) => (el as HTMLElement).textContent ?? '');
+	}
+
+	it('orders tasks newest-first by default', async () => {
+		const older = makeTask({ id: 'older', name: 'Older task', updated: daysAgo(10) });
+		const newer = makeTask({ id: 'newer', name: 'Newer task', updated: daysAgo(1) });
+		const { wrapper } = await mountWithData([], [older, newer]);
+
+		expect(orderedTexts(wrapper)).toEqual(['Newer task', 'Older task']);
+	});
+
+	it('respects a stored "oldest" sortOrder', async () => {
+		const older = makeTask({ id: 'older', name: 'Older task', updated: daysAgo(10) });
+		const newer = makeTask({ id: 'newer', name: 'Newer task', updated: daysAgo(1) });
+		const { wrapper } = await mountWithData([], [older, newer]);
+		useSettingsStore().updatePageSettings('tasks', { sortOrder: 'oldest' });
+		await wrapper.vm.$nextTick();
+
+		expect(orderedTexts(wrapper)).toEqual(['Older task', 'Newer task']);
+	});
+
+	it("lifts a task's goal group above a newer ungrouped task once a task inside the group is updated", async () => {
+		const goal = makeGoal({ id: 'goal-1', name: 'Learn Japanese' });
+		const groupedTask = makeTask({
+			id: 'grouped',
+			name: 'Grouped task',
+			goalId: 'goal-1',
+			updated: daysAgo(50),
+		});
+		const freshUngrouped = makeTask({
+			id: 'ungrouped',
+			name: 'Ungrouped task',
+			updated: daysAgo(5),
+		});
+		const { wrapper, items } = await mountWithData([goal], [groupedTask, freshUngrouped]);
+
+		const before = orderedTexts(wrapper);
+		expect(before.indexOf('Ungrouped task')).toBeLessThan(before.indexOf('Learn Japanese'));
+
+		await items.update(ItemType.Task, 'grouped', { name: 'Grouped task' });
+		await wrapper.vm.$nextTick();
+
+		const after = orderedTexts(wrapper);
+		expect(after.indexOf('Learn Japanese')).toBeLessThan(after.indexOf('Ungrouped task'));
+	});
+});
+
+describe('TaskList completions', () => {
+	it('marking an occurrence done from the open dialog calls the store action and updates the dialog live', async () => {
+		const schedule: Schedule = { start: '2020-01-03T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
+		const { wrapper, items } = await mountWithData([], [makeTask({ schedule })]);
+
+		await wrapper.get('.v-list-item').trigger('click');
+		expect(wrapper.text()).not.toContain('time done');
+
+		await wrapper.get('button[aria-label^="Mark done: "]').trigger('click');
+
+		expect(items.tasks.all[0].completions).toHaveLength(1);
+		expect(items.tasks.all[0].completions?.[0].done).toBe(true);
+		expect(wrapper.text()).toContain('1 time done');
+	});
+
+	it('skipping an occurrence from the open dialog calls the store action', async () => {
+		const schedule: Schedule = { start: '2020-01-03T09:00', rrule: 'FREQ=WEEKLY;BYDAY=FR' };
+		const { wrapper, items } = await mountWithData([], [makeTask({ schedule })]);
+
+		await wrapper.get('.v-list-item').trigger('click');
+		await wrapper.get('button[aria-label^="Skip: "]').trigger('click');
+
+		expect(items.tasks.all[0].schedule?.exdate).toHaveLength(1);
+	});
+});

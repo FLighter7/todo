@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+*.local
+.DS_Store
+.superpowers
+test-results
+playwright-report
+blob-report

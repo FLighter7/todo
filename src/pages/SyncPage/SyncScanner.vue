@@ -1,0 +1,90 @@
+<style lang="scss" module>
+.wrap {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.video {
+	width: 100%;
+	max-width: 360px;
+	align-self: center;
+	border-radius: 8px;
+	background: #000000;
+}
+</style>
+
+<template>
+	<div :class="$style.wrap">
+		<video v-show="cameraOn" ref="video" :class="$style.video" muted playsinline />
+
+		<VAlert v-if="cameraError" type="info" variant="tonal" :text="t('sync.cameraFailed')" />
+		<p v-else-if="cameraOn" class="text-center text-medium-emphasis">{{ t('sync.scanning') }}</p>
+
+		<!-- The instruction is a hint rather than the label: a label stays on one line
+		and lost its end on a phone, a hint wraps. -->
+		<VTextarea
+			v-model="pasted"
+			:label="t('sync.codeLabel')"
+			:hint="t('sync.orPaste')"
+			persistent-hint
+			rows="2"
+			auto-grow
+			class="mt-2"
+		/>
+		<VBtn :disabled="pasted.trim() === ''" variant="tonal" @click="submitPasted">
+			{{ t('sync.paste') }}
+		</VBtn>
+	</div>
+</template>
+
+<script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import { useI18n } from 'vue-i18n';
+import QrScanner from 'qr-scanner';
+
+/**
+ * `source` tells a code the camera keeps seeing, emitted again on every
+ * frame, from one the user deliberately pasted.
+ */
+const emit = defineEmits<{ code: [value: string, source: 'camera' | 'paste'] }>();
+
+const { t } = useI18n();
+const video = useTemplateRef<HTMLVideoElement>('video');
+const pasted = ref('');
+const cameraOn = ref(false);
+const cameraError = ref(false);
+
+let scanner: QrScanner | null = null;
+
+onMounted(async () => {
+	if (!video.value) {
+		return;
+	}
+
+	try {
+		scanner = new QrScanner(video.value, (result) => emit('code', result.data, 'camera'), {
+			highlightScanRegion: true,
+			maxScansPerSecond: 5,
+		});
+		await scanner.start();
+		cameraOn.value = true;
+	} catch {
+		// No camera, no permission, or an insecure origin. Pasting still works,
+		// and on a desktop without a webcam it is the normal path anyway.
+		cameraError.value = true;
+		scanner?.destroy();
+		scanner = null;
+	}
+});
+
+onBeforeUnmount(() => {
+	scanner?.destroy();
+	scanner = null;
+});
+
+function submitPasted(): void {
+	emit('code', pasted.value.trim(), 'paste');
+	pasted.value = '';
+}
+</script>

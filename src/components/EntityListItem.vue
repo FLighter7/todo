@@ -1,0 +1,99 @@
+<style lang="scss" module>
+// Row height comes from the title line plus Vuetify's own 4px padding alone. Its min-height
+// is dropped rather than lowered through the density prop, because VListItem hands its
+// density down to the prepend's VCheckboxBtn and would shrink its touch target with it.
+.item {
+	min-height: 0;
+
+	// The checkbox otherwise centers against the two-line title+note block;
+	// Vuetify only aligns prepend/append to the top for its own --three-line items.
+	:global(.v-list-item__prepend) {
+		align-self: start;
+	}
+
+	// The checkbox keeps its full touch target (--v-selection-control-size, 40px), but
+	// negative margins shrink its layout box to the title's own line box (1.5rem): it no
+	// longer dictates the row height, overflows into the row's padding instead, and stays
+	// centered on the title line with or without a note. The margin goes on the control,
+	// not the prepend, because only the control's own element carries the variable.
+	:global(.v-list-item__prepend > .v-selection-control) {
+		margin-block: calc((1.5rem - var(--v-selection-control-size)) / 2);
+	}
+}
+
+// A name wraps rather than losing its end to an ellipsis: on a phone at a large
+// text size most of them did, and the row was the only place to read them. The
+// title and the content box around it let the focus ring of the button inside
+// show past their edges; Vuetify clips both.
+.item :global(.v-list-item__content),
+.item :global(.v-list-item-title) {
+	overflow: visible;
+}
+
+.item :global(.v-list-item-title) {
+	white-space: normal;
+}
+
+// The name is a real button for the keyboard and a screen reader, drawn as the
+// plain title it was.
+.open {
+	display: block;
+	width: 100%;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	overflow-wrap: anywhere;
+	cursor: pointer;
+}
+</style>
+
+<template>
+	<!-- A click anywhere on the row opens the record. For the keyboard and a screen
+	reader the row is a list item and no stop of its own: its two actions are the
+	checkbox and the name, a button, which Vuetify's row turns Enter into a click on. -->
+	<VListItem :class="$style.item" role="listitem" :tabindex="-1" @click="emit('click')">
+		<template #prepend>
+			<VCheckboxBtn
+				:model-value="done"
+				:aria-label="t('task.doneNamed', { name })"
+				@click.stop
+				@update:model-value="emit('update:done', $event ?? false)"
+			/>
+		</template>
+
+		<VListItemTitle>
+			<button type="button" :class="$style.open">{{ name }}</button>
+		</VListItemTitle>
+		<!-- A cancelled record's checkbox is as empty as an open one's; the word says which it is. -->
+		<div v-if="cancelled" class="text-body-small text-medium-emphasis">
+			{{ t('entity.statusCancelled') }}
+		</div>
+		<VListItemSubtitle v-if="note">{{ note }}</VListItemSubtitle>
+
+		<template v-if="date" #append>
+			<span class="text-body-small text-medium-emphasis">{{ date }}</span>
+		</template>
+	</VListItem>
+</template>
+
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+defineProps<{
+	name: string;
+	note?: string;
+	done: boolean;
+	cancelled?: boolean;
+	date?: string;
+}>();
+
+const emit = defineEmits<{
+	'update:done': [value: boolean];
+	click: [];
+}>();
+
+const { t } = useI18n();
+</script>

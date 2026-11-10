@@ -1,0 +1,154 @@
+import {
+	createRouter,
+	createWebHistory,
+	type RouteLocationNormalized,
+	type RouteLocationRaw,
+	type RouteRecordRaw,
+} from 'vue-router';
+import {
+	mdiBullseyeArrow,
+	mdiFolderOutline,
+	mdiFormatListBulleted,
+	mdiShimmer,
+	mdiViewGridOutline,
+} from '@mdi/js';
+import TasksPage from '@/pages/TasksPage/TasksPage.vue';
+import { settingsService } from '@/services/settings/SettingsService';
+import { firstShownPage, isPageHidden, type AppPage } from '@/types';
+
+declare module 'vue-router' {
+	interface RouteMeta {
+		/** The page's name: its document title, its heading, and what a page change announces. */
+		titleKey?: string;
+		/** Present on routes that can be picked as the app's start page. */
+		startPage?: {
+			icon: string;
+			labelKey: string;
+		};
+	}
+}
+
+/**
+ * Not a real union — the set of eligible routes is derived at runtime from
+ * `routes` (see `getStartPageOptions`), keyed by `meta.startPage`.
+ */
+export type StartPage = string;
+
+export interface StartPageOption {
+	value: StartPage;
+	icon: string;
+	labelKey: string;
+}
+
+/** Each page's icon, shared by the bottom bar and the start page choices. */
+export const PAGE_ICONS: Record<AppPage, string> = {
+	tasks: mdiFormatListBulleted,
+	matrix: mdiViewGridOutline,
+	dreams: mdiShimmer,
+	goals: mdiBullseyeArrow,
+	groups: mdiFolderOutline,
+};
+
+const routes: RouteRecordRaw[] = [
+	{ path: '/', redirect: () => ({ name: readStoredStartPage() }) },
+	{
+		path: '/tasks',
+		name: 'tasks',
+		component: TasksPage,
+		meta: {
+			titleKey: 'nav.tasks',
+			startPage: { icon: PAGE_ICONS.tasks, labelKey: 'settings.startPageTasks' },
+		},
+	},
+	{
+		path: '/matrix',
+		name: 'matrix',
+		component: () => import('@/pages/MatrixPage/MatrixPage.vue'),
+		meta: {
+			titleKey: 'nav.matrix',
+			startPage: { icon: PAGE_ICONS.matrix, labelKey: 'settings.startPageMatrix' },
+		},
+	},
+	{
+		path: '/dreams',
+		name: 'dreams',
+		component: () => import('@/pages/DreamsPage/DreamsPage.vue'),
+		meta: {
+			titleKey: 'nav.dreams',
+			startPage: { icon: PAGE_ICONS.dreams, labelKey: 'settings.startPageDreams' },
+		},
+	},
+	{
+		path: '/goals',
+		name: 'goals',
+		component: () => import('@/pages/GoalsPage/GoalsPage.vue'),
+		meta: {
+			titleKey: 'nav.goals',
+			startPage: { icon: PAGE_ICONS.goals, labelKey: 'settings.startPageGoals' },
+		},
+	},
+	{
+		path: '/groups',
+		name: 'groups',
+		component: () => import('@/pages/GroupsPage/GroupsPage.vue'),
+		meta: {
+			titleKey: 'nav.groups',
+			startPage: { icon: PAGE_ICONS.groups, labelKey: 'settings.startPageGroups' },
+		},
+	},
+	{
+		path: '/sync',
+		name: 'sync',
+		component: () => import('@/pages/SyncPage/SyncPage.vue'),
+		meta: { titleKey: 'sync.title' },
+	},
+	{
+		path: '/settings',
+		name: 'settings',
+		component: () => import('@/pages/SettingsPage/SettingsPage.vue'),
+		meta: { titleKey: 'nav.settings' },
+	},
+];
+
+export function getStartPageOptions(): StartPageOption[] {
+	const options: StartPageOption[] = [];
+
+	for (const route of routes) {
+		const startPage = route.meta?.startPage;
+
+		if (typeof route.name !== 'string' || startPage === undefined) {
+			continue;
+		}
+
+		options.push({ value: route.name, ...startPage });
+	}
+
+	return options;
+}
+
+export function readStoredStartPage(): StartPage {
+	const settings = settingsService.load();
+	const stored = settings.general.startPage;
+	const known = getStartPageOptions().some((option) => option.value === stored);
+
+	return known && !isPageHidden(settings, stored) ? stored : firstShownPage(settings);
+}
+
+/**
+ * A page switched off in Settings cannot be reached by its address either:
+ * it leads to the start page, which is never a hidden one.
+ */
+export function redirectHiddenPage(to: RouteLocationNormalized): RouteLocationRaw | true {
+	return isPageHidden(settingsService.load(), String(to.name))
+		? { name: readStoredStartPage() }
+		: true;
+}
+
+const router = createRouter({
+	history: createWebHistory(import.meta.env.BASE_URL),
+	routes,
+});
+
+router.beforeEach(redirectHiddenPage);
+
+export default router;

@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm test
+      - run: pnpm run build
+
+      # The server e2e test builds workspace-server from source. Checked out
+      # after lint and unit tests, so neither scans it.
+      - uses: actions/checkout@v4
+        with:
+          repository: FLighter7/workspace-server
+          path: .workspace-server
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: .workspace-server/go.mod
+          cache-dependency-path: .workspace-server/go.sum
+
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run test:e2e
+        env:
+          WORKSPACE_SERVER_DIR: ${{ github.workspace }}/.workspace-server
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - run: cp dist/index.html dist/404.html
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+      - uses: actions/deploy-pages@v4
+        id: deployment
