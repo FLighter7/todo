@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { expect, type Locator, type Page } from '@playwright/test';
+import { fakePairing, samplePairingCode } from '../pairing';
 
 export const LOCALES = ['en', 'ru', 'pl'] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -173,6 +174,32 @@ export const STATES: AuditState[] = [
 		},
 	},
 	{ name: 'sync', enter: (page) => goto(page, 'sync') },
+	{
+		name: 'sync-paired',
+		enter: async (page) => {
+			await fakePairing(page);
+			await goto(page, 'sync');
+		},
+	},
+	{
+		// A code for another server than this device's, so its notice is probed too.
+		name: 'sync-relay',
+		enter: async (page, locale) => {
+			await fakePairing(page);
+			await goto(page, 'sync');
+			await page.getByRole('button', { name: msg(locale, 'sync.server.relay.open') }).click();
+			const dialog = openDialog(page);
+			await dialog
+				.getByLabel(msg(locale, 'sync.codeLabel'), { exact: true })
+				.fill(samplePairingCode('S2', 'Laptop'));
+			await dialog.getByRole('button', { name: msg(locale, 'sync.paste') }).click();
+			await expect(
+				dialog.getByRole('img', {
+					name: msg(locale, 'sync.server.relay.qrLabel').replace('{name}', 'Laptop'),
+				}),
+			).toBeVisible();
+		},
+	},
 	{ name: 'add-task', enter: (page, locale) => openAddDialog(page, locale) },
 	{
 		name: 'add-task-errors',

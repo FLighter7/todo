@@ -9,12 +9,14 @@ import type { ServerSyncError } from '@/stores/serverSync';
 import { useAnnouncerStore } from '@/stores/announcer';
 import { clickButtonByText } from '@/vitestHelpers';
 import SyncScanner from '../../SyncScanner.vue';
+import PairingRelay from '../PairingRelay.vue';
 import ServerSyncPanel from '../ServerSyncPanel.vue';
 
 const fake = await vi.hoisted(async () => {
 	const { reactive } = await import('vue');
 	return reactive({
 		status: 'unpaired' as SyncStatus,
+		serverId: null as string | null,
 		serverName: null as string | null,
 		lastSyncAt: null as string | null,
 		error: null as ServerSyncError | null,
@@ -29,7 +31,7 @@ vi.mock('@/stores/serverSync', () => ({ useServerSyncStore: () => fake }));
 
 function mountPanel() {
 	return mount(ServerSyncPanel, {
-		global: { plugins: [vuetify, i18n], stubs: { SyncScanner: true } },
+		global: { plugins: [vuetify, i18n], stubs: { SyncScanner: true, PairingRelay: true } },
 	});
 }
 
@@ -167,6 +169,24 @@ describe('ServerSyncPanel', () => {
 		expect(buttonByText(wrapper, 'Sync now')?.props('disabled')).toBe(false);
 		expect(buttonByText(wrapper, 'Disconnect from server')).toBeDefined();
 		expect(wrapper.findComponent(SyncScanner).exists()).toBe(false);
+	});
+
+	it('Pair another device opens the relay, whatever the state', async () => {
+		paired('unreachable');
+		const wrapper = mountPanel();
+		expect(wrapper.findComponent(PairingRelay).props('modelValue')).toBe(false);
+
+		await clickButtonByText(wrapper, 'Pair another device');
+
+		expect(wrapper.findComponent(PairingRelay).props('modelValue')).toBe(true);
+		expect(fake.pair).not.toHaveBeenCalled();
+	});
+
+	it('offers no relay before this device is paired', () => {
+		const wrapper = mountPanel();
+
+		expect(wrapper.findComponent(PairingRelay).exists()).toBe(false);
+		expect(buttonByText(wrapper, 'Pair another device')).toBeUndefined();
 	});
 
 	it('says when it has not synced yet', () => {

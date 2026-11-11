@@ -41,6 +41,9 @@ Devices sync through **workspace-server**, a small program you run on your own c
 
 1. **Install and run the server.** Download it from [its repository](https://github.com/FLighter7/workspace-server) and follow its guide; it opens its own page in the browser on that computer.
 2. **Pair each device once.** On the server's page press "Pair a device". In the app open the Sync page and scan the code with the camera, or paste it — on the server's own computer the clipboard is shared, so no camera is needed. A code works once and for ten minutes. On iPhone, pair inside the app installed to the home screen: it keeps its storage apart from Safari.
+
+   **A laptop without carrying it to the server's screen:** on a phone that is already paired, open the Sync page, press "Pair another device" and scan the server's code there. The phone does not pair with it: it shows the code again as a large QR code for the laptop's camera, and offers Share (AirDrop from iPhone to a Mac, Quick Share from Android to Windows) and Copy (an iPhone's clipboard reaches a Mac signed in to the same Apple account). On the laptop, scan or paste it on the Sync page as usual.
+
 3. **That is all.** While the app is on screen it stays connected and syncs on its own: when it opens, a few seconds after an edit, and as soon as another device changes something. The Sync page shows the state, the time of the last sync, a Sync now button and Disconnect from server.
 
 **The server and the devices must be on the same network.** The connection runs over the local network, without STUN or TURN, and will not work across the internet; guest Wi-Fi with client isolation blocks it too. Away from home the app works offline as always and catches up once it can reach the server again.

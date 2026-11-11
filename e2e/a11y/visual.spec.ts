@@ -74,6 +74,8 @@ const REFLOW_STATES = [
 	'settings-general',
 	'settings-tasks',
 	'sync',
+	'sync-paired',
+	'sync-relay',
 	'add-task-schedule',
 	'add-goal-deadline',
 	'task-read-completions',

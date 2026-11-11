@@ -137,7 +137,24 @@
 			"syncNow": "Sync now",
 			"disconnect": "Disconnect from server",
 			"disconnected": "Disconnected from the server.",
-			"pairAgain": "Pair again"
+			"pairAgain": "Pair again",
+			"relay": {
+				"open": "Pair another device",
+				"title": "Pair another device",
+				"intro": "On the server's page, press “Pair a device”, then scan its code here. This device only shows the code again for the other one: its own pairing stays as it is.",
+				"ready": "The code for {name} is ready. Show it to the other device.",
+				"qrLabel": "Pairing code for {name}",
+				"show": "On the other device, open the Sync page and point its camera at this code, or send the code there and paste it.",
+				"expiry": "The code works once, within 10 minutes of being made on the server's page.",
+				"foreign": "This code is for the server {name}, not the one this device syncs with. The other device will sync with {name}.",
+				"share": "Share the code",
+				"copy": "Copy the code",
+				"scanAnother": "Scan another code",
+				"copied": "Code copied. Paste it on the other device.",
+				"copyFailed": "Could not copy the code. Show it to the other device's camera instead.",
+				"shareFailed": "Could not share the code. Copy it or show it to the other device's camera instead.",
+				"refused": "Cannot pass this code on: {reason}"
+			}
 		}
 	},
 	"settings": {

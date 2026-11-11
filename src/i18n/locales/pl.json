@@ -137,7 +137,24 @@
 			"syncNow": "Synchronizuj teraz",
 			"disconnect": "Odłącz od serwera",
 			"disconnected": "Odłączono od serwera.",
-			"pairAgain": "Sparuj ponownie"
+			"pairAgain": "Sparuj ponownie",
+			"relay": {
+				"open": "Sparuj inne urządzenie",
+				"title": "Sparuj inne urządzenie",
+				"intro": "Na stronie serwera naciśnij „Sparuj urządzenie”, a potem zeskanuj tutaj kod. To urządzenie tylko pokaże kod drugiemu — jego własne sparowanie się nie zmieni.",
+				"ready": "Kod dla serwera {name} jest gotowy. Pokaż go drugiemu urządzeniu.",
+				"qrLabel": "Kod parowania z serwerem {name}",
+				"show": "Na drugim urządzeniu otwórz stronę „Synchronizacja” i skieruj kamerę na ten kod — albo prześlij tam kod i go wklej.",
+				"expiry": "Kod działa raz i tylko przez 10 minut od utworzenia na stronie serwera.",
+				"foreign": "Ten kod pochodzi z serwera {name}, a nie z tego, z którym synchronizuje się to urządzenie. Drugie urządzenie będzie się synchronizować z {name}.",
+				"share": "Udostępnij kod",
+				"copy": "Kopiuj kod",
+				"scanAnother": "Zeskanuj inny kod",
+				"copied": "Skopiowano kod. Wklej go na drugim urządzeniu.",
+				"copyFailed": "Nie udało się skopiować kodu. Pokaż go kamerze drugiego urządzenia.",
+				"shareFailed": "Nie udało się udostępnić kodu. Skopiuj go albo pokaż kamerze drugiego urządzenia.",
+				"refused": "Nie można przekazać tego kodu: {reason}"
+			}
 		}
 	},
 	"settings": {

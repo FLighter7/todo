@@ -161,6 +161,37 @@ describe('useServerSyncStore', () => {
 		expect(store.error).toBe(error);
 	});
 
+	it('knows the paired server once the engine reports a state, and forgets it with the pairing', () => {
+		const store = useServerSyncStore();
+		store.start();
+		const state: SyncState<SyncDocumentErrorCode> = {
+			status: 'connecting',
+			serverName: 'Desk',
+			lastSyncAt: null,
+			error: null,
+		};
+		expect(store.serverId).toBeNull();
+
+		options().pairingStore.save({
+			serverId: 'S1',
+			name: 'Desk',
+			device: 'dev1',
+			token: 'tok1',
+			password: 'a'.repeat(24),
+			fingerprint: 'AA:BB',
+			port: 47800,
+			hosts: ['a.local'],
+			lastEtag: null,
+			lastSyncAt: null,
+		});
+		options().onState(state);
+		expect(store.serverId).toBe('S1');
+
+		options().pairingStore.clear();
+		options().onState({ ...state, status: 'unpaired', serverName: null });
+		expect(store.serverId).toBeNull();
+	});
+
 	it('pair parses the code first', async () => {
 		const store = useServerSyncStore();
 		store.start();

@@ -30,18 +30,21 @@ export type ServerSyncError = WorkspaceError<WorkspaceErrorCode | SyncDocumentEr
  */
 export const useServerSyncStore = defineStore('serverSync', () => {
 	const status = ref<SyncStatus>('unpaired');
+	/** The paired server's id, so a code for another server can be told apart. */
+	const serverId = ref<string | null>(null);
 	const serverName = ref<string | null>(null);
 	const lastSyncAt = ref<string | null>(null);
 	const error = shallowRef<ServerSyncError | null>(null);
 
 	const items = useItemsStore();
 	const settings = useSettingsStore();
+	const pairingStore = createPairingStore({ key: SERVER_PAIRING_KEY });
 	let engine: SyncEngine<SyncDocumentErrorCode> | null = null;
 
 	function createEngine(): SyncEngine<SyncDocumentErrorCode> {
 		return new SyncEngine<SyncDocumentErrorCode>({
 			app: APP_ID,
-			pairingStore: createPairingStore({ key: SERVER_PAIRING_KEY }),
+			pairingStore,
 			adapter: createTodoSyncAdapter({
 				localItems: () => [...items.records],
 				replaceLocalItems: (next) => items.replaceAll(next),
@@ -53,6 +56,8 @@ export const useServerSyncStore = defineStore('serverSync', () => {
 				serverName.value = state.serverName;
 				lastSyncAt.value = state.lastSyncAt;
 				error.value = state.error;
+				// The engine saves or clears the pairing before it reports the state that follows.
+				serverId.value = pairingStore.load()?.serverId ?? null;
 			},
 		});
 	}
@@ -93,6 +98,7 @@ export const useServerSyncStore = defineStore('serverSync', () => {
 
 	return {
 		status: readonly(status),
+		serverId: readonly(serverId),
 		serverName: readonly(serverName),
 		lastSyncAt: readonly(lastSyncAt),
 		// Not `readonly()`: that would hand out a proxy of the error object itself.

@@ -2,6 +2,7 @@ import { nvdaTest as test, type NVDAPlaywright } from '@guidepup/playwright';
 import { NVDAKeyCodeCommands } from '@guidepup/guidepup';
 import { expect, type Page } from '@playwright/test';
 import { applySettings, dump, msg, openDialog, seedSampleData, settle } from '../a11y/fixtures';
+import { fakePairing, samplePairingCode } from '../pairing';
 
 // What NVDA says along the paths a screen reader user takes through the app.
 // Each test keeps its spoken log under A11Y_DUMP_DIR before it asserts, so a
@@ -318,4 +319,55 @@ test('a section colour in the add dialog', async ({ page, nvda }) => {
 	expect(said.green).toContain(msg('en', 'settings.accents.green'));
 	expect(said.paint).toContain(msg('en', 'entity.paintItems'));
 	expect(said.paint).not.toMatch(/unavailable/i);
+});
+
+test('passing a pairing code on to another device', async ({ page, nvda }) => {
+	await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+	await fakePairing(page);
+	await open(page, 'sync');
+	await focusWebContent(page, nvda);
+	const relayButton = page.getByRole('button', { name: msg('en', 'sync.server.relay.open') });
+	await relayButton.focus();
+	await nvda.clearSpokenPhraseLog();
+	await nvda.press('Enter');
+	await pause(page);
+	const opened = await speech(nvda);
+
+	await openDialog(page)
+		.getByLabel(msg('en', 'sync.codeLabel'), { exact: true })
+		.fill(samplePairingCode());
+	await openDialog(page)
+		.getByRole('button', { name: msg('en', 'sync.paste') })
+		.focus();
+	await nvda.clearSpokenPhraseLog();
+	await nvda.press('Enter');
+	await pause(page);
+	// The focus moves into the code's view, and NVDA reads it from the top: the
+	// picture's name among the rest.
+	const ready = await speech(nvda);
+
+	await openDialog(page)
+		.getByRole('button', { name: msg('en', 'sync.server.relay.copy') })
+		.focus();
+	await nvda.clearSpokenPhraseLog();
+	await nvda.press('Enter');
+	await pause(page);
+	const copied = await speech(nvda);
+
+	await nvda.clearSpokenPhraseLog();
+	await nvda.press('Escape');
+	await pause(page);
+	const closed = await speech(nvda);
+	dump(
+		'sr/pairing-relay.txt',
+		['## opened', opened, '## ready', ready, '## copied', copied, '## closed', closed].join('\n'),
+	);
+
+	expect(opened).toContain(msg('en', 'sync.server.relay.title'));
+	expect(opened).toMatch(/dialog/i);
+	expect(ready).toContain('The code for Desk is ready');
+	expect(ready).toMatch(/Pairing code for Desk,?\s+graphic/i);
+	expect(copied).toContain(msg('en', 'sync.server.relay.copied'));
+	expect(closed).toContain(msg('en', 'sync.server.relay.open'));
+	await expect(relayButton).toBeFocused();
 });

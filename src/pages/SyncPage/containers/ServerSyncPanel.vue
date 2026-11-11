@@ -15,6 +15,19 @@
 	display: flex;
 	flex-direction: column;
 	gap: 0.75rem;
+
+	// A label wraps instead of running out of its button: "Подключить другое
+	// устройство" and "Синхронизировать сейчас" are wider than a phone at a
+	// large text size.
+	:global(.v-btn) {
+		height: auto;
+		min-height: var(--v-btn-height);
+		padding-block: 0.5rem;
+	}
+
+	:global(.v-btn__content) {
+		white-space: normal;
+	}
 }
 
 .lines {
@@ -66,10 +79,16 @@
 				>
 					{{ t('sync.server.syncNow') }}
 				</VBtn>
+				<!-- Needs no connection: it only reads a code and shows it again. -->
+				<VBtn variant="tonal" size="large" @click="relayOpen = true">
+					{{ t('sync.server.relay.open') }}
+				</VBtn>
 				<VBtn variant="tonal" size="large" @click="disconnect">
 					{{ t('sync.server.disconnect') }}
 				</VBtn>
 			</div>
+
+			<PairingRelay v-model="relayOpen" />
 		</template>
 	</div>
 </template>
@@ -78,6 +97,7 @@
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SyncScanner from '../SyncScanner.vue';
+import PairingRelay from './PairingRelay.vue';
 import { BLOCKED_RETRY_MS, WorkspaceError } from '@flighter7/workspace-client';
 import { useServerSyncStore, type ServerSyncError } from '@/stores/serverSync';
 import { useAnnouncerStore } from '@/stores/announcer';
@@ -99,6 +119,8 @@ const panel = useTemplateRef<HTMLElement>('panel');
 
 const pairing = ref(false);
 const pairError = ref('');
+/** The dialog that passes the server's code on to another device. */
+const relayOpen = ref(false);
 /**
  * The code the last failed pairing used, and when the camera may try it
  * again. The camera sees the same code on every frame, so it would retry a

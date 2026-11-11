@@ -5,6 +5,7 @@ import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test, expect, type Browser, type Page } from '@playwright/test';
+import { decodeQr } from './pairing';
 
 /**
  * Two and then three browsers syncing through a real workspace-server. The
@@ -191,4 +192,25 @@ test('a used code is refused with a reason', async ({ browser }) => {
 			timeout: 20_000,
 		},
 	);
+});
+
+test('a paired device passes a code on, and the device that reads it pairs', async ({
+	browser,
+}) => {
+	const phone = await openDevice(browser);
+	await pairDevice(phone, await pairingCode());
+	const pairing = await phone.evaluate(() => localStorage.getItem('todo.server'));
+
+	await phone.getByRole('button', { name: 'Pair another device' }).click();
+	const relay = phone.getByRole('dialog', { name: 'Pair another device' });
+	await relay.getByLabel('Code', { exact: true }).fill(await pairingCode());
+	await relay.getByRole('button', { name: 'Use this code' }).click();
+	const relayed = await decodeQr(phone, relay.getByRole('img', { name: /^Pairing code for / }));
+
+	const laptop = await openDevice(browser);
+	await pairDevice(laptop, relayed);
+	await laptop.goto('/todo/tasks');
+
+	await expect(laptop.locator('main').getByText('Buy milk')).toBeVisible({ timeout: 15_000 });
+	expect(await phone.evaluate(() => localStorage.getItem('todo.server'))).toBe(pairing);
 });
