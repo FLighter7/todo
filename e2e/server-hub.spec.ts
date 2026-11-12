@@ -15,6 +15,8 @@ import { WorkspaceServer, buildServer, onLoopback } from './workspaceServer';
 let tmp = '';
 let main: WorkspaceServer;
 let laptop: WorkspaceServer;
+/** A pairing code of the laptop's server, taken before it linked. */
+let laptopCode = '';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -65,6 +67,10 @@ test.beforeAll(async () => {
 	laptop = await WorkspaceServer.start(binary, join(tmp, 'laptop'));
 	await main.api('PUT', '/api/config', { name: 'Desk' });
 	await laptop.api('PUT', '/api/config', { name: 'Laptop' });
+	// Once linked, the laptop's page issues no code of its own (devices pair
+	// with the main); its server refuses pair before it reads the secret, so
+	// a code taken now stands for any code of the laptop.
+	laptopCode = await laptop.pairingCode();
 	// The servers link over loopback, so the link does not depend on the LAN.
 	await laptop.api('POST', '/api/upstream', { code: onLoopback(await main.pairingCode()) });
 	await expect.poll(linked, { timeout: 20_000 }).toBe(true);
@@ -87,7 +93,7 @@ test('the laptop’s own code is refused with a reason: devices pair with the ma
 }) => {
 	const page = await browser.newPage();
 	await page.goto('/todo/sync');
-	await page.getByLabel('Code', { exact: true }).fill(await laptop.pairingCode());
+	await page.getByLabel('Code', { exact: true }).fill(laptopCode);
 	await page.getByRole('button', { name: 'Use this code' }).click();
 
 	await expect(
