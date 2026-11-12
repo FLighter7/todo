@@ -1,11 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-	DocumentError,
-	SyncEngine,
-	type Pairing,
-	type SyncState,
-} from '@flighter7/workspace-client';
-import { FakeServer } from '@flighter7/workspace-client/testing';
+import { DocumentError, SyncEngine, type Pairing, type SyncState } from '@flighter7/wss-client';
+import { FakeServer } from '@flighter7/wss-client/testing';
 import { Status, type Item, type Task } from '@/types';
 import {
 	decodeSyncDocument,

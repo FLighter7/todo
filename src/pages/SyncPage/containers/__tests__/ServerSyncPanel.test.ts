@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import vuetify from '@/plugins/vuetify';
 import { i18n } from '@/i18n';
-import { DocumentError, WorkspaceError, type SyncStatus } from '@flighter7/workspace-client';
+import { DocumentError, WorkspaceError, type SyncStatus } from '@flighter7/wss-client';
 import type { ServerSyncError } from '@/stores/serverSync';
 import { useAnnouncerStore } from '@/stores/announcer';
 import { clickButtonByText } from '@/vitestHelpers';

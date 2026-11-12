@@ -1,5 +1,5 @@
 import { useI18n } from 'vue-i18n';
-import { WorkspaceError } from '@flighter7/workspace-client';
+import { WorkspaceError } from '@flighter7/wss-client';
 import { BackupFormatError } from '@/services/backup/BackupService';
 
 /**

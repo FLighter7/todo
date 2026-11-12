@@ -8,7 +8,7 @@ import {
 	type SyncStatus,
 	type WorkspaceError,
 	type WorkspaceErrorCode,
-} from '@flighter7/workspace-client';
+} from '@flighter7/wss-client';
 import type { SyncDocumentErrorCode } from '@/services/server/syncDocument';
 import { createTodoSyncAdapter } from '@/services/server/todoSyncAdapter';
 import { useItemsStore } from './items';
@@ -24,7 +24,7 @@ export type ServerSyncError = WorkspaceError<WorkspaceErrorCode | SyncDocumentEr
 
 /**
  * Sync through the user's workspace-server: wires one `SyncEngine` from
- * `@flighter7/workspace-client` to the items store, the settings store and
+ * `@flighter7/wss-client` to the items store, the settings store and
  * the page, and holds what the Sync page shows. `DefaultLayout` starts it
  * once the items have loaded; everything after that runs on its own.
  */

@@ -8,7 +8,7 @@ importers:
 
   .:
     dependencies:
-      '@flighter7/workspace-client':
+      '@flighter7/wss-client':
         specifier: link:../workspace-server/client
         version: link:../workspace-server/client
       '@mdi/js':
