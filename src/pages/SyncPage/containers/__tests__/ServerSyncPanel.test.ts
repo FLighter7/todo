@@ -18,6 +18,7 @@ const fake = await vi.hoisted(async () => {
 		status: 'unpaired' as SyncStatus,
 		serverId: null as string | null,
 		serverName: null as string | null,
+		via: null as string | null,
 		lastSyncAt: null as string | null,
 		error: null as ServerSyncError | null,
 		start: vi.fn(),
@@ -50,6 +51,7 @@ beforeEach(() => {
 	setActivePinia(createPinia());
 	fake.status = 'unpaired';
 	fake.serverName = null;
+	fake.via = null;
 	fake.lastSyncAt = null;
 	fake.error = null;
 	vi.clearAllMocks();
@@ -169,6 +171,17 @@ describe('ServerSyncPanel', () => {
 		expect(buttonByText(wrapper, 'Sync now')?.props('disabled')).toBe(false);
 		expect(buttonByText(wrapper, 'Disconnect from server')).toBeDefined();
 		expect(wrapper.findComponent(SyncScanner).exists()).toBe(false);
+		expect(wrapper.text()).not.toContain('Through');
+	});
+
+	it('names the server it syncs through while the paired one is out of reach', () => {
+		paired('connected');
+		fake.via = 'Laptop';
+		i18n.global.locale.value = 'ru';
+		const wrapper = mountPanel();
+
+		expect(wrapper.text()).toContain('Сервер: Desk');
+		expect(wrapper.text()).toContain('Через Laptop, пока этот сервер недоступен');
 	});
 
 	it('Pair another device opens the relay, whatever the state', async () => {

@@ -122,6 +122,7 @@
 			"pairFailed": "Nie udało się sparować: {reason}",
 			"paired": "Sparowano z serwerem {name}.",
 			"serverName": "Serwer: {name}",
+			"via": "Przez {name}, dopóki ten serwer jest niedostępny",
 			"state": {
 				"connected": "Połączono",
 				"connecting": "Łączę…",
@@ -317,7 +318,8 @@
 			"newerSchema": "serwer ma dane z nowszej wersji aplikacji. Zaktualizuj tę",
 			"badDocument": "nie można odczytać danych na serwerze. Niczego nie nadpisano",
 			"tooManyWrites": "zbyt wiele zapisów z rzędu. Otwórz aplikację ponownie",
-			"conflict": "inne urządzenie ciągle zmieniało dane. Spróbuj ponownie"
+			"conflict": "inne urządzenie ciągle zmieniało dane. Spróbuj ponownie",
+			"notMain": "to drugi serwer, połączony z głównym. Sparuj kodem ze strony głównego serwera"
 		}
 	}
 }

@@ -59,6 +59,7 @@
 		<template v-else>
 			<div :class="$style.lines">
 				<p class="text-title-medium">{{ t('sync.server.serverName', { name: serverName }) }}</p>
+				<p v-if="store.via">{{ t('sync.server.via', { name: store.via }) }}</p>
 				<p>{{ stateLine }}</p>
 				<p v-if="store.status === 'unreachable'" class="text-medium-emphasis">
 					{{ t('sync.server.unreachableHint') }}

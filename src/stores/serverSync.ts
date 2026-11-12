@@ -33,6 +33,8 @@ export const useServerSyncStore = defineStore('serverSync', () => {
 	/** The paired server's id, so a code for another server can be told apart. */
 	const serverId = ref<string | null>(null);
 	const serverName = ref<string | null>(null);
+	/** The server the connection goes through when the paired one is out of reach: one linked to it. */
+	const via = ref<string | null>(null);
 	const lastSyncAt = ref<string | null>(null);
 	const error = shallowRef<ServerSyncError | null>(null);
 
@@ -54,6 +56,7 @@ export const useServerSyncStore = defineStore('serverSync', () => {
 			onState: (state) => {
 				status.value = state.status;
 				serverName.value = state.serverName;
+				via.value = state.via;
 				lastSyncAt.value = state.lastSyncAt;
 				error.value = state.error;
 				// The engine saves or clears the pairing before it reports the state that follows.
@@ -100,6 +103,7 @@ export const useServerSyncStore = defineStore('serverSync', () => {
 		status: readonly(status),
 		serverId: readonly(serverId),
 		serverName: readonly(serverName),
+		via: readonly(via),
 		lastSyncAt: readonly(lastSyncAt),
 		// Not `readonly()`: that would hand out a proxy of the error object itself.
 		error: computed(() => error.value),

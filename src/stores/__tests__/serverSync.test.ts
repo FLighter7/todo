@@ -149,6 +149,7 @@ describe('useServerSyncStore', () => {
 		const state: SyncState<SyncDocumentErrorCode> = {
 			status: 'error',
 			serverName: 'Desk',
+			via: 'Laptop',
 			lastSyncAt: '2026-11-07T12:00:00Z',
 			error,
 		};
@@ -157,6 +158,7 @@ describe('useServerSyncStore', () => {
 
 		expect(store.status).toBe('error');
 		expect(store.serverName).toBe('Desk');
+		expect(store.via).toBe('Laptop');
 		expect(store.lastSyncAt).toBe('2026-11-07T12:00:00Z');
 		expect(store.error).toBe(error);
 	});
@@ -167,6 +169,7 @@ describe('useServerSyncStore', () => {
 		const state: SyncState<SyncDocumentErrorCode> = {
 			status: 'connecting',
 			serverName: 'Desk',
+			via: null,
 			lastSyncAt: null,
 			error: null,
 		};

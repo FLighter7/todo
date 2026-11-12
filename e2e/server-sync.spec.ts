@@ -1,20 +1,15 @@
-import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { createSocket } from 'node:dgram';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { createServer } from 'node:net';
+import { spawn, type ChildProcess } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { test, expect, type Browser, type Page } from '@playwright/test';
 import { decodeQr } from './pairing';
+import { buildServer, freeTcpPort, freeUdpPort } from './workspaceServer';
 
 /**
- * Two and then three browsers syncing through a real workspace-server. The
- * server comes from its repository next to this one (or
- * WORKSPACE_SERVER_DIR), built with Go; WORKSPACE_SERVER_BIN runs a binary
- * already built instead, for a machine without Go.
+ * Two and then three browsers syncing through a real workspace-server, built
+ * as `workspaceServer.ts` says.
  */
-const SERVER_DIR = resolve(process.env.WORKSPACE_SERVER_DIR ?? '../workspace-server');
-const PREBUILT = process.env.WORKSPACE_SERVER_BIN;
 
 let server: ChildProcess | null = null;
 let tmp = '';
@@ -23,52 +18,6 @@ let httpPort = 0;
 let firstCode = '';
 
 test.describe.configure({ mode: 'serial' });
-
-function freeTcpPort(): Promise<number> {
-	return new Promise((resolvePort, reject) => {
-		const probe = createServer();
-		probe.once('error', reject);
-		probe.listen(0, '127.0.0.1', () => {
-			const address = probe.address();
-			probe.close(() => resolvePort(typeof address === 'object' && address ? address.port : 0));
-		});
-	});
-}
-
-function freeUdpPort(): Promise<number> {
-	return new Promise((resolvePort, reject) => {
-		const probe = createSocket('udp4');
-		probe.once('error', reject);
-		probe.bind(0, () => {
-			const { port } = probe.address();
-			probe.close(() => resolvePort(port));
-		});
-	});
-}
-
-function buildServer(): string {
-	if (PREBUILT) return resolve(PREBUILT);
-	if (!existsSync(join(SERVER_DIR, 'go.mod'))) {
-		throw new Error(
-			`No workspace-server repository at ${SERVER_DIR}: clone FLighter7/workspace-server ` +
-				'next to this repository, or set WORKSPACE_SERVER_DIR (or WORKSPACE_SERVER_BIN).',
-		);
-	}
-
-	const binary = join(
-		tmp,
-		process.platform === 'win32' ? 'workspace-server.exe' : 'workspace-server',
-	);
-	const build = spawnSync('go', ['build', '-o', binary, './cmd/workspace-server'], {
-		cwd: SERVER_DIR,
-		encoding: 'utf8',
-	});
-	if (build.status !== 0) {
-		throw new Error(`go build failed: ${build.error?.message ?? ''}${build.stderr ?? ''}`);
-	}
-
-	return binary;
-}
 
 async function waitForServer(): Promise<void> {
 	const deadline = Date.now() + 30_000;
@@ -121,7 +70,7 @@ test.beforeAll(async () => {
 	test.setTimeout(180_000);
 	tmp = mkdtempSync(join(tmpdir(), 'todo-server-sync-'));
 	dataDir = join(tmp, 'server');
-	const binary = buildServer();
+	const binary = buildServer(tmp);
 	httpPort = await freeTcpPort();
 	const udpPort = await freeUdpPort();
 

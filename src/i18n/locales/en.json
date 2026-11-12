@@ -122,6 +122,7 @@
 			"pairFailed": "Could not pair: {reason}",
 			"paired": "Paired with {name}.",
 			"serverName": "Server: {name}",
+			"via": "Through {name} while this server is out of reach",
 			"state": {
 				"connected": "Connected",
 				"connecting": "Connecting…",
@@ -317,7 +318,8 @@
 			"newerSchema": "the server holds data from a newer version of the app. Update this one",
 			"badDocument": "the data on the server cannot be read. Nothing was overwritten",
 			"tooManyWrites": "it wrote too many times in a row. Reopen the app",
-			"conflict": "another device kept changing the data. Try again"
+			"conflict": "another device kept changing the data. Try again",
+			"notMain": "this is a second server, linked to a main one. Pair with the code from the main server's page"
 		}
 	}
 }
