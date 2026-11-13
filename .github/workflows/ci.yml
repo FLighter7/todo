@@ -23,11 +23,16 @@ jobs:
       - run: pnpm test
       - run: pnpm run build
 
-      # The server e2e test builds workspace-server from source. Checked out
-      # after lint and unit tests, so neither scans it.
+      # The server e2e tests build workspace-server from source, at the tag
+      # matching the installed client package: the package's version is the
+      # server's tag (1.0.0-rc.1 is v1.0.0-rc.1). Checked out after lint and
+      # unit tests, so neither scans it.
+      - id: server
+        run: echo "tag=v$(node -p "require('./node_modules/@flighter/wss-client/package.json').version")" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
           repository: FLighter7/workspace-server
+          ref: ${{ steps.server.outputs.tag }}
           path: .workspace-server
       - uses: actions/setup-go@v5
         with:

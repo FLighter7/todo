@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@flighter/wss-client':
-        specifier: link:../workspace-server/client
-        version: link:../workspace-server/client
+        specifier: 1.0.0-rc.1
+        version: 1.0.0-rc.1
       '@mdi/js':
         specifier: ^7.4.47
         version: 7.4.47
@@ -857,6 +857,9 @@ packages:
   '@eslint/plugin-kit@0.7.2':
     resolution: {integrity: sha512-+CNAzxglkrpNf/kKywqQfk74QjtceuOE7Qm+AF8miRvPF/wmmK5+OJOgVh3AVTT3RP2mH3+FOaxlE5v72owk0A==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+
+  '@flighter/wss-client@1.0.0-rc.1':
+    resolution: {integrity: sha512-lgbQ+7c48lH/nXnllo9hffzxSf5dC+L95nQssiN0wNZxbE4GeYjb6lb4eJD4flc+GxE1Zh0QACAE9A8K9u0elA==}
 
   '@guidepup/guidepup@0.38.0':
     resolution: {integrity: sha512-BESjF92DTIaw451unpFxzIfd39WwfqY9x3UUs0f+0r20KotR7u5Q+s3B4IwWAsMKHc7e3G7X47JKjMes8sxMHw==}
@@ -4431,6 +4434,8 @@ snapshots:
     dependencies:
       '@eslint/core': 1.2.1
       levn: 0.4.1
+
+  '@flighter/wss-client@1.0.0-rc.1': {}
 
   '@guidepup/guidepup@0.38.0':
     dependencies:
