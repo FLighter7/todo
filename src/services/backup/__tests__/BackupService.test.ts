@@ -195,3 +195,65 @@ describe('BackupService.parse settings', () => {
 		expect(() => backupService.parse(text)).toThrow(/settings/);
 	});
 });
+
+describe('BackupService.merge', () => {
+	const EARLIER = '2026-08-06T10:00:00.000Z';
+	const LATER = '2026-08-07T10:00:00.000Z';
+
+	it('adds the records only the file has and keeps the ones only this device has', () => {
+		const result = backupService.merge([dream], [goal, task]);
+
+		expect(result.items.map((item) => item.id).sort()).toEqual(['dream-1', 'goal-1', 'task-1']);
+		expect(result.added).toBe(2);
+		expect(result.changed).toBe(0);
+	});
+
+	it('takes the later version of a record both sides hold, from either side', () => {
+		const newerInFile = makeDream({ name: 'Visit Kyoto', updated: LATER });
+		const newerHere = makeTask({ name: 'Book trains', updated: LATER });
+
+		const result = backupService.merge(
+			[makeDream({ updated: EARLIER }), newerHere],
+			[newerInFile, makeTask({ updated: EARLIER })],
+		);
+
+		expect(result.items.find((item) => item.id === 'dream-1')?.name).toBe('Visit Kyoto');
+		expect(result.items.find((item) => item.id === 'task-1')?.name).toBe('Book trains');
+		expect(result.added).toBe(0);
+		expect(result.changed).toBe(1);
+	});
+
+	it("keeps this device's record on an exact tie", () => {
+		const result = backupService.merge([makeGoal({ name: 'Here' })], [makeGoal({ name: 'File' })]);
+
+		expect(result.items[0].name).toBe('Here');
+		expect(result.changed).toBe(0);
+	});
+
+	it('keeps the completions of both sides, per occurrence', () => {
+		const here = makeTask({
+			updated: LATER,
+			completions: [{ occurrence: '2026-08-07T09:00', done: true, at: LATER }],
+		});
+		const inFile = makeTask({
+			updated: EARLIER,
+			completions: [{ occurrence: '2026-08-14T09:00', done: true, at: EARLIER }],
+		});
+
+		const result = backupService.merge([here], [inFile]);
+		const merged = result.items[0] as Task;
+
+		expect(merged.completions?.map((mark) => mark.occurrence).sort()).toEqual([
+			'2026-08-07T09:00',
+			'2026-08-14T09:00',
+		]);
+		expect(result.changed).toBe(1);
+	});
+
+	it('counts nothing when the file holds what this device already has', () => {
+		const result = backupService.merge([dream, goal, task], [task, dream]);
+
+		expect(result).toMatchObject({ added: 0, changed: 0 });
+		expect(result.items).toHaveLength(3);
+	});
+});

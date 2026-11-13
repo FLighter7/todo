@@ -28,6 +28,7 @@ import {
 	type SectionedByParent,
 } from '@/utils';
 import { isLastOccurrence } from '@/utils/schedule';
+import { backupService } from '@/services/backup/BackupService';
 import { useSettingsStore } from './settings';
 import { useStorageStore } from './storage';
 
@@ -355,6 +356,25 @@ export const useItemsStore = defineStore('items', () => {
 		await persist(() => storage.replaceAll(copies));
 	}
 
+	/**
+	 * Merges records from a backup file into this device's. Unlike
+	 * `replaceAll` it counts as this device's own change, since what it brings
+	 * in is new to the server too: server sync then writes it on.
+	 */
+	async function mergeIn(incoming: Item[]): Promise<{ added: number; changed: number }> {
+		const { items: merged, added, changed } = backupService.merge(records.value, incoming);
+		if (added + changed === 0) {
+			return { added, changed };
+		}
+
+		const copies = merged.map((record) => toStorable(record));
+		records.value = copies;
+		changeCount.value++;
+		await persist(() => storage.replaceAll(copies));
+
+		return { added, changed };
+	}
+
 	function findTask(id: string): Task | undefined {
 		const record = byId.value.get(id);
 		return record !== undefined && isTask(record) ? record : undefined;
@@ -431,6 +451,7 @@ export const useItemsStore = defineStore('items', () => {
 		close,
 		reopen,
 		replaceAll,
+		mergeIn,
 		setOccurrenceDone,
 		setOccurrenceSkipped,
 	};

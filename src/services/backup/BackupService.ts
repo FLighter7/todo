@@ -7,6 +7,8 @@ import {
 	type AppSettings,
 	type Item,
 } from '@/types';
+import { sameRecord } from '@/services/sync/sameRecords';
+import { syncMerger } from '@/services/sync/SyncMerger';
 
 export const BACKUP_VERSION = 4;
 
@@ -16,6 +18,15 @@ export interface Backup {
 	exportedAt: string;
 	items: Item[];
 	settings?: AppSettings;
+}
+
+/** A backup's items merged into this device's, and how many of them that brought in. */
+export interface BackupMerge {
+	items: Item[];
+	/** Records the file had and this device did not. */
+	added: number;
+	/** Records both had, where the file's version changed this device's. */
+	changed: number;
 }
 
 /** What is wrong with a backup file, for the interface to say in the user's language. */
@@ -121,6 +132,32 @@ export class BackupService {
 			items: items.map((item) => ({ ...item })),
 			settings: settings === undefined ? undefined : cloneSettings(settings),
 		};
+	}
+
+	/**
+	 * Merges a backup's items into this device's by the sync rule: the later
+	 * `updated` wins a record, and a task's completions merge per occurrence.
+	 * This device's list goes first, so it keeps a record on an exact tie; a
+	 * merge from a file runs once, so no other device has to settle the tie
+	 * the same way. Nothing is collected or pruned and no `updated` moves:
+	 * the next start collects what the window allows, as after any sync.
+	 */
+	merge(local: Item[], incoming: Item[]): BackupMerge {
+		const items = syncMerger.mergeItems(local, incoming);
+		const localById = new Map(local.map((item) => [item.id, item]));
+		let added = 0;
+		let changed = 0;
+
+		for (const item of items) {
+			const before = localById.get(item.id);
+			if (before === undefined) {
+				added++;
+			} else if (!sameRecord(before, item)) {
+				changed++;
+			}
+		}
+
+		return { items, added, changed };
 	}
 
 	/**

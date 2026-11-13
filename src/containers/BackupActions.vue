@@ -12,6 +12,13 @@
 		@click="exportFile"
 	/>
 	<VListItem
+		v-if="shareSupported"
+		role="button"
+		:prepend-icon="mdiShareVariantOutline"
+		:title="t('backup.share')"
+		@click="shareFile"
+	/>
+	<VListItem
 		role="button"
 		:prepend-icon="mdiUploadOutline"
 		:title="t('backup.import')"
@@ -21,7 +28,7 @@
 	<input
 		ref="fileInput"
 		type="file"
-		accept="application/json,.json"
+		accept="application/json,.json,text/plain,.txt"
 		:aria-label="t('backup.import')"
 		:class="$style.hidden"
 		@change="onFileChosen"
@@ -38,11 +45,14 @@
 				<p v-if="exportedAt" class="text-medium-emphasis mt-2">
 					{{ t('backup.exportedAt', { date: exportedAt }) }}
 				</p>
+				<p class="mt-4">{{ t('backup.mergeHint') }}</p>
+				<p class="mt-2">{{ t('backup.replaceHint') }}</p>
 			</VCardText>
 
 			<VCardActions class="flex-wrap justify-end">
 				<VBtn variant="text" @click="cancelImport">{{ t('form.cancel') }}</VBtn>
 				<VBtn color="error" variant="flat" @click="confirmImport">{{ t('backup.replace') }}</VBtn>
+				<VBtn color="primary" variant="flat" @click="confirmMerge">{{ t('backup.merge') }}</VBtn>
 			</VCardActions>
 		</VCard>
 	</VDialog>
@@ -51,7 +61,7 @@
 <script setup lang="ts">
 import { computed, ref, useId, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { mdiDownloadOutline, mdiUploadOutline } from '@mdi/js';
+import { mdiDownloadOutline, mdiShareVariantOutline, mdiUploadOutline } from '@mdi/js';
 import type { Backup } from '@/services/backup/BackupService';
 import { backupService } from '@/services/backup/BackupService';
 import { backupFile } from '@/services/backup/BackupFile';
@@ -71,6 +81,8 @@ const fileInput = useTemplateRef<HTMLInputElement>('fileInput');
 const pending = ref<Backup | null>(null);
 const confirmOpen = ref(false);
 const titleId = useId();
+/** Read once: whether the browser can share files does not change while the page is open. */
+const shareSupported = backupFile.canShare();
 
 useReturnFocus(confirmOpen);
 
@@ -91,19 +103,32 @@ const exportedAt = computed(() => {
 	return new Date(raw).toLocaleString(locale.value);
 });
 
-function exportFile(): void {
+function currentBackup(): Backup {
 	// records, not active: a backup that omitted closed records would resurrect
-	// everything ever finished or abandoned on the next restore.
-	backupFile.download(
-		backupService.create(items.records, {
-			general: settings.general,
-			dreams: settings.dreams,
-			goals: settings.goals,
-			groups: settings.groups,
-			tasks: settings.tasks,
-		}),
-	);
+	// everything ever finished or abandoned on the next restore, and a merge
+	// would leave open on the other device what was closed here.
+	return backupService.create(items.records, {
+		general: settings.general,
+		dreams: settings.dreams,
+		goals: settings.goals,
+		groups: settings.groups,
+		tasks: settings.tasks,
+	});
+}
+
+function exportFile(): void {
+	backupFile.download(currentBackup());
 	emit('notify', t('backup.exported'));
+}
+
+async function shareFile(): Promise<void> {
+	try {
+		await backupFile.share(currentBackup());
+	} catch (error) {
+		// Closing the share sheet without picking anyone is not a failure.
+		if (error instanceof DOMException && error.name === 'AbortError') return;
+		emit('notify', t('backup.shareFailed'));
+	}
 }
 
 function pickFile(): void {
@@ -160,6 +185,30 @@ async function confirmImport(): Promise<void> {
 		emit('notify', t('backup.restored', { count: incomingTotal(backup) }));
 	} catch (error) {
 		emit('notify', t('backup.restoreFailed', { reason: errorReason(error) }));
+	}
+}
+
+/**
+ * Merges the file's records into this device's, by the sync rule. The file's
+ * settings are left out: like sync, a merge keeps each device's own.
+ */
+async function confirmMerge(): Promise<void> {
+	const backup = pending.value;
+	if (!backup) {
+		return;
+	}
+
+	confirmOpen.value = false;
+	pending.value = null;
+
+	try {
+		const { added, changed } = await items.mergeIn(backup.items);
+		emit(
+			'notify',
+			added + changed === 0 ? t('backup.mergedNothing') : t('backup.merged', { added, changed }),
+		);
+	} catch (error) {
+		emit('notify', t('backup.mergeFailed', { reason: errorReason(error) }));
 	}
 }
 

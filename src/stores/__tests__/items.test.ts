@@ -665,6 +665,58 @@ describe('useItemsStore replaceAll', () => {
 	});
 });
 
+describe('useItemsStore mergeIn', () => {
+	it('merges the file into the collection, writes it in one call and counts as a change', async () => {
+		const { storage, replaced } = spyingRepository([
+			makeDream({ id: 'here' }),
+			makeTask({ id: 'both', name: 'Old', updated: daysAgo(2) }),
+		]);
+		const store = useItemsStore();
+		await store.load(async () => storage);
+		const before = store.changeCount;
+
+		const result = await store.mergeIn([
+			makeTask({ id: 'both', name: 'New', updated: daysAgo(1) }),
+			makeGoal({ id: 'from-file' }),
+		]);
+
+		expect(result).toEqual({ added: 1, changed: 1 });
+		expect(store.records.map((r) => r.id).sort()).toEqual(['both', 'from-file', 'here']);
+		expect(store.byId.get('both')?.name).toBe('New');
+		expect(store.changeCount).toBe(before + 1);
+		expect(replaced).toHaveLength(1);
+		const stored = await storage.getAll();
+		expect(stored.map((r) => r.id).sort()).toEqual(['both', 'from-file', 'here']);
+	});
+
+	it('writes nothing and counts no change when the file brings nothing new', async () => {
+		const here = makeDream({ id: 'here' });
+		const { storage, replaced } = spyingRepository([here]);
+		const store = useItemsStore();
+		await store.load(async () => storage);
+		const before = store.changeCount;
+
+		const result = await store.mergeIn([{ ...here }]);
+
+		expect(result).toEqual({ added: 0, changed: 0 });
+		expect(store.changeCount).toBe(before);
+		expect(replaced).toHaveLength(0);
+	});
+
+	it('writes plain objects to storage, not reactive proxies', async () => {
+		const { storage, replaced } = spyingRepository();
+		const store = useItemsStore();
+		await store.load(async () => storage);
+
+		const incoming = reactive(makeTask({ schedule: { start: daysAgo(1).slice(0, 16) } })) as Task;
+		await store.mergeIn([incoming]);
+
+		const [record] = replaced[0] as Task[];
+		expect(isReactive(record)).toBe(false);
+		expect(isReactive(record.schedule)).toBe(false);
+	});
+});
+
 /**
  * Regression coverage for the `toRaw` correction: a Dream has no nested
  * fields, so it cannot detect a reactive proxy leaking into storage. A Task's

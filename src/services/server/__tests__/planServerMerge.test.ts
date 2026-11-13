@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Status, type Item, type Task } from '@/types';
-import { planServerMerge, sameRecords } from '../planServerMerge';
+import { sameRecords } from '@/services/sync/sameRecords';
+import { planServerMerge } from '../planServerMerge';
 import { makeDream, makeTask, mark } from './fixtures';
 
 const NOW = new Date('2026-11-07T12:00:00.000Z');
