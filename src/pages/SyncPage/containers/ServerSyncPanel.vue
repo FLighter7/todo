@@ -99,7 +99,7 @@ import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SyncScanner from '../SyncScanner.vue';
 import PairingRelay from './PairingRelay.vue';
-import { BLOCKED_RETRY_MS, WorkspaceError } from '@flighter7/wss-client';
+import { BLOCKED_RETRY_MS, WorkspaceError } from '@flighter/wss-client';
 import { useServerSyncStore, type ServerSyncError } from '@/stores/serverSync';
 import { useAnnouncerStore } from '@/stores/announcer';
 import { useErrorReason } from '@/composables/useErrorReason';

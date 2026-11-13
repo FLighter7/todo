@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import { createPinia, setActivePinia } from 'pinia';
-import { WorkspaceError, type SyncEngineOptions, type SyncState } from '@flighter7/wss-client';
+import { WorkspaceError, type SyncEngineOptions, type SyncState } from '@flighter/wss-client';
 import { ItemType, type Item } from '@/types';
 import { ItemMemoryRepository } from '@/repositories/ItemMemoryRepository';
 import { decodeSyncDocument } from '@/services/server/syncDocument';
@@ -30,8 +30,8 @@ const { MockEngine } = vi.hoisted(() => {
 	return { MockEngine };
 });
 
-vi.mock('@flighter7/wss-client', async (importOriginal) => ({
-	...(await importOriginal<typeof import('@flighter7/wss-client')>()),
+vi.mock('@flighter/wss-client', async (importOriginal) => ({
+	...(await importOriginal<typeof import('@flighter/wss-client')>()),
 	SyncEngine: MockEngine,
 }));
 

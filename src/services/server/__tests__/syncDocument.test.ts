@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BackupService } from '@/services/backup/BackupService';
-import { DocumentError } from '@flighter7/wss-client';
+import { DocumentError } from '@flighter/wss-client';
 import { decodeSyncDocument, encodeSyncDocument } from '../syncDocument';
 import { makeDream, makeTask, mark } from './fixtures';
 

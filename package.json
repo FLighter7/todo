@@ -17,7 +17,7 @@
 		"format": "prettier --write ."
 	},
 	"dependencies": {
-		"@flighter7/wss-client": "link:../workspace-server/client",
+		"@flighter/wss-client": "link:../workspace-server/client",
 		"@mdi/js": "^7.4.47",
 		"flag-icons": "^7.5.0",
 		"idb": "^8.0.3",

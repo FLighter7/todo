@@ -1,4 +1,4 @@
-import { DocumentError } from '@flighter7/wss-client';
+import { DocumentError } from '@flighter/wss-client';
 import { BackupFormatError, backupService } from '@/services/backup/BackupService';
 import { SYNC_SCHEMA } from '@/services/sync/syncSchema';
 import type { Item } from '@/types';

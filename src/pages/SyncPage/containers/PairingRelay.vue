@@ -110,7 +110,7 @@
 import { computed, nextTick, ref, shallowRef, useId, useTemplateRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { mdiClose, mdiContentCopy, mdiShareVariantOutline } from '@mdi/js';
-import { parsePairingCode } from '@flighter7/wss-client';
+import { parsePairingCode } from '@flighter/wss-client';
 import QrCode from '../QrCode.vue';
 import SyncScanner from '../SyncScanner.vue';
 import { useServerSyncStore } from '@/stores/serverSync';

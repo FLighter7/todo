@@ -1,5 +1,5 @@
 import { ItemType, Status, type Completion, type Dream, type Task } from '@/types';
-import type { Pairing } from '@flighter7/wss-client';
+import type { Pairing } from '@flighter/wss-client';
 
 export function makeTask(overrides: Partial<Task> = {}): Task {
 	return {

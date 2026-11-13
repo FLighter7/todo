@@ -4,7 +4,7 @@ import { defineComponent } from 'vue';
 import { mount } from '@vue/test-utils';
 import { i18n } from '@/i18n';
 import { BackupFormatError } from '@/services/backup/BackupService';
-import { DocumentError, WorkspaceError } from '@flighter7/wss-client';
+import { DocumentError, WorkspaceError } from '@flighter/wss-client';
 import { useErrorReason } from '../useErrorReason';
 
 function mountReason(): (error: unknown) => string {

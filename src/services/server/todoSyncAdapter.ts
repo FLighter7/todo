@@ -1,4 +1,4 @@
-import type { SyncAdapter } from '@flighter7/wss-client';
+import type { SyncAdapter } from '@flighter/wss-client';
 import type { Item } from '@/types';
 import { planServerMerge } from './planServerMerge';
 import { decodeSyncDocument, encodeSyncDocument } from './syncDocument';
