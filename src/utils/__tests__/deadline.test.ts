@@ -55,8 +55,10 @@ describe('formatDeadline', () => {
 
 	it('formats an impossible day correctly in a different locale too', () => {
 		i18n.global.locale.value = 'ru';
-		// Node's Intl.formatToParts inserts a narrow no-break space (U+202F)
-		// before the "г." era abbreviation, unlike .format()'s plain space.
-		expect(formatDeadline({ year: 2027, month: 2, day: 29 }, 'ru', t)).toBe('29 февраля 2027 г.');
+		// The space before the "г." year abbreviation depends on Node's ICU:
+		// Node 25 puts a narrow no-break space (U+202F) there, CI's Node 26
+		// another one. Any space counts as one.
+		const formatted = formatDeadline({ year: 2027, month: 2, day: 29 }, 'ru', t);
+		expect(formatted.replace(/\s/gu, ' ')).toBe('29 февраля 2027 г.');
 	});
 });
